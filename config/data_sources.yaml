@@ -10,6 +10,13 @@
 # Los valores de cobertura_temporal y frecuencia_actualizacion marcados como
 # "por validar" no se inventaron: requieren confirmación directa en el portal
 # de origen antes de usarse en diseño de pipeline o documentación pública.
+#
+# Fase 1.5 (2026-07-11) añadió, para las 7 fuentes MVP priorizadas, los campos:
+#   url_descarga_directa, formato_validado, llave_integracion_validada,
+#   riesgo_tecnico (bajo/medio/alto), notas_validacion.
+# Estos campos solo existen en las fuentes que fueron probadas técnicamente
+# (HEAD request, metadata de API, o consulta de esquema/capacidades). Ver
+# docs/03_validacion_fuentes_mvp.md para el detalle completo de cada prueba.
 
 version: 1
 last_updated: "2026-07-11"
@@ -38,7 +45,12 @@ categories:
       uso_en_modelo: "Base para identificar títulos y áreas mineras formales, insumo para cruces espaciales con bosque, agua y áreas protegidas"
       prioridad: alta
       limitaciones_conocidas: "Requiere cliente WFS/SIG para descarga masiva; no incluye minería ilegal ni informal (fuera del alcance de este catálogo por regla del proyecto de no afirmar causalidad ni ilegalidad); estructura de campos por confirmar con una descarga de prueba"
-      estado: candidata
+      estado: pendiente_de_validacion
+      url_descarga_directa: "https://geo.anm.gov.co/webgis/services/ANM/ServiciosANM/MapServer/WFSServer?service=WFS&version=2.0.0&request=GetFeature&typenames=ANM_ServiciosANM:Titulo_Vigente"
+      formato_validado: "WFS 2.0.0 (GML por defecto; exportable a GeoJSON con outputFormat=GEOJSON u otros formatos vía cliente SIG). GetCapabilities y DescribeFeatureType respondieron correctamente (HTTP 200)."
+      llave_integracion_validada: "CODIGO_EXPEDIENTE (clave del título, cruza directo con anm_titulos_mineros_datos_gov) + SHAPE (geometría). DEPARTAMENTOS y MUNICIPIOS son texto libre, NO código DANE — requiere normalización de nombres o cruce espacial contra dane_geoportal_mgn, no join directo por código."
+      riesgo_tecnico: medio
+      notas_validacion: "Validado 2026-07-11 con HEAD/GetCapabilities/DescribeFeatureType/GetFeature (resultType=hits) livianos, sin descargar el conjunto completo. La capa Titulo_Vigente devolvió ~6.294 features (numberReturned) con 15 capas más disponibles en el servicio (Solicitud_Vigente, Subcontrato, Areas_Estrategicas_Mineras, etc.). El Abstract del servicio indica 'actualizado el 22/03/2023', es decir, con más de 3 años de antigüedad respecto a hoy (2026-07-11); debe confirmarse con la ANM si existe una versión más reciente antes de aprobar para el MVP. Licencia/términos de uso no declarados en el WFS (Fees y AccessConstraints vacíos en GetCapabilities)."
 
     - id: anm_titulos_mineros_datos_gov
       nombre: "ANM Títulos Mineros - Anotaciones RMN"
@@ -57,7 +69,12 @@ categories:
       uso_en_modelo: "Complemento tabular/histórico al catastro minero geoespacial de la ANM"
       prioridad: media
       limitaciones_conocidas: "Dataset tabular, sin geometría propia; requiere cruce con el catastro minero geoespacial para ubicar espacialmente"
-      estado: candidata
+      estado: aprobada
+      url_descarga_directa: "https://www.datos.gov.co/resource/si2v-pbq5.json (o .csv para exportar en CSV; soporta parámetros Socrata como $limit y $where)"
+      formato_validado: "JSON / CSV vía API Socrata (SODA). Metadata y primeras filas confirmadas con HTTP 200."
+      llave_integracion_validada: "codigo_expediente — mismo formato que CODIGO_EXPEDIENTE del catastro geoespacial de la ANM (anm_catastro_minero), permite cruce directo por texto sin geocodificación adicional."
+      riesgo_tecnico: bajo
+      notas_validacion: "Validado 2026-07-11 vía metadata Socrata (api/views/si2v-pbq5.json) y consulta de 2 filas de muestra. Licencia CC BY-SA 4.0 (licenseId: CC_40_BY_SA). Última actualización de filas: 2025-11-24 (rowsUpdatedAt). Sin autenticación requerida para uso liviano; para consumo intensivo se recomienda registrar un app token de Socrata (no es un requisito estricto). Campos confirmados: codigo_expediente, estado_juridico, modalidad, id_tipo_de_anotacion, tipo_de_anotacion, fecha_anotacion, fecha_ejecutoria, observacion."
 
     - id: anla_datos_abiertos
       nombre: "Datos Abiertos ANLA (licencias ambientales, sector minería)"
@@ -140,7 +157,12 @@ categories:
       uso_en_modelo: "Variable central para análisis de pérdida de cobertura boscosa y su relación espacial con actividad minera"
       prioridad: alta
       limitaciones_conocidas: "Formato de descarga (raster vs. vector) y granularidad exacta deben confirmarse en el visualizador antes de diseñar el pipeline; algunos productos están en PDF, no en datos estructurados"
-      estado: candidata
+      estado: pendiente_de_validacion
+      url_descarga_directa: null
+      formato_validado: "No confirmado técnicamente. Las páginas institucionales (ideam.gov.co/temas/monitoreo-de-bosques/geovisor, ideam.gov.co/geoportal-ambiental-institucional) respondieron HTTP 200 pero son SPA/Drupal sin enlaces de descarga en el HTML plano ni en el contenido extraído."
+      llave_integracion_validada: null
+      riesgo_tecnico: alto
+      notas_validacion: "Validado 2026-07-11. El geoserver histórico esperado (geoapps.ideam.gov.co/geoserver) referenciado por resultados de búsqueda NO resuelve por DNS actualmente (nslookup: 'Non-existent domain', curl exit code 6 en http y https) — ese endpoint puede estar dado de baja, renombrado o solo accesible desde otra red. La propia página del geovisor de bosque indica textualmente 'Mapa interactivo externo no accesible, consulte el geovisor de MinAmbiente', lo que sugiere que ni siquiera la visualización web es 100% estable. Se requiere validación manual en navegador (no solo HTTP) del GeoVisor SMByC y del Geoportal Ambiental Institucional (que sí menciona 'GeoServicios OGC' y 'Centro de Descargas oficial' en su descripción) antes de decidir el mecanismo real de descarga."
 
     - id: ideam_capas_geo
       nombre: "Capas geográficas IDEAM (ecosistemas, bosque, agua)"
@@ -200,6 +222,40 @@ categories:
       prioridad: alta
       limitaciones_conocidas: "El portal describe la red pero no deja claro el mecanismo exacto de descarga masiva (API vs. solicitud); cobertura de estaciones puede ser desigual entre regiones"
       estado: pendiente_de_validacion
+      url_descarga_directa: null
+      formato_validado: null
+      llave_integracion_validada: null
+      riesgo_tecnico: medio
+      notas_validacion: "No se encontró en esta página institucional un endpoint de descarga estructurada propio. Ver la fuente ideam_calidad_agua_historica (nueva, añadida en Fase 1.5) para el dataset real y validado que cubre esta misma necesidad vía datos.gov.co. Esta entrada se mantiene como referencia a la página institucional de la red de monitoreo, mientras ideam_calidad_agua_historica es la fuente recomendada para el MVP."
+
+    - id: ideam_calidad_agua_historica
+      nombre: "Data Histórica de Calidad de Agua (Red de Referencia de Calidad de Agua)"
+      entidad_responsable: "IDEAM"
+      url: "https://www.datos.gov.co/Ambiente-y-Desarrollo-Sostenible/Data-Hist%C3%B3rica-de-Calidad-de-Agua/62gv-3857"
+      portal_origen: "Datos Abiertos Colombia (datos.gov.co, Socrata), atribuido a IDEAM"
+      tipo_dato: ["JSON (API Socrata)", "CSV"]
+      cobertura_geografica: "Nacional (Colombia), Red de Referencia de Calidad de Agua (160 estaciones) más puntos de convenios con otras entidades"
+      cobertura_temporal: "Desde 2005 hasta la fecha de corte del dataset (rango exacto de fin no confirmado; muestra observada incluye registros hasta 2013 y metadata actualizada en 2025)"
+      frecuencia_actualizacion: "No declarada explícitamente en metadata; última actualización de filas confirmada: 2025-06-18"
+      campos_clave_esperados:
+        - "nombre del punto de monitoreo"
+        - "latitud/longitud"
+        - "corriente"
+        - "zona y subzona hidrográfica (código y nombre)"
+        - "departamento/municipio"
+        - "fecha"
+        - "propiedad observada (parámetro fisicoquímico/microbiológico)"
+        - "resultado y unidad"
+      llave_integracion_esperada: "coordenadas + código de subzona hidrográfica + departamento/municipio (texto)"
+      uso_en_modelo: "Variable central de calidad hídrica: parámetros fisicoquímicos georreferenciados y vinculados a subzona hidrográfica, cruzable con cuencas_zonificacion_hidrografica y con municipios"
+      prioridad: alta
+      limitaciones_conocidas: "departamento/municipio vienen como texto (no código DANE), requieren normalización; no confirmado si incluye todas las estaciones vigentes o solo históricas descontinuadas"
+      estado: aprobada
+      url_descarga_directa: "https://www.datos.gov.co/resource/62gv-3857.json (o .csv); soporta $limit, $where y $select de Socrata"
+      formato_validado: "JSON / CSV vía API Socrata (SODA). Confirmado con metadata, conteo total (SELECT count(*)) y 2 filas de muestra reales."
+      llave_integracion_validada: "szh_c_digo_rea_zona_subzona (código de subzona hidrográfica, cruza con cuencas_zonificacion_hidrografica) + latitud/longitud; departamento y municipio vienen como texto en mayúsculas, requieren normalización antes de cruzar por código DANE."
+      riesgo_tecnico: bajo
+      notas_validacion: "Validado 2026-07-11. Dataset con 134.261 filas (confirmado vía $select=count(*)), atribuido explícitamente a 'Instituto de Hidrología, Meteorología y Estudios Ambientales - IDEAM' en la metadata. Licencia CC BY-SA 4.0 (CC_40_BY_SA). Última actualización de filas: 2025-06-18. Campos de muestra reales: nombre_del_punto_de_monitoreo, latitud, longitud, elevaci_n_m_s_n_m, corriente, zona_hidrogr_fica_zh, szh_c_digo_rea_zona_subzona, nombre_subzona_hidrogr_fica, departamento, municipio, fecha, propiedad_observada, resultado, unidad_del_resultado, proyecto, codigo__muestra. Sin autenticación requerida."
 
     - id: ideam_redcam
       nombre: "Red de Vigilancia de la Calidad de Aguas Marinas y Costeras (REDCAM)"
@@ -239,7 +295,12 @@ categories:
       uso_en_modelo: "Llave maestra de integración territorial entre todas las demás fuentes"
       prioridad: alta
       limitaciones_conocidas: "Ninguna relevante conocida; es información administrativa estable y oficial"
-      estado: candidata
+      estado: aprobada
+      url_descarga_directa: "https://geoportal.dane.gov.co/descargas/divipola/DIVIPOLA_Municipios.xlsx (XLSX directo, 299.758 bytes); alternativa API: https://www.datos.gov.co/resource/gdxc-w37w.json"
+      formato_validado: "XLSX directo (confirmado con HEAD, Content-Type application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, Content-Length 299.758 bytes ≈ 293 KB) y JSON vía API Socrata (confirmado con 3 filas de muestra)."
+      llave_integracion_validada: "cod_dpto + cod_mpio (código DANE de municipio, 5 dígitos) — confirmados en la respuesta real de la API: cod_dpto, dpto, cod_mpio, nom_mpio, tipo_municipio, longitud, latitud."
+      riesgo_tecnico: bajo
+      notas_validacion: "Validado 2026-07-11 con HEAD al XLSX (HTTP 200) y consulta a la API Socrata (metadata + 3 filas). Licencia CC BY-SA 4.0 (CC_40_BY_SA). Descripción del dataset: 'Actualización a corte 30 diciembre 2024'; última escritura de filas registrada el 2025-01-24. Sin autenticación requerida. Fuente lista para descarga en el MVP."
 
     - id: dane_divipola_geolocalizados
       nombre: "DIVIPOLA - Códigos de municipios geolocalizados"
@@ -276,6 +337,11 @@ categories:
       prioridad: alta
       limitaciones_conocidas: "Portal con múltiples niveles de descarga (nacional, departamental); requiere identificar la capa exacta de límites municipales antes de automatizar la descarga"
       estado: pendiente_de_validacion
+      url_descarga_directa: "https://geoportal.dane.gov.co/mparcgis/rest/services/Divipola/Cache_DivipolaEntidadesTerritorialesCP/MapServer/9/query (ArcGIS REST, capa 'Municipios', id 9; exportable con f=geojson o f=json)"
+      formato_validado: "ArcGIS REST Feature Layer (Feature Layer, geometryType esriGeometryPolygon). Metadata (?f=json) y conteo de features confirmados con HTTP 200: 1.122 polígonos municipales."
+      llave_integracion_validada: "COD_MPIO (código DANE de municipio) + COD_DPTO, confirmados como campos reales del servicio (OBJECTID, Shape, COD_DPTO, NOM_DPTO, COD_MPIO, NOM_MPIO, MPIO_CORRDEPTAL)."
+      riesgo_tecnico: medio
+      notas_validacion: "Validado 2026-07-11 vía ArcGIS REST (?f=json y query con returnCountOnly). El portal principal del Geoportal DANE (geoportal.dane.gov.co) es una SPA que no expone enlaces de descarga en HTML plano ni al hacer fetch de la página, por lo que el enlace directo del MGN 'oficial' (mgn_2023) no pudo confirmarse por esta vía liviana. El servicio ArcGIS REST encontrado ('Cache_DivipolaEntidadesTerritorialesCP') es funcional y liviano de consultar, pero es una capa cacheada de límites administrativos DIVIPOLA, no necesariamente la versión cartográfica más detallada del MGN que usa el DANE para censo. Es suficiente para el MVP (polígonos municipales con código DANE), pero se recomienda una revisión manual del geovisor MGN antes de aprobar como fuente definitiva de límites de alta precisión. Licencia no confirmada explícitamente en el servicio REST."
 
   cuencas_zonificacion_hidrografica:
     - id: ideam_zonificacion_hidrografica
@@ -316,7 +382,12 @@ categories:
       uso_en_modelo: "Restricción/contexto legal para identificar traslapes entre áreas protegidas y actividad minera o pérdida de bosque"
       prioridad: alta
       limitaciones_conocidas: "El enlace de descarga directa (storage.googleapis.com) es un recurso técnico que puede cambiar de ubicación; conviene validar siempre desde el portal oficial RUNAP antes de automatizar la descarga"
-      estado: candidata
+      estado: pendiente_de_validacion
+      url_descarga_directa: "https://storage.googleapis.com/pnn_geodatabase/runap/latest.zip"
+      formato_validado: "ZIP (Content-Type application/zip), confirmado con HEAD. No se abrió el ZIP ni se descargó el contenido en esta fase."
+      llave_integracion_validada: "No confirmada campo a campo (requiere abrir el ZIP); geometría esperada para cruce espacial, según lo documentado en Fase 1"
+      riesgo_tecnico: medio
+      notas_validacion: "Validado 2026-07-11 con HEAD (sin descargar el archivo). Content-Length: 69.412.236 bytes ≈ 66,2 MB — es un archivo pesado; su descarga real en una fase posterior requiere aviso previo explícito, conforme a las reglas del proyecto. Last-Modified: 2026-07-02 (muy reciente, indica mantenimiento activo). No se confirmaron explícitamente los términos de licencia/uso del portal oficial en esta prueba liviana (la página de 'cifras' de RUNAP no expuso texto de términos al hacer fetch); debe revisarse manualmente antes de aprobar."
 
   sensibilidad_social_territorial:
     - id: ant_resguardos_indigenas
