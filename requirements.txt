@@ -1,0 +1,2 @@
+# Dependencias del proyecto AquaBosque Minero IA
+# Pendiente de completar según las fuentes de datos y análisis definidos.
