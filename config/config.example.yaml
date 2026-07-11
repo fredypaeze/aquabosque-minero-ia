@@ -1,0 +1,21 @@
+# Configuración de ejemplo del proyecto AquaBosque Minero IA.
+# Copiar como "config.yaml" (fuera de control de versiones) y ajustar según
+# las fuentes de datos y el alcance definidos en fases posteriores.
+
+project:
+  name: aquabosque-minero-ia
+  version: "0.0.0"
+
+paths:
+  data_raw: data/raw
+  data_processed: data/processed
+  data_external: data/external
+  outputs_figures: outputs/figures
+  outputs_reports: outputs/reports
+
+# Fuentes de datos: pendientes de definir. No completar hasta contar con
+# aprobación explícita de qué datos se van a descargar.
+data_sources: []
+
+# Área de estudio: pendiente de definir (departamento/municipio/cuenca).
+study_area: null

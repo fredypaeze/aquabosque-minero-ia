@@ -4,13 +4,15 @@ Proyecto de análisis de datos aplicado a recursos hídricos, cobertura boscosa 
 
 ## Estado del proyecto
 
-Fase actual: **estructura base del repositorio**. Aún no se ha descargado ni cargado ningún dato.
+Fase actual: **Fase 0 — estructura base del repositorio**. Aún no se ha descargado ni cargado ningún dato, ni se ha entrenado ningún modelo, ni existe dashboard final.
 
 ## Estructura del repositorio
 
 ```
 .
-├── config/                # Archivos de configuración (parámetros, credenciales de ejemplo, etc.)
+├── config/
+│   ├── config.example.yaml # Configuración de ejemplo (copiar como config.yaml, no versionado)
+│   └── .gitkeep
 ├── data/
 │   ├── raw/                # Datos originales, sin modificar (no versionados en git)
 │   ├── processed/          # Datos limpios/transformados (no versionados en git)
@@ -20,10 +22,15 @@ Fase actual: **estructura base del repositorio**. Aún no se ha descargado ni ca
 ├── outputs/
 │   ├── figures/             # Gráficos y visualizaciones generadas
 │   └── reports/             # Reportes generados
-├── scripts/                 # Scripts ejecutables (descarga, procesamiento, etc.)
+├── scripts/                 # Scripts placeholder (aún no implementados)
+│   ├── 01_download_data.py
+│   ├── 02_process_data.py
+│   ├── 03_train_model.py
+│   └── 04_generate_report.py
 ├── src/aquabosque/          # Código fuente del paquete Python del proyecto
 ├── tests/                   # Pruebas automatizadas
 ├── venv/                    # Entorno virtual local (no versionado)
+├── .env.example             # Variables de entorno de ejemplo (copiar como .env, no versionado)
 ├── .gitignore
 ├── README.md
 └── requirements.txt
@@ -52,5 +59,6 @@ El entorno virtual ya existe en `venv/`. Para activarlo (PowerShell):
 ## Próximos pasos
 
 - Definir fuentes de datos a utilizar (pendiente de aprobación antes de descargar).
-- Completar `requirements.txt` según las librerías que se necesiten.
+- Ampliar `requirements.txt` con librerías geoespaciales/de modelado cuando se definan las fuentes y el alcance.
 - Documentar en `docs/` el alcance y la metodología del proyecto.
+- Implementar `scripts/01_download_data.py` una vez aprobadas las fuentes de datos (Fase 1).

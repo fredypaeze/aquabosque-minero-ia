@@ -1,2 +1,20 @@
 # Dependencias del proyecto AquaBosque Minero IA
-# Pendiente de completar según las fuentes de datos y análisis definidos.
+# Fase 0: paquetes base para estructura, configuración y análisis exploratorio.
+# Librerías geoespaciales, de descarga específica de fuentes y de modelado
+# se añadirán en fases posteriores, cuando se definan las fuentes de datos
+# y el alcance del modelado.
+
+# Manejo de datos
+pandas
+numpy
+
+# Configuración y entorno
+python-dotenv
+pyyaml
+
+# Exploración y notebooks
+jupyter
+matplotlib
+
+# Utilidades
+requests
