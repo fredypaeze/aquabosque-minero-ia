@@ -1,0 +1,377 @@
+# Catálogo de fuentes de datos abiertas candidatas para AquaBosque Minero IA.
+#
+# Fase 1 — inventario. NINGUNA fuente listada aquí ha sido descargada todavía.
+# El campo "estado" indica el nivel de avance de cada fuente:
+#   candidata               -> identificada, sin validar en detalle
+#   pendiente_de_validacion -> se probó acceso/formato, falta confirmar campos o vigencia
+#   aprobada                -> validada y aceptada para el MVP
+#   descartada              -> evaluada y excluida, con motivo documentado
+#
+# Los valores de cobertura_temporal y frecuencia_actualizacion marcados como
+# "por validar" no se inventaron: requieren confirmación directa en el portal
+# de origen antes de usarse en diseño de pipeline o documentación pública.
+
+version: 1
+last_updated: "2026-07-11"
+
+categories:
+
+  mineria:
+    - id: anm_catastro_minero
+      nombre: "Catastro Minero Colombiano (CMC)"
+      entidad_responsable: "Agencia Nacional de Minería (ANM)"
+      url: "https://www.anm.gov.co/Datos_Abiertos_ANM"
+      portal_origen: "Sistema de Información Geográfica Minero (SIGM) - ANM, servicio WFS en https://geo.anm.gov.co/webgis/services/ANM/ServiciosANM/MapServer/WFSServer"
+      tipo_dato: ["SHP", "GeoJSON", "KML", "CSV", "XLSX", "GeoPackage (vía WFS)"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Histórico acumulado de títulos y solicitudes mineras; por validar rango exacto de años"
+      frecuencia_actualizacion: "Por validar en el portal (catastro minero se actualiza periódicamente, periodicidad exacta no confirmada)"
+      campos_clave_esperados:
+        - "código de expediente / título minero"
+        - "municipio"
+        - "mineral(es)"
+        - "etapa (exploración/explotación)"
+        - "modalidad contractual"
+        - "titular"
+        - "área (geometría del polígono)"
+      llave_integracion_esperada: "geometría (polígono) + código DANE de municipio para cruces territoriales"
+      uso_en_modelo: "Base para identificar títulos y áreas mineras formales, insumo para cruces espaciales con bosque, agua y áreas protegidas"
+      prioridad: alta
+      limitaciones_conocidas: "Requiere cliente WFS/SIG para descarga masiva; no incluye minería ilegal ni informal (fuera del alcance de este catálogo por regla del proyecto de no afirmar causalidad ni ilegalidad); estructura de campos por confirmar con una descarga de prueba"
+      estado: candidata
+
+    - id: anm_titulos_mineros_datos_gov
+      nombre: "ANM Títulos Mineros - Anotaciones RMN"
+      entidad_responsable: "Agencia Nacional de Minería (ANM)"
+      url: "https://www.datos.gov.co/Minas-y-Energ-a/ANM-T-tulos-Mineros-Anotaciones-RMN/si2v-pbq5"
+      portal_origen: "Datos Abiertos Colombia (datos.gov.co, Socrata)"
+      tipo_dato: ["CSV", "JSON (API Socrata)", "XLSX"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Por validar"
+      frecuencia_actualizacion: "Por validar (portales Socrata suelen indicar periodicidad en la ficha del dataset)"
+      campos_clave_esperados:
+        - "expediente"
+        - "municipio"
+        - "tipo de anotación en el Registro Minero Nacional (RMN)"
+      llave_integracion_esperada: "código de expediente minero; municipio (posible cruce con código DANE)"
+      uso_en_modelo: "Complemento tabular/histórico al catastro minero geoespacial de la ANM"
+      prioridad: media
+      limitaciones_conocidas: "Dataset tabular, sin geometría propia; requiere cruce con el catastro minero geoespacial para ubicar espacialmente"
+      estado: candidata
+
+    - id: anla_datos_abiertos
+      nombre: "Datos Abiertos ANLA (licencias ambientales, sector minería)"
+      entidad_responsable: "Autoridad Nacional de Licencias Ambientales (ANLA)"
+      url: "https://datosabiertos-anla.hub.arcgis.com/"
+      portal_origen: "ANLA - Portal de Datos Abiertos (ArcGIS Hub)"
+      tipo_dato: ["SHP", "GeoJSON", "CSV (por confirmar según capa)"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Por validar"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "expediente ambiental"
+        - "tipo de licencia/instrumento (licencia ambiental, plan de manejo)"
+        - "sector (minería, entre otros)"
+        - "municipio"
+        - "geometría (según capa)"
+      llave_integracion_esperada: "expediente ambiental; municipio (posible cruce con código DANE); geometría si está disponible"
+      uso_en_modelo: "Contexto regulatorio: qué proyectos mineros cuentan con licencia/instrumento ambiental vigente, complemento al catastro minero de la ANM"
+      prioridad: media
+      limitaciones_conocidas: "No se confirmó en la búsqueda qué capas específicas expone el hub de ArcGIS; requiere explorar el portal para identificar datasets relevantes al proyecto"
+      estado: candidata
+
+    - id: simco_upme
+      nombre: "Sistema de Información Minero Colombiano (SIMCO)"
+      entidad_responsable: "Ministerio de Minas y Energía / UPME"
+      url: "https://www1.upme.gov.co/simco/Paginas/home.aspx"
+      portal_origen: "SIMCO (UPME)"
+      tipo_dato: ["XLSX", "informes estadísticos", "información georreferenciada (formato por confirmar)"]
+      cobertura_geografica: "Nacional (Colombia), con desagregación departamental/municipal en algunas series"
+      cobertura_temporal: "Series históricas de producción y comercio exterior minero; rango exacto por validar"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "mineral"
+        - "producción"
+        - "exportaciones"
+        - "precios"
+        - "municipio/departamento"
+      llave_integracion_esperada: "municipio o departamento (posible cruce con código DANE); no confirmado si expone coordenadas o geometría"
+      uso_en_modelo: "Contexto estadístico/económico del sector minero para complementar el catastro geoespacial"
+      prioridad: media
+      limitaciones_conocidas: "El portal no deja claro si existe API abierta; el acceso programático (API/descarga estructurada) debe confirmarse manualmente"
+      estado: pendiente_de_validacion
+
+    - id: sgc_datos_abiertos
+      nombre: "Portal de Datos Abiertos del Servicio Geológico Colombiano (SGC)"
+      entidad_responsable: "Servicio Geológico Colombiano (SGC)"
+      url: "https://datos.sgc.gov.co/"
+      portal_origen: "SGC - Portal de Datos Abiertos"
+      tipo_dato: ["CSV", "KML", "ZIP", "GeoJSON", "GeoTIFF", "PNG"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Por validar"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "unidad geológica"
+        - "tipo de roca/mineral"
+        - "geometría (polígono/línea/punto según capa)"
+      llave_integracion_esperada: "geometría; posible cruce espacial con catastro minero"
+      uso_en_modelo: "Contexto geológico de fondo (no imprescindible para el MVP inicial)"
+      prioridad: baja
+      limitaciones_conocidas: "Portal amplio y con múltiples capas; requiere explorar catálogo específico antes de seleccionar capas relevantes"
+      estado: candidata
+
+  deforestacion_bosque:
+    - id: ideam_smbyc
+      nombre: "Sistema de Monitoreo de Bosques y Carbono (SMByC)"
+      entidad_responsable: "IDEAM (con apoyo de Visión Amazonía)"
+      url: "http://www.ideam.gov.co/en/web/siac/smbyc"
+      portal_origen: "IDEAM - visualizador en https://visualizador.ideam.gov.co/"
+      tipo_dato: ["raster (mapas de cobertura/deforestación)", "PDF (boletines)", "SHP/GeoJSON (por confirmar en visualizador)"]
+      cobertura_geografica: "Nacional (Colombia), con foco histórico en la Amazonía"
+      cobertura_temporal: "Monitoreo anual de deforestación desde años 2000s; rango exacto por validar en cada dataset"
+      frecuencia_actualizacion: "Boletines trimestrales de alerta temprana (AT-D) y reportes anuales de monitoreo, según fuente"
+      campos_clave_esperados:
+        - "superficie de bosque"
+        - "superficie deforestada"
+        - "departamento/municipio"
+        - "año"
+        - "geometría (para capas ráster/vectoriales)"
+      llave_integracion_esperada: "código DANE de municipio/departamento; geometría para cruces raster-vector"
+      uso_en_modelo: "Variable central para análisis de pérdida de cobertura boscosa y su relación espacial con actividad minera"
+      prioridad: alta
+      limitaciones_conocidas: "Formato de descarga (raster vs. vector) y granularidad exacta deben confirmarse en el visualizador antes de diseñar el pipeline; algunos productos están en PDF, no en datos estructurados"
+      estado: candidata
+
+    - id: ideam_capas_geo
+      nombre: "Capas geográficas IDEAM (ecosistemas, bosque, agua)"
+      entidad_responsable: "IDEAM"
+      url: "http://www.ideam.gov.co/capas-geo"
+      portal_origen: "IDEAM"
+      tipo_dato: ["SHP", "raster (formato por confirmar)"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Por validar"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "tipo de cobertura/ecosistema"
+        - "geometría"
+      llave_integracion_esperada: "geometría"
+      uso_en_modelo: "Insumo complementario de cobertura de ecosistemas"
+      prioridad: media
+      limitaciones_conocidas: "Página agregadora de capas; requiere explorar cuáles capas específicas aplican al proyecto"
+      estado: candidata
+
+    - id: global_forest_watch
+      nombre: "Global Forest Watch (GFW) - Colombia"
+      entidad_responsable: "World Resources Institute (WRI) / Global Forest Watch"
+      url: "https://www.globalforestwatch.org/map/country/COL/"
+      portal_origen: "Global Forest Watch, API en https://data-api.globalforestwatch.org/ y portal de datos en https://data.globalforestwatch.org/"
+      tipo_dato: ["raster (pérdida de cobertura arbórea)", "API (JSON)", "vector (alertas)"]
+      cobertura_geografica: "Global, con recorte disponible para Colombia"
+      cobertura_temporal: "Pérdida de cobertura arbórea anual desde 2001 hasta el presente; alertas casi en tiempo real (semanal) y focos de calor (diario)"
+      frecuencia_actualizacion: "Alertas de deforestación: semanales; focos de calor: diarios; pérdida de cobertura arbórea: anual"
+      campos_clave_esperados:
+        - "pérdida de cobertura arbórea (%, hectáreas)"
+        - "año"
+        - "coordenadas / geometría"
+        - "nivel de confianza de alerta"
+      llave_integracion_esperada: "coordenadas geográficas / geometría (no usa código DANE directamente, requiere cruce espacial)"
+      uso_en_modelo: "Fuente satelital independiente para contrastar o complementar el monitoreo oficial de IDEAM/SMByC"
+      prioridad: media
+      limitaciones_conocidas: "Fuente internacional, no oficial colombiana; la resolución y metodología (Hansen/GLAD) difiere de IDEAM, por lo que no deben mezclarse cifras sin aclarar la fuente"
+      estado: candidata
+
+  calidad_hidrica:
+    - id: ideam_redes_calidad_agua
+      nombre: "Redes de Monitoreo de Calidad del Agua"
+      entidad_responsable: "IDEAM"
+      url: "http://www.ideam.gov.co/en/web/agua/redes-monitoreo-calidad-agua"
+      portal_origen: "IDEAM - subdirección de Hidrología"
+      tipo_dato: ["por confirmar (posible CSV/XLSX de estaciones e indicadores)"]
+      cobertura_geografica: "Nacional (Colombia), red de estaciones de monitoreo puntuales"
+      cobertura_temporal: "Por validar"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "estación de monitoreo"
+        - "coordenadas"
+        - "parámetro fisicoquímico (pH, oxígeno disuelto, sólidos, metales, etc.)"
+        - "fecha de muestreo"
+      llave_integracion_esperada: "coordenadas de la estación; cuenca/subzona hidrográfica"
+      uso_en_modelo: "Variable clave para evaluar posibles relaciones espaciales entre calidad hídrica y actividad minera/deforestación, sin inferir causalidad"
+      prioridad: alta
+      limitaciones_conocidas: "El portal describe la red pero no deja claro el mecanismo exacto de descarga masiva (API vs. solicitud); cobertura de estaciones puede ser desigual entre regiones"
+      estado: pendiente_de_validacion
+
+    - id: ideam_redcam
+      nombre: "Red de Vigilancia de la Calidad de Aguas Marinas y Costeras (REDCAM)"
+      entidad_responsable: "IDEAM"
+      url: "https://www.ideam.gov.co/agua"
+      portal_origen: "IDEAM"
+      tipo_dato: ["por confirmar"]
+      cobertura_geografica: "Zonas costeras y marinas de Colombia"
+      cobertura_temporal: "Por validar"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "estación costera"
+        - "parámetro de calidad"
+        - "fecha"
+      llave_integracion_esperada: "coordenadas"
+      uso_en_modelo: "Relevante solo si el área de estudio incluye zonas costeras; de lo contrario, baja prioridad"
+      prioridad: baja
+      limitaciones_conocidas: "Aplica únicamente a zonas costeras; su relevancia depende del área de estudio final del proyecto (aún no definida)"
+      estado: candidata
+
+  territorio_divipola:
+    - id: dane_divipola_municipios
+      nombre: "DIVIPOLA - Códigos de municipios"
+      entidad_responsable: "DANE"
+      url: "https://www.datos.gov.co/Mapas-Nacionales/DIVIPOLA-C-digos-municipios/gdxc-w37w"
+      portal_origen: "Datos Abiertos Colombia (datos.gov.co, Socrata) y Geoportal DANE (https://geoportal.dane.gov.co/servicios/descarga-y-metadatos/descarga-divipola/)"
+      tipo_dato: ["CSV", "XLSX", "JSON (API Socrata)", "SHP (vía Geoportal DANE)"]
+      cobertura_geografica: "Nacional (Colombia), nivel departamento/municipio"
+      cobertura_temporal: "Codificación vigente (actualizada por el DANE)"
+      frecuencia_actualizacion: "Por validar (se actualiza cuando hay cambios de división político-administrativa)"
+      campos_clave_esperados:
+        - "código DANE de departamento"
+        - "código DANE de municipio"
+        - "nombre de departamento"
+        - "nombre de municipio"
+      llave_integracion_esperada: "código DANE de municipio (llave de integración principal para todo el proyecto)"
+      uso_en_modelo: "Llave maestra de integración territorial entre todas las demás fuentes"
+      prioridad: alta
+      limitaciones_conocidas: "Ninguna relevante conocida; es información administrativa estable y oficial"
+      estado: candidata
+
+    - id: dane_divipola_geolocalizados
+      nombre: "DIVIPOLA - Códigos de municipios geolocalizados"
+      entidad_responsable: "DANE"
+      url: "https://www.datos.gov.co/Mapas-Nacionales/DIVIPOLA-C-digos-municipios-geolocalizados/vafm-j2df"
+      portal_origen: "Datos Abiertos Colombia (datos.gov.co, Socrata)"
+      tipo_dato: ["CSV", "JSON (API Socrata)"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Vigente"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "código DANE de municipio"
+        - "latitud/longitud de cabecera municipal"
+      llave_integracion_esperada: "código DANE de municipio"
+      uso_en_modelo: "Geolocalización rápida de municipios cuando no se requiere el polígono completo"
+      prioridad: media
+      limitaciones_conocidas: "Solo punto representativo (cabecera municipal), no el polígono del municipio"
+      estado: candidata
+
+    - id: dane_geoportal_mgn
+      nombre: "Marco Geoestadístico Nacional (MGN) - límites municipales"
+      entidad_responsable: "DANE"
+      url: "https://geoportal.dane.gov.co/"
+      portal_origen: "Geoportal DANE"
+      tipo_dato: ["SHP", "GeoJSON (por confirmar)"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Por validar (versión vigente del MGN)"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "código DANE de municipio/departamento"
+        - "geometría del polígono municipal"
+      llave_integracion_esperada: "código DANE de municipio"
+      uso_en_modelo: "Polígonos municipales oficiales para todos los cruces espaciales por municipio"
+      prioridad: alta
+      limitaciones_conocidas: "Portal con múltiples niveles de descarga (nacional, departamental); requiere identificar la capa exacta de límites municipales antes de automatizar la descarga"
+      estado: pendiente_de_validacion
+
+  cuencas_zonificacion_hidrografica:
+    - id: ideam_zonificacion_hidrografica
+      nombre: "Zonificación Hidrográfica de Colombia"
+      entidad_responsable: "IDEAM"
+      url: "http://www.ideam.gov.co/en/web/agua/zonificacion-hidrografica"
+      portal_origen: "IDEAM, también publicado en datos.gov.co: https://www.datos.gov.co/Ambiente-y-Desarrollo-Sostenible/Zonificaci-n-Hidrogr-fica-Colombia/5kjg-nuda"
+      tipo_dato: ["SHP", "GeoJSON (vía datos.gov.co, por confirmar)"]
+      cobertura_geografica: "Nacional (Colombia): 5 áreas hidrográficas, zonas y subzonas hidrográficas"
+      cobertura_temporal: "Capa base vigente (última actualización relevante identificada: 2013/2020 según fuente; requiere confirmación de versión exacta)"
+      frecuencia_actualizacion: "Baja (capa estructural, no cambia frecuentemente)"
+      campos_clave_esperados:
+        - "código de área/zona/subzona hidrográfica"
+        - "nombre de la cuenca"
+        - "geometría"
+      llave_integracion_esperada: "código de subzona hidrográfica; geometría para cruce espacial con municipios y títulos mineros"
+      uso_en_modelo: "Unidad espacial de análisis alternativa/complementaria al municipio para temas de agua"
+      prioridad: alta
+      limitaciones_conocidas: "Existen varias versiones de la capa (IDEAM 2013 vs. actualizaciones POMCA de MinAmbiente a escala 1:100.000); se debe fijar una sola versión de referencia para evitar inconsistencias"
+      estado: pendiente_de_validacion
+
+  areas_protegidas_runap:
+    - id: runap_consolidado
+      nombre: "RUNAP - Registro Único Nacional de Áreas Protegidas (consolidado)"
+      entidad_responsable: "Parques Nacionales Naturales de Colombia (PNN)"
+      url: "https://runap.parquesnacionales.gov.co/cifras"
+      portal_origen: "RUNAP (PNN), descarga consolidada vía https://storage.googleapis.com/pnn_geodatabase/runap/latest.zip; también disponible en MADS: https://siac-datosabiertos-mads.hub.arcgis.com/"
+      tipo_dato: ["SHP", "geodatabase (ZIP)"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Registro vigente y actualizado (según búsqueda, con datos activos a 2026)"
+      frecuencia_actualizacion: "Continua (registro administrativo actualizado por PNN)"
+      campos_clave_esperados:
+        - "nombre del área protegida"
+        - "categoría de manejo"
+        - "acto administrativo de creación"
+        - "geometría del polígono"
+      llave_integracion_esperada: "geometría (cruce espacial con títulos mineros y bosque); posible cruce por código DANE de municipios que intersectan"
+      uso_en_modelo: "Restricción/contexto legal para identificar traslapes entre áreas protegidas y actividad minera o pérdida de bosque"
+      prioridad: alta
+      limitaciones_conocidas: "El enlace de descarga directa (storage.googleapis.com) es un recurso técnico que puede cambiar de ubicación; conviene validar siempre desde el portal oficial RUNAP antes de automatizar la descarga"
+      estado: candidata
+
+  sensibilidad_social_territorial:
+    - id: ant_resguardos_indigenas
+      nombre: "Resguardos Indígenas Formalizados"
+      entidad_responsable: "Agencia Nacional de Tierras (ANT)"
+      url: "https://data-agenciadetierras.opendata.arcgis.com/datasets/agenciadetierras::resguardo-indigena-formalizado/about"
+      portal_origen: "Agencia Nacional de Tierras - Portal de Datos Abiertos (ArcGIS Hub); también en datos.gov.co: https://www.datos.gov.co/dataset/Resguardo-Indigena-Formalizado/f6du-dwd8"
+      tipo_dato: ["SHP", "GeoJSON", "KML", "CSV"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Registro vigente, actualizado por la ANT"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "nombre del resguardo"
+        - "pueblo/comunidad"
+        - "acto administrativo de constitución"
+        - "geometría del polígono"
+      llave_integracion_esperada: "geometría (cruce espacial); posible código DANE de municipio(s) que intersectan"
+      uso_en_modelo: "Capa de sensibilidad territorial para señalar traslapes con títulos mineros o zonas de deforestación, sin inferir intención ni causalidad, solo coexistencia espacial"
+      prioridad: media
+      limitaciones_conocidas: "Uso sensible: cualquier cruce con esta capa debe presentarse como coexistencia espacial, nunca como acusación o juicio; requiere especial cuidado ético y legal en el reporting"
+      estado: candidata
+
+    - id: mads_tierras_comunidades_negras
+      nombre: "Mapa Digital de Tierras de las Comunidades Negras"
+      entidad_responsable: "Ministerio de Ambiente y Desarrollo Sostenible (MADS) / ICDE"
+      url: "https://metadatos.icde.gov.co/geonetwork/srv/api/records/fe0ca929-482b-41df-997a-a080b83030b9"
+      portal_origen: "Infraestructura Colombiana de Datos Espaciales (ICDE)"
+      tipo_dato: ["SHP (por confirmar en el registro de metadatos)"]
+      cobertura_geografica: "Nacional (Colombia), zonas con territorios colectivos de comunidades negras"
+      cobertura_temporal: "Por validar"
+      frecuencia_actualizacion: "Por validar"
+      campos_clave_esperados:
+        - "nombre del territorio colectivo"
+        - "consejo comunitario"
+        - "geometría del polígono"
+      llave_integracion_esperada: "geometría; posible código DANE de municipio(s) asociados"
+      uso_en_modelo: "Misma lógica de sensibilidad territorial que resguardos indígenas: coexistencia espacial, no causalidad"
+      prioridad: media
+      limitaciones_conocidas: "El registro encontrado es una ficha de metadatos (GeoNetwork); falta confirmar el enlace de descarga directa del shapefile"
+      estado: pendiente_de_validacion
+
+  general:
+    - id: datos_gov_co
+      nombre: "Portal de Datos Abiertos de Colombia (Datos Abiertos Colombia)"
+      entidad_responsable: "MinTIC / DNP (portal nacional, agrega datasets de múltiples entidades)"
+      url: "https://www.datos.gov.co/"
+      portal_origen: "datos.gov.co (Socrata)"
+      tipo_dato: ["CSV", "JSON (API Socrata)", "XLSX", "SHP/GeoJSON (según dataset)"]
+      cobertura_geografica: "Nacional (Colombia)"
+      cobertura_temporal: "Variable según dataset"
+      frecuencia_actualizacion: "Variable según dataset; el portal expone metadatos de periodicidad por conjunto de datos"
+      campos_clave_esperados:
+        - "variable según dataset"
+      llave_integracion_esperada: "variable según dataset; muchos usan código DANE"
+      uso_en_modelo: "Portal agregador/meta-fuente: varias fuentes específicas de este catálogo (DIVIPOLA, catastro minero, zonificación hidrográfica) también están replicadas aquí vía API Socrata"
+      prioridad: media
+      limitaciones_conocidas: "No es una fuente primaria en sí misma, sino un agregador; siempre que sea posible se debe preferir el portal de la entidad responsable como fuente primaria y usar datos.gov.co como respaldo/API"
+      estado: candidata
