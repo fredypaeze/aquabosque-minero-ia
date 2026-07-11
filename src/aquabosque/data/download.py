@@ -13,6 +13,7 @@ estado "truncado_por_tamano" u "omitido_por_tamano" en vez de completarse.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -467,3 +468,243 @@ def write_batch_manifest(manifest_path: Path, result: BatchDownloadResult) -> No
         "observaciones": result.observaciones,
     }
     write_json(manifest_path, manifest)
+
+
+def write_wfs_batch_manifest(
+    manifest_path: Path,
+    result: BatchDownloadResult,
+    *,
+    tipo_servicio: str,
+    capa: str,
+    formato: str,
+) -> None:
+    """Escribe el manifest.json de una descarga por lotes de una capa WFS,
+    con la nomenclatura de "features" (no "filas") pedida para geoservicios."""
+    manifest = {
+        "fuente": result.fuente,
+        "url": result.url,
+        "fecha_descarga": utc_now_iso(),
+        "tipo_servicio": tipo_servicio,
+        "capa": capa,
+        "formato": formato,
+        "total_features_origen": result.total_filas_origen,
+        "total_features_descargadas": result.total_filas_descargadas,
+        "numero_partes": result.numero_partes,
+        "tamano_total_bytes": result.tamano_total_bytes,
+        "tamano_por_parte": [
+            {
+                "parte": p.part_num,
+                "archivo": p.path.name,
+                "features": p.filas,
+                "tamano_bytes": p.tamano_bytes,
+            }
+            for p in result.parts
+        ],
+        "rangos_startindex_usados": [
+            {
+                "parte": p.part_num,
+                "start_index_inicio": p.offset_inicio,
+                "start_index_fin": p.offset_fin,
+            }
+            for p in result.parts
+        ],
+        "estado_final": result.estado,
+        "observaciones": result.observaciones,
+    }
+    write_json(manifest_path, manifest)
+
+
+# ---------------------------------------------------------------------------
+# WFS (OGC), p. ej. catastro minero geoespacial de la ANM
+# ---------------------------------------------------------------------------
+
+
+def get_wfs_capabilities_abstract(base_url: str, *, timeout: int = DEFAULT_TIMEOUT) -> str | None:
+    """Consulta GetCapabilities y devuelve el texto de ows:Abstract (suele
+    incluir la fecha de última actualización del geoservicio)."""
+    headers = {"User-Agent": USER_AGENT}
+    try:
+        response = requests.get(
+            base_url,
+            headers=headers,
+            params={"service": "WFS", "version": "2.0.0", "request": "GetCapabilities"},
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        match = re.search(r"<ows:Abstract>(.*?)</ows:Abstract>", response.text, re.DOTALL)
+        return match.group(1).strip() if match else None
+    except requests.RequestException:
+        return None
+
+
+def get_wfs_feature_count(base_url: str, typename: str, *, timeout: int = DEFAULT_TIMEOUT) -> int | None:
+    """Cuenta aproximada de features vía `GetFeature&resultType=hits`.
+
+    Este geoservicio (ArcGIS Server WFS) no rellena `numberMatched`, pero sí
+    expone el conteo en el atributo `numberReturned` cuando se pide
+    `resultType=hits` (sin devolver features reales) — se usa ese valor.
+    """
+    headers = {"User-Agent": USER_AGENT}
+    try:
+        response = requests.get(
+            base_url,
+            headers=headers,
+            params={
+                "service": "WFS",
+                "version": "2.0.0",
+                "request": "GetFeature",
+                "typenames": typename,
+                "resultType": "hits",
+            },
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        match = re.search(r'numberReturned="(\d+)"', response.text)
+        return int(match.group(1)) if match else None
+    except requests.RequestException:
+        return None
+
+
+def _geojson_feature_collection_bytes_len(features: list[dict]) -> int:
+    fc = {"type": "FeatureCollection", "features": features}
+    return len(json.dumps(fc, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+
+
+def download_wfs_geojson_batched(
+    fuente: str,
+    base_url: str,
+    typename: str,
+    dest_dir: Path,
+    *,
+    filename_prefix: str,
+    page_size: int = 1000,
+    max_bytes_per_part: int = MAX_BYTES_DEFAULT,
+    timeout: int = DEFAULT_TIMEOUT,
+) -> BatchDownloadResult:
+    """Descarga completa y paginada (`startIndex`/`count`) de una capa WFS en
+    GeoJSON, partida en varios archivos para que ninguno supere
+    `max_bytes_per_part`. Cada parte es un GeoJSON `FeatureCollection` válido
+    por sí mismo (no un fragmento a medias).
+    """
+    ensure_dir(dest_dir)
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+
+    total_origin = get_wfs_feature_count(base_url, typename, timeout=timeout)
+
+    parts: list[BatchPart] = []
+    part_features: list[dict] = []
+    part_start_offset = 0
+    part_num = 0
+    offset = 0
+    total_features = 0
+    error_msg: str | None = None
+
+    def flush_part(features: list[dict], start_offset: int, end_offset: int) -> None:
+        nonlocal part_num
+        part_num += 1
+        part_path = dest_dir / f"{filename_prefix}_part_{part_num:04d}.geojson"
+        fc = {"type": "FeatureCollection", "features": features}
+        size = write_json(part_path, fc, compact=True)
+        # Verificación dura final, igual que en la descarga Socrata: el
+        # tamaño real escrito nunca puede superar max_bytes_per_part.
+        local_features = features
+        while size > max_bytes_per_part and local_features:
+            local_features = local_features[: -max(1, int(len(local_features) * 0.05))]
+            fc = {"type": "FeatureCollection", "features": local_features}
+            size = write_json(part_path, fc, compact=True)
+        parts.append(
+            BatchPart(
+                part_num=part_num,
+                path=part_path,
+                offset_inicio=start_offset,
+                offset_fin=start_offset + len(local_features),
+                filas=len(local_features),
+                tamano_bytes=size,
+            )
+        )
+
+    while True:
+        params = {
+            "service": "WFS",
+            "version": "2.0.0",
+            "request": "GetFeature",
+            "typenames": typename,
+            "outputFormat": "GEOJSON",
+            "count": page_size,
+            "startIndex": offset,
+        }
+        try:
+            response = requests.get(base_url, headers=headers, params=params, timeout=timeout)
+            response.raise_for_status()
+            page_features = response.json().get("features", [])
+        except (requests.RequestException, ValueError) as exc:
+            error_msg = f"Fallo en petición paginada (startIndex={offset}): {exc}"
+            break
+
+        if not page_features:
+            break
+
+        candidate_features = part_features + page_features
+        candidate_size = _geojson_feature_collection_bytes_len(candidate_features)
+
+        if candidate_size > max_bytes_per_part and part_features:
+            flush_part(part_features, part_start_offset, offset)
+            part_features = list(page_features)
+            part_start_offset = offset
+        elif candidate_size > max_bytes_per_part and not part_features:
+            trimmed = list(page_features)
+            while trimmed and _geojson_feature_collection_bytes_len(trimmed) > max_bytes_per_part:
+                trimmed = trimmed[:-1]
+            if trimmed:
+                flush_part(trimmed, offset, offset + len(trimmed))
+            part_features = []
+            part_start_offset = offset + len(trimmed)
+        else:
+            part_features = candidate_features
+
+        total_features += len(page_features)
+        offset += len(page_features)
+
+        if len(page_features) < page_size:
+            break
+
+    if part_features:
+        flush_part(part_features, part_start_offset, offset)
+
+    total_size = sum(p.tamano_bytes for p in parts)
+    total_features_written = sum(p.filas for p in parts)
+
+    if error_msg and not parts:
+        estado = "error"
+        observaciones = error_msg
+    elif error_msg:
+        estado = "incompleto_por_error"
+        observaciones = (
+            f"Se descargaron {total_features_written} features en {len(parts)} partes antes de un "
+            f"error de red; hay que reintentar para completar. {error_msg}"
+        )
+    elif total_origin is not None and total_features_written < total_origin:
+        estado = "incompleto"
+        observaciones = (
+            f"Se esperaban {total_origin} features según GetFeature resultType=hits, pero solo se "
+            f"descargaron {total_features_written}."
+        )
+    else:
+        estado = "completo"
+        observaciones = (
+            f"Descarga por lotes completa: {total_features_written} features en {len(parts)} "
+            f"partes, ninguna mayor a {max_bytes_per_part} bytes."
+        )
+
+    return BatchDownloadResult(
+        fuente=fuente,
+        url=base_url,
+        dest_dir=dest_dir,
+        total_filas_origen=total_origin,
+        total_filas_descargadas=total_features_written,
+        numero_partes=len(parts),
+        tamano_total_bytes=total_size,
+        parts=parts,
+        estado=estado,
+        observaciones=observaciones,
+    )

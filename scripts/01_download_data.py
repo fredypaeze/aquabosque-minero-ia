@@ -1,15 +1,15 @@
-"""Fase 2A / 2A.1: descarga controlada de las fuentes MVP aprobadas y livianas.
+"""Fase 2A / 2A.1 / 2B: descarga controlada de las fuentes MVP aprobadas.
 
 Descarga únicamente:
   1. DIVIPOLA - Códigos de municipios (DANE), XLSX directo.
   2. ANM Títulos Mineros - Anotaciones RMN (API Socrata, paginada, archivo único).
   3. IDEAM - Data Histórica de Calidad de Agua (API Socrata, paginada, POR LOTES:
-     el dataset completo no cabe en un solo archivo de <20 MB, así que se parte
-     en varios archivos, cada uno bajo el límite, más un manifest.json).
+     el dataset completo no cabe en un solo archivo de <20 MB).
+  4. Catastro Minero ANM - capa Titulo_Vigente (WFS/GeoJSON, paginada, POR LOTES).
 
-No descarga RUNAP, SMByC, el catastro minero WFS completo, el MGN completo,
-Global Forest Watch, MapBiomas, Sentinel ni Landsat: esas fuentes quedan para
-fases posteriores, según lo acordado en la Fase 1.5.
+No descarga RUNAP, SMByC, el MGN completo, Global Forest Watch, MapBiomas,
+Sentinel ni Landsat: esas fuentes quedan para fases posteriores, según lo
+acordado en la Fase 1.5.
 
 No procesa ni limpia los datos: solo guarda el archivo crudo y su metadata en
 data/raw/. Ningún archivo individual supera 20 MB (ver
@@ -18,7 +18,7 @@ la descarga se detiene y queda marcada como incompleta en la metadata en vez
 de continuar sin autorización.
 
 Reejecutable: cada corrida vuelve a descargar y sobrescribe los archivos de
-salida, sus metadata y (para la fuente por lotes) todas las partes y el
+salida, sus metadata y (para las fuentes por lotes) todas las partes y el
 manifest, sin fallar si ya existían de una corrida anterior.
 """
 
@@ -39,7 +39,10 @@ from aquabosque.data.download import (  # noqa: E402
     download_direct_file,
     download_socrata_batched,
     download_socrata_json,
+    download_wfs_geojson_batched,
+    get_wfs_capabilities_abstract,
     write_batch_manifest,
+    write_wfs_batch_manifest,
 )
 from aquabosque.utils.io import file_size_bytes, format_bytes, write_metadata  # noqa: E402
 
@@ -64,13 +67,25 @@ SOURCES = [
     },
 ]
 
-BATCH_SOURCE = {
-    "id": "ideam_calidad_agua_historica",
-    "fuente": "IDEAM - Data Histórica de Calidad de Agua",
-    "url": "https://www.datos.gov.co/resource/62gv-3857.json",
-    "dest_dir": DATA_RAW / "agua" / "ideam_calidad_agua_historica",
-    "filename_prefix": "ideam_calidad_agua_historica",
-}
+BATCH_SOURCES = [
+    {
+        "id": "ideam_calidad_agua_historica",
+        "kind": "socrata_batch",
+        "fuente": "IDEAM - Data Histórica de Calidad de Agua",
+        "url": "https://www.datos.gov.co/resource/62gv-3857.json",
+        "dest_dir": DATA_RAW / "agua" / "ideam_calidad_agua_historica",
+        "filename_prefix": "ideam_calidad_agua_historica",
+    },
+    {
+        "id": "anm_catastro_minero_titulo_vigente",
+        "kind": "wfs_batch",
+        "fuente": "Catastro Minero ANM - Títulos Vigentes (WFS)",
+        "url": "https://geo.anm.gov.co/webgis/services/ANM/ServiciosANM/MapServer/WFSServer",
+        "typename": "ANM_ServiciosANM:Titulo_Vigente",
+        "dest_dir": DATA_RAW / "mineria" / "catastro_minero_anm",
+        "filename_prefix": "catastro_minero_anm_titulo_vigente",
+    },
+]
 
 
 def metadata_path_for(dest: Path) -> Path:
@@ -123,13 +138,29 @@ def validate_result(result: DownloadResult) -> str | None:
 
 
 def run_batch_source(source: dict) -> BatchDownloadResult:
-    result = download_socrata_batched(
-        fuente=source["fuente"],
-        resource_url=source["url"],
-        dest_dir=source["dest_dir"],
-        filename_prefix=source["filename_prefix"],
-        max_bytes_per_part=MAX_BYTES,
-    )
+    if source["kind"] == "socrata_batch":
+        result = download_socrata_batched(
+            fuente=source["fuente"],
+            resource_url=source["url"],
+            dest_dir=source["dest_dir"],
+            filename_prefix=source["filename_prefix"],
+            max_bytes_per_part=MAX_BYTES,
+        )
+        formato_parte = "json (API Socrata, parte de lote)"
+        rango_label = "Offsets Socrata"
+    elif source["kind"] == "wfs_batch":
+        result = download_wfs_geojson_batched(
+            fuente=source["fuente"],
+            base_url=source["url"],
+            typename=source["typename"],
+            dest_dir=source["dest_dir"],
+            filename_prefix=source["filename_prefix"],
+            max_bytes_per_part=MAX_BYTES,
+        )
+        formato_parte = "GeoJSON (WFS 2.0.0, GetFeature outputFormat=GEOJSON, parte de lote)"
+        rango_label = "startIndex WFS"
+    else:
+        raise ValueError(f"Tipo de descarga por lotes desconocido: {source['kind']}")
 
     # Metadata individual por cada parte, igual que las demás fuentes.
     for part in result.parts:
@@ -137,23 +168,35 @@ def run_batch_source(source: dict) -> BatchDownloadResult:
             metadata_path_for(part.path),
             fuente=f"{result.fuente} (parte {part.part_num})",
             url=result.url,
-            formato="json (API Socrata, parte de lote)",
+            formato=formato_parte,
             estado="completo",
             tamano_bytes=part.tamano_bytes,
             filas_descargadas=part.filas,
             observaciones=(
                 f"Parte {part.part_num} de {result.numero_partes}. "
-                f"Offsets Socrata [{part.offset_inicio}, {part.offset_fin})."
+                f"{rango_label} [{part.offset_inicio}, {part.offset_fin})."
             ),
         )
 
     manifest_path = source["dest_dir"] / "manifest.json"
-    write_batch_manifest(manifest_path, result)
+    if source["kind"] == "wfs_batch":
+        abstract = get_wfs_capabilities_abstract(source["url"])
+        if abstract:
+            result.observaciones = f"{result.observaciones} GetCapabilities Abstract del servicio: {abstract}"
+        write_wfs_batch_manifest(
+            manifest_path,
+            result,
+            tipo_servicio="WFS 2.0.0 (ArcGIS Server)",
+            capa=source["typename"],
+            formato="GeoJSON",
+        )
+    else:
+        write_batch_manifest(manifest_path, result)
     return result
 
 
-def validate_batch_result(result: BatchDownloadResult) -> list[str]:
-    """Valida la descarga por lotes según los criterios de la Fase 2A.1.
+def validate_batch_result(source: dict, result: BatchDownloadResult) -> list[str]:
+    """Valida una descarga por lotes (Socrata o WFS).
 
     Devuelve una lista de problemas encontrados (vacía si todo está bien).
     """
@@ -176,17 +219,25 @@ def validate_batch_result(result: BatchDownloadResult) -> list[str]:
         if not part.path.exists() or file_size_bytes(part.path) == 0:
             problems.append(f"parte {part.part_num} no existe o está vacía")
 
-    # Todos los JSON deben ser parseables (se relee cada archivo desde disco).
+    # Todos los JSON/GeoJSON deben ser parseables (se relee cada archivo desde disco).
+    is_wfs = source["kind"] == "wfs_batch"
     for part in result.parts:
         try:
             with open(part.path, encoding="utf-8") as fh:
                 data = json.load(fh)
-            if len(data) != part.filas:
+            n_registros = len(data["features"]) if is_wfs else len(data)
+            if n_registros != part.filas:
                 problems.append(
-                    f"parte {part.part_num}: filas en disco ({len(data)}) no coincide "
+                    f"parte {part.part_num}: registros en disco ({n_registros}) no coincide "
                     f"con lo reportado ({part.filas})"
                 )
-        except (OSError, json.JSONDecodeError) as exc:
+            if is_wfs and n_registros > 0:
+                primera = data["features"][0]
+                if "CODIGO_EXPEDIENTE" not in primera.get("properties", {}):
+                    problems.append(f"parte {part.part_num}: no se encontró CODIGO_EXPEDIENTE en properties")
+                if not primera.get("geometry"):
+                    problems.append(f"parte {part.part_num}: no se encontró geometría (campo SHAPE del WFS)")
+        except (OSError, json.JSONDecodeError, KeyError) as exc:
             problems.append(f"parte {part.part_num} no es JSON válido: {exc}")
 
     # No debe haber offsets duplicados ni huecos entre partes consecutivas.
@@ -205,25 +256,24 @@ def validate_batch_result(result: BatchDownloadResult) -> list[str]:
             )
         expected_next = part.offset_fin
 
-    # La suma de filas descargadas debe coincidir con el total de filas de origen.
+    # La suma de filas/features descargadas debe coincidir con el total de origen.
     if result.total_filas_origen is not None:
         if result.total_filas_descargadas != result.total_filas_origen:
             problems.append(
-                f"total de filas descargadas ({result.total_filas_descargadas}) no "
-                f"coincide con el total de origen reportado por Socrata "
-                f"({result.total_filas_origen})"
+                f"total descargado ({result.total_filas_descargadas}) no coincide con el "
+                f"total de origen reportado por el servicio ({result.total_filas_origen})"
             )
     else:
         problems.append(
-            "no se pudo confirmar el total de filas de origen vía Socrata "
-            "(count(*) falló); no se puede verificar completitud con certeza"
+            "no se pudo confirmar el total de origen vía el servicio; no se puede verificar "
+            "completitud con certeza"
         )
 
     return problems
 
 
 def main() -> int:
-    print("=== AquaBosque Minero IA — Fase 2A / 2A.1: descarga controlada ===\n")
+    print("=== AquaBosque Minero IA — Fase 2A / 2A.1 / 2B: descarga controlada ===\n")
 
     results: list[tuple[dict, DownloadResult, str | None]] = []
     for source in SOURCES:
@@ -237,18 +287,25 @@ def main() -> int:
             print(f"   filas descargadas: {result.filas_descargadas}")
         print()
 
-    print(f"-> Descargando por lotes: {BATCH_SOURCE['fuente']} ...")
-    batch_result = run_batch_source(BATCH_SOURCE)
-    batch_problems = validate_batch_result(batch_result)
-    print(
-        f"   estado: {batch_result.estado} | partes: {batch_result.numero_partes} "
-        f"| tamaño total: {format_bytes(batch_result.tamano_total_bytes)}"
-    )
-    print(
-        f"   filas descargadas: {batch_result.total_filas_descargadas} "
-        f"(origen reportado: {batch_result.total_filas_origen})"
-    )
-    print()
+    batch_results: list[tuple[dict, BatchDownloadResult, list[str]]] = []
+    for source in BATCH_SOURCES:
+        print(f"-> Descargando por lotes: {source['fuente']} ...")
+        if source["kind"] == "wfs_batch":
+            abstract = get_wfs_capabilities_abstract(source["url"])
+            if abstract:
+                print(f"   GetCapabilities Abstract: {abstract}")
+        batch_result = run_batch_source(source)
+        batch_problems = validate_batch_result(source, batch_result)
+        batch_results.append((source, batch_result, batch_problems))
+        print(
+            f"   estado: {batch_result.estado} | partes: {batch_result.numero_partes} "
+            f"| tamaño total: {format_bytes(batch_result.tamano_total_bytes)}"
+        )
+        print(
+            f"   registros descargados: {batch_result.total_filas_descargadas} "
+            f"(origen reportado: {batch_result.total_filas_origen})"
+        )
+        print()
 
     print("=== Resumen de la descarga ===")
     ok = 0
@@ -268,28 +325,29 @@ def main() -> int:
         if problem:
             print(f"        observación: {problem} — {result.observaciones}")
 
-    marca_batch = "OK" if not batch_problems else "REVISAR"
-    if batch_problems:
-        con_problemas += 1
-    else:
-        ok += 1
-    print(
-        f"[{marca_batch}] {BATCH_SOURCE['fuente']} (por lotes)\n"
-        f"        ruta: {batch_result.dest_dir.relative_to(PROJECT_ROOT)}/\n"
-        f"        estado: {batch_result.estado} | partes: {batch_result.numero_partes} "
-        f"| tamaño total: {format_bytes(batch_result.tamano_total_bytes)} "
-        f"| filas: {batch_result.total_filas_descargadas}"
-    )
-    for part in batch_result.parts:
+    for source, batch_result, batch_problems in batch_results:
+        marca_batch = "OK" if not batch_problems else "REVISAR"
+        if batch_problems:
+            con_problemas += 1
+        else:
+            ok += 1
         print(
-            f"          - {part.path.name}: {part.filas} filas, "
-            f"{format_bytes(part.tamano_bytes)}, offsets [{part.offset_inicio}, {part.offset_fin})"
+            f"[{marca_batch}] {source['fuente']} (por lotes)\n"
+            f"        ruta: {batch_result.dest_dir.relative_to(PROJECT_ROOT)}/\n"
+            f"        estado: {batch_result.estado} | partes: {batch_result.numero_partes} "
+            f"| tamaño total: {format_bytes(batch_result.tamano_total_bytes)} "
+            f"| registros: {batch_result.total_filas_descargadas}"
         )
-    if batch_problems:
-        for p in batch_problems:
-            print(f"        observación: {p}")
+        for part in batch_result.parts:
+            print(
+                f"          - {part.path.name}: {part.filas} registros, "
+                f"{format_bytes(part.tamano_bytes)}, rango [{part.offset_inicio}, {part.offset_fin})"
+            )
+        if batch_problems:
+            for p in batch_problems:
+                print(f"        observación: {p}")
 
-    total_sources = len(SOURCES) + 1
+    total_sources = len(SOURCES) + len(BATCH_SOURCES)
     print(f"\nFuentes OK: {ok}/{total_sources} | Con problemas: {con_problemas}/{total_sources}")
 
     if con_problemas:
@@ -299,7 +357,7 @@ def main() -> int:
         )
         return 1
 
-    print("\nTodas las fuentes MVP aprobadas se descargaron correctamente y completas.")
+    print("\nTodas las fuentes aprobadas se descargaron correctamente y completas.")
     return 0
 
 
