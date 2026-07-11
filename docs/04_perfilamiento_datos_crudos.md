@@ -1,8 +1,9 @@
-# 04 — Perfilamiento de datos crudos (Fase 3A)
+# 04 — Perfilamiento de datos crudos (Fase 3A / 3C)
 
-Perfilamiento de las 3 fuentes MVP descargadas en la Fase 2A/2A.1, antes de cualquier
+Perfilamiento de las fuentes descargadas en la Fase 2A/2A.1/2B, antes de cualquier
 limpieza o transformación. Generado por `scripts/02_profile_raw_data.py`, que llama a
-`src/aquabosque/data/profile.py`.
+`src/aquabosque/data/profile.py`. La Fase 3C amplió este perfilamiento con el Catastro
+Minero geoespacial de la ANM (capa `Titulo_Vigente`, descargada en la Fase 2B).
 
 **Solo lectura:** no se limpió ni transformó ningún dato, no se guardó nada en
 `data/processed/`, no se construyó dataset maestro, no se entrenó modelo ni se creó
@@ -15,13 +16,13 @@ dashboard, y no se descargó ninguna fuente nueva.
 python scripts\02_profile_raw_data.py
 ```
 
-Los reportes se escriben en `outputs/reports/raw_data_profile/` (4 archivos:
+Los reportes se escriben en `outputs/reports/raw_data_profile/` (5 archivos:
 `divipola_profile.md`, `mineria_anm_profile.md`, `calidad_agua_profile.md`,
-`raw_data_profile_summary.md`). Esa carpeta está en `.gitignore` (mismo patrón que el
-resto de `outputs/reports/` desde la Fase 0): son artefactos regenerables, no se
-versionan. Este documento (`docs/04_...md`) sí queda en git como registro narrativo de
-los hallazgos, para no depender de tener que regenerar los reportes para entender qué se
-encontró.
+`catastro_minero_anm_profile.md`, `raw_data_profile_summary.md`). Esa carpeta está en
+`.gitignore` (mismo patrón que el resto de `outputs/reports/` desde la Fase 0): son
+artefactos regenerables, no se versionan. Este documento (`docs/04_...md`) sí queda en
+git como registro narrativo de los hallazgos, para no depender de tener que regenerar
+los reportes para entender qué se encontró.
 
 ## Fuentes perfiladas
 
@@ -31,6 +32,10 @@ encontró.
    `data/raw/agua/ideam_calidad_agua_historica/*.json` (IDEAM calidad de agua, 4 partes,
    concatenadas **solo en memoria** para perfilar — no se generó ningún archivo
    concatenado en disco)
+4. `data/raw/mineria/catastro_minero_anm/catastro_minero_anm_titulo_vigente_part_0001.geojson`
+   + `manifest.json` (Catastro Minero ANM - Títulos Vigentes, WFS, Fase 3C). Las
+   propiedades se perfilan como tabla; la geometría se perfila aparte (nulas, tipos,
+   validez) y **nunca se imprime completa** en el reporte.
 
 ## Hallazgos principales por fuente
 
@@ -81,17 +86,42 @@ encontró.
   nombres.
 - 45 filas completamente duplicadas.
 
+### Catastro Minero ANM - Títulos Vigentes (WFS)
+
+- 6.294 features, 19 columnas de propiedades, **0 filas completamente duplicadas**.
+- `CODIGO_EXPEDIENTE` es **único** por feature (0 duplicados) — a diferencia de ANM
+  Anotaciones RMN, aquí sí sirve como llave primaria de fila.
+- Geometría: 100% `MultiPolygon`, 0 nulas, pero **22 topológicamente inválidas**
+  (verificado con `shapely.geometry.shape(...).is_valid`).
+- `AREA_HA` ya viene numérica (float64); rango de 0,0138 a 206.040,39 ha.
+- `FECHA_DE_INSCRIPCION`/`FECHA_TERMINACION` vienen en dos formatos mezclados dentro de
+  la misma columna: `'DD/MM/AAAA HH:MM:SS a.m./p.m.'` y `'DD/MM/AAAA'` (solo fecha).
+- **Hallazgo de calidad:** `ETAPA` tiene el valor de texto literal `'null'` en 138
+  features (no un nulo real de JSON). `FECHA_TERMINACION` tiene el mismo problema en 91
+  features.
+- **Hallazgo de calidad:** 3 features tienen `FECHA_TERMINACION` en el año 9999 (p. ej.
+  `9999-12-31`), casi con certeza un valor centinela de "sin vencimiento", no una fecha
+  real.
+- `MINERALES` trae varios minerales separados por coma en una sola cadena (121 minerales
+  individuales distintos tras separar); `DEPARTAMENTOS`/`MUNICIPIOS` igual: 246 features
+  cruzan más de un departamento y 1.676 más de un municipio.
+- El geoservicio de origen sigue declarando "actualizado el 22/03/2023" en su
+  `GetCapabilities Abstract` (mismo hallazgo de la Fase 1.5/2B).
+
 ## Problema transversal de integración territorial
 
-Ninguna de las 3 fuentes comparte hoy una llave territorial lista para join directo:
+Ninguna de las 4 fuentes comparte hoy una llave territorial lista para join directo:
 
 - DIVIPOLA tiene el código DANE, pero mal tipado (numérico, sin cero inicial).
 - ANM Anotaciones RMN no trae territorio en absoluto en este dataset puntual.
 - Calidad de agua trae territorio como texto libre, sin código DANE.
+- Catastro Minero ANM trae geometría (cruzable espacialmente) y territorio como texto
+  libre, a veces con varias unidades territoriales en una sola cadena.
 
-La integración futura (Fase 3B en adelante) va a necesitar normalización de nombres de
-departamento/municipio (mayúsculas, tildes, variantes como "BOGOTÁ, D.C." vs "BOGOTÁ
-D.C.") y no un simple `merge` por código.
+La integración futura va a necesitar normalización de nombres de departamento/municipio
+(mayúsculas, tildes, variantes como "BOGOTÁ, D.C." vs "BOGOTÁ D.C.") y no un simple
+`merge` por código; para el catastro minero, además, un paso de "explode" de los campos
+con varias unidades territoriales.
 
 ## Llaves de integración candidatas
 
@@ -100,18 +130,23 @@ D.C.") y no un simple `merge` por código.
 | DIVIPOLA | `mpio_codigo` (código DANE de municipio, 5 dígitos, una vez corregido el tipo) |
 | ANM Anotaciones RMN | `codigo_expediente` (llave de agrupación 1-a-muchos, no llave única de fila) |
 | Calidad de agua IDEAM | coordenadas (`latitud`/`longitud`) + `szh_c_digo_rea_zona_subzona` (subzona hidrográfica) para cruzar con cuencas; `departamento`/`municipio` de texto para cruzar con DIVIPOLA tras normalización |
+| Catastro Minero ANM | `CODIGO_EXPEDIENTE` (único por feature) + geometría para cruce espacial directo con otras capas geoespaciales |
 
-## Recomendación para Fase 3B
+## Recomendación
 
 1. Documentar explícitamente, antes de escribir código de limpieza, los tipos objetivo
    por columna (códigos como texto con ceros a la izquierda, fechas en ISO 8601) y cómo
    descartar las filas basura del XLSX de DIVIPOLA.
 2. Diseñar la normalización de nombres de departamento/municipio antes de intentar
-   cualquier cruce entre calidad de agua/ANM y DIVIPOLA.
-3. Decidir cómo tratar la relación 1-a-muchos de `codigo_expediente` en ANM (¿agregar a
-   nivel de expediente antes de integrar, o mantener el detalle de anotaciones?).
+   cualquier cruce entre calidad de agua/ANM/catastro minero y DIVIPOLA.
+3. Decidir cómo tratar la relación 1-a-muchos de `codigo_expediente` en ANM Anotaciones
+   RMN (¿agregar a nivel de expediente antes de integrar, o mantener el detalle de
+   anotaciones?).
 4. Revisar y, si aplica, estandarizar los ~80 valores de `propiedad_observada` en calidad
    de agua.
-5. Solo después de esas decisiones, avanzar a limpieza real guardando en
-   `data/processed/` — seguir sin tocar RUNAP, SMByC, el catastro minero WFS completo ni
-   el MGN completo.
+5. Para el catastro minero: decidir si corregir (p. ej. `buffer(0)`) o descartar las 22
+   geometrías inválidas antes de análisis espacial, y cómo tratar el valor centinela
+   `FECHA_TERMINACION = 9999-12-31`.
+6. Solo después de esas decisiones, avanzar a cruces reales entre fuentes y a la
+   construcción de un dataset maestro — seguir sin tocar RUNAP, SMByC, el MGN completo,
+   Global Forest Watch, MapBiomas, Sentinel ni Landsat.

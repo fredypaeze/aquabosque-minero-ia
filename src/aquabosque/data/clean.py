@@ -13,6 +13,7 @@ import re
 import unicodedata
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 _MULTI_SPACE_RE = re.compile(r"\s+")
@@ -348,6 +349,220 @@ def clean_calidad_agua(df_raw: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
             "como texto y quedan nulos en 'resultado_numerico', no se inventa un valor.",
             "departamento/municipio se conservan como texto original + versión *_norm; no hay código "
             "DANE en esta fuente, el cruce futuro con DIVIPOLA requerirá emparejar por nombre normalizado.",
+        ],
+    }
+    return df, report
+
+
+# ---------------------------------------------------------------------------
+# Catastro Minero ANM - Títulos Vigentes (WFS, geoespacial)
+# ---------------------------------------------------------------------------
+
+
+def parse_catastro_fecha(series: pd.Series) -> pd.Series:
+    """Parsea las fechas del catastro minero ANM, que vienen en dos formatos
+    mezclados dentro de la misma columna:
+
+    - "DD/MM/AAAA HH:MM:SS a.m./p.m." (con hora, en español)
+    - "DD/MM/AAAA" (solo fecha)
+
+    Lo que no parsea en ninguno de los dos formatos queda como NaT (nulo),
+    sin inventar una fecha.
+    """
+    texto = series.astype(str)
+    con_hora_normalizada = (
+        texto.str.replace("p.m.", "PM", regex=False).str.replace("a.m.", "AM", regex=False)
+    )
+    dt_con_hora = pd.to_datetime(con_hora_normalizada, format="%d/%m/%Y %I:%M:%S %p", errors="coerce")
+    dt_solo_fecha = pd.to_datetime(texto, format="%d/%m/%Y", errors="coerce")
+    return dt_con_hora.fillna(dt_solo_fecha)
+
+
+def json_safe_default(value: Any) -> Any:
+    """Handler `default` para json.dumps: convierte tipos numpy/pandas que no
+    son JSON-nativos. pandas.NA/NaT ya se reemplazan antes por None."""
+    if isinstance(value, np.integer):
+        return int(value)
+    if isinstance(value, np.floating):
+        return float(value)
+    if isinstance(value, np.bool_):
+        return bool(value)
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    raise TypeError(f"Objeto de tipo {type(value)} no es serializable a JSON")
+
+
+def dataframe_to_geojson(df: pd.DataFrame, geometry_col: str = "_geometry") -> dict:
+    """Convierte un DataFrame con una columna de geometrías GeoJSON (dict o
+    None) en un FeatureCollection GeoJSON válido; el resto de columnas se
+    serializan como `properties` de cada Feature."""
+    props_df = df.drop(columns=[geometry_col])
+    # Reemplaza NaN/NaT/pd.NA por None ANTES de convertir a dict, para que el
+    # GeoJSON resultante tenga `null` explícito en vez de "NaN" (inválido en
+    # JSON estricto) o errores de serialización con tipos nulos de pandas.
+    props_df = props_df.astype(object).where(props_df.notna(), None)
+    records = props_df.to_dict(orient="records")
+    geometries = df[geometry_col].tolist()
+
+    features = [
+        {"type": "Feature", "geometry": geom, "properties": props}
+        for props, geom in zip(records, geometries)
+    ]
+    return {"type": "FeatureCollection", "features": features}
+
+
+def clean_catastro_minero_anm(
+    df_raw: pd.DataFrame, geometries: list[dict | None]
+) -> tuple[pd.DataFrame, dict]:
+    """Limpia las propiedades del catastro minero geoespacial de la ANM.
+
+    `geometries` es una lista paralela (mismo orden/índice que `df_raw`) de
+    geometrías GeoJSON (dict) o None; se conserva intacta en una columna
+    auxiliar `_geometry` para poder reconstruir el GeoJSON de salida, y NUNCA
+    se imprime completa en reportes.
+    """
+    n_entrada = len(df_raw)
+    df = normalize_column_names(df_raw)
+    df["_geometry"] = list(geometries)
+
+    # codigo_expediente a texto limpio.
+    df["codigo_expediente"] = df["codigo_expediente"].astype(str).str.strip().str.upper()
+
+    # area_ha a numérico (ya venía float en el GeoJSON origen; coerción defensiva).
+    df["area_ha"] = pd.to_numeric(df["area_ha"], errors="coerce")
+
+    # ETAPA trae el valor de texto literal "null" (no un nulo real) para
+    # títulos sin etapa definida: se convierte a nulo real antes de normalizar.
+    df["etapa"] = df["etapa"].replace("null", pd.NA)
+
+    # Fechas a ISO + año auxiliar.
+    fecha_inscripcion_dt = parse_catastro_fecha(df["fecha_de_inscripcion"])
+    fecha_terminacion_dt = parse_catastro_fecha(df["fecha_terminacion"])
+    df["fecha_de_inscripcion"] = fecha_inscripcion_dt.dt.strftime("%Y-%m-%d")
+    df["fecha_terminacion"] = fecha_terminacion_dt.dt.strftime("%Y-%m-%d")
+    df["anio_inscripcion"] = fecha_inscripcion_dt.dt.year.astype("Int64")
+    df["anio_terminacion"] = fecha_terminacion_dt.dt.year.astype("Int64")
+
+    # Campos normalizados con trazabilidad al original. DEPARTAMENTOS y
+    # MUNICIPIOS pueden traer varios valores separados por coma (un título
+    # puede cruzar más de un municipio/departamento): se normaliza la cadena
+    # completa, no se separa en esta fase (ver observaciones).
+    df["modalidad_norm"] = df["modalidad"].map(normalize_text)
+    df["etapa_norm"] = df["etapa"].map(normalize_text)
+    df["estado_norm"] = df["estado"].map(normalize_text)
+    df["minerales_norm"] = df["minerales"].map(normalize_text)
+    df["departamentos_norm"] = df["departamentos"].map(normalize_text)
+    df["municipios_norm"] = df["municipios"].map(normalize_text)
+
+    columnas_finales = [
+        "codigo_expediente",
+        "estado",
+        "estado_norm",
+        "modalidad",
+        "modalidad_norm",
+        "etapa",
+        "etapa_norm",
+        "area_ha",
+        "minerales",
+        "minerales_norm",
+        "nombre_de_titular",
+        "numero_identificacion",
+        "tipo_de_identificacion",
+        "identificacion_titulares",
+        "pto_pti",
+        "instrumento_ambiental",
+        "departamentos",
+        "departamentos_norm",
+        "municipios",
+        "municipios_norm",
+        "grupo_de_trabajo",
+        "fecha_de_inscripcion",
+        "anio_inscripcion",
+        "fecha_terminacion",
+        "anio_terminacion",
+        "objectid",
+        "_geometry",
+    ]
+    df = df[columnas_finales].reset_index(drop=True)
+
+    # Duplicados completos: se comparan solo las columnas no geométricas
+    # (un dict de geometría no es "hashable" para duplicated()).
+    columnas_sin_geom = [c for c in columnas_finales if c != "_geometry"]
+    n_duplicados = int(df[columnas_sin_geom].duplicated().sum())
+    if n_duplicados:
+        df = df.drop_duplicates(subset=columnas_sin_geom).reset_index(drop=True)
+
+    n_salida = len(df)
+
+    # --- Validaciones ---
+    n_codigo_vacio = int((df["codigo_expediente"].isna() | (df["codigo_expediente"].str.strip() == "")).sum())
+    n_codigo_duplicado = int(df["codigo_expediente"].duplicated().sum())
+
+    n_geom_nulas = int(df["_geometry"].isna().sum())
+    try:
+        from shapely.geometry import shape
+
+        n_geom_invalidas = 0
+        for g in df["_geometry"]:
+            if g is None or (isinstance(g, float) and pd.isna(g)):
+                continue
+            try:
+                if not shape(g).is_valid:
+                    n_geom_invalidas += 1
+            except Exception:  # noqa: BLE001
+                n_geom_invalidas += 1
+        validez_verificada_con = "shapely"
+    except ImportError:
+        n_geom_invalidas = None
+        validez_verificada_con = None
+
+    n_area_no_numerica = int(df["area_ha"].isna().sum())
+    n_fecha_inscripcion_invalida = int(df["fecha_de_inscripcion"].isna().sum())
+    n_fecha_terminacion_invalida = int(df["fecha_terminacion"].isna().sum())
+    n_etapa_null_literal_corregido = int((df_raw["ETAPA"] == "null").sum()) if "ETAPA" in df_raw.columns else 0
+    n_fecha_terminacion_null_literal = (
+        int((df_raw["FECHA_TERMINACION"] == "null").sum()) if "FECHA_TERMINACION" in df_raw.columns else 0
+    )
+    n_fecha_terminacion_9999 = int((fecha_terminacion_dt.dt.year == 9999).sum())
+
+    report = {
+        "filas_entrada": n_entrada,
+        "filas_salida": n_salida,
+        "registros_eliminados": {
+            "duplicados_completos_no_geometricos": n_duplicados,
+        },
+        "columnas_finales": columnas_finales,
+        "validaciones": {
+            "n_codigo_expediente_vacio": n_codigo_vacio,
+            "n_codigo_expediente_duplicado": n_codigo_duplicado,
+            "codigo_expediente_es_unico": n_codigo_duplicado == 0 and n_codigo_vacio == 0,
+            "n_geometrias_nulas": n_geom_nulas,
+            "n_geometrias_invalidas": n_geom_invalidas,
+            "validez_geometrica_verificada_con": validez_verificada_con,
+            "n_area_ha_no_numerica": n_area_no_numerica,
+            "n_fecha_inscripcion_no_parseable": n_fecha_inscripcion_invalida,
+            "n_fecha_terminacion_no_parseable": n_fecha_terminacion_invalida,
+        },
+        "observaciones": [
+            f"{n_etapa_null_literal_corregido} filas tenían el valor de texto literal 'null' en ETAPA "
+            "(no un nulo real de JSON); se reemplazó por nulo real antes de normalizar.",
+            f"{n_fecha_terminacion_null_literal} filas tenían el valor de texto literal 'null' en "
+            "FECHA_TERMINACION; pd.to_datetime(errors='coerce') ya las deja como nulo real (explica "
+            f"la mayoría de las {n_fecha_terminacion_invalida} fechas de terminación no parseables).",
+            f"{n_fecha_terminacion_9999} filas tienen FECHA_TERMINACION con año 9999 (probable valor "
+            "centinela de 'sin vencimiento'); con la versión de pandas usada en este proyecto SÍ se "
+            "parsean correctamente (no quedan nulas), por lo que anio_terminacion=9999 debe tratarse "
+            "como caso especial en cualquier cálculo de vigencia, no como una fecha real lejana.",
+            "DEPARTAMENTOS y MUNICIPIOS pueden contener varios valores separados por coma (un título "
+            "minero puede cruzar más de una unidad territorial); se normalizó la cadena completa, "
+            "no se separó en filas ni en listas — cualquier cruce futuro por municipio individual "
+            "requerirá explotar (split) estos campos primero.",
+            f"Se detectaron {n_geom_invalidas if n_geom_invalidas is not None else 'N/D'} geometrías "
+            "topológicamente inválidas (autointersecciones u otros problemas) vía shapely; NO se "
+            "corrigieron ni se descartaron en esta fase, solo se documentan como riesgo para análisis "
+            "espacial futuro (buffer(0) u otra corrección debe decidirse explícitamente más adelante).",
+            "La geometría se conserva intacta (MultiPolygon) en la salida GeoJSON; no se simplificó "
+            "ni se reproyectó.",
         ],
     }
     return df, report

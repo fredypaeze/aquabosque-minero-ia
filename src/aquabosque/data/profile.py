@@ -287,3 +287,47 @@ def value_counts_markdown(series: pd.Series, *, top_n: int | None = None, title:
     for value, n in counts.items():
         lines.append(f"| {value} | {n} |")
     return "\n".join(lines)
+
+
+def describe_geometries(geometries: list[dict | None]) -> dict[str, Any]:
+    """Perfila una lista de geometrías GeoJSON (una por feature, en paralelo
+    a un DataFrame de propiedades, sin imprimir la geometría completa):
+    nulas, distribución de tipos y validez geométrica.
+
+    La validez se calcula con shapely si está disponible; si no lo está, el
+    perfil lo deja explícito en vez de fingir que se validó.
+    """
+    n_total = len(geometries)
+    n_nulas = sum(1 for g in geometries if not g)
+
+    tipos: dict[str, int] = {}
+    for g in geometries:
+        if g:
+            tipos[g.get("type", "desconocido")] = tipos.get(g.get("type", "desconocido"), 0) + 1
+
+    resultado: dict[str, Any] = {
+        "n_total": n_total,
+        "n_geometrias_nulas": n_nulas,
+        "tipos_geometria": tipos,
+    }
+
+    try:
+        from shapely.geometry import shape
+    except ImportError:
+        resultado["n_geometrias_invalidas"] = None
+        resultado["validez_verificada_con"] = None
+        return resultado
+
+    n_invalidas = 0
+    for g in geometries:
+        if not g:
+            continue
+        try:
+            if not shape(g).is_valid:
+                n_invalidas += 1
+        except Exception:  # noqa: BLE001 - geometría corrupta también cuenta como inválida
+            n_invalidas += 1
+
+    resultado["n_geometrias_invalidas"] = n_invalidas
+    resultado["validez_verificada_con"] = "shapely"
+    return resultado

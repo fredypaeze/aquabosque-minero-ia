@@ -1,8 +1,9 @@
-# 05 — Limpieza y estandarización de datos (Fase 3B)
+# 05 — Limpieza y estandarización de datos (Fase 3B / 3C)
 
-Limpieza de las 3 fuentes MVP descargadas (Fase 2A/2A.1) y perfiladas (Fase 3A), cada una
+Limpieza de las fuentes descargadas (Fase 2A/2A.1/2B) y perfiladas (Fase 3A/3C), cada una
 por separado. Generado por `scripts/03_clean_raw_data.py`, que usa
-`src/aquabosque/data/clean.py`.
+`src/aquabosque/data/clean.py`. La Fase 3C amplió esta limpieza al Catastro Minero
+geoespacial de la ANM.
 
 **Esta fase NO cruza fuentes ni construye dataset maestro.** Cada fuente se limpia de
 forma independiente y se guarda en `data/processed/`.
@@ -20,7 +21,26 @@ Salidas (todas ignoradas por git, igual que el resto de `data/processed/` y
 - `data/processed/territorio/divipola_municipios_clean.csv` (+ `.metadata.json`)
 - `data/processed/mineria/anm_anotaciones_rmn_clean.csv` (+ `.metadata.json`)
 - `data/processed/agua/ideam_calidad_agua_clean.csv` (+ `.metadata.json`)
+- `data/processed/mineria/catastro_minero_anm_clean.geojson` (+ `.metadata.json`)
 - `outputs/reports/cleaning/cleaning_summary.md`
+- `outputs/reports/cleaning/catastro_minero_anm_cleaning.md`
+
+## Librería geoespacial: shapely en vez de geopandas
+
+Para limpiar el catastro minero (Fase 3C) hacía falta validar geometrías GeoJSON (nulas,
+tipo, validez topológica). Se evaluó `geopandas`, pero se optó por **`shapely`** (ya
+declarado en `requirements.txt`, justificado ahí mismo):
+
+- El GeoJSON de entrada y de salida ya se lee/escribe con `json` estándar de Python — no
+  se necesita la capa de I/O de geopandas (que internamente depende de `fiona`/`pyogrio`).
+- `geopandas` exige además `pyproj` y `GDAL`, mucho más pesados de instalar (especialmente
+  en Windows sin conda) que lo que esta fase necesita.
+- Lo único que se requería era construir una geometría desde su representación GeoJSON y
+  consultar `.is_valid` / `.geom_type` — exactamente lo que ofrece `shapely.geometry.shape`
+  sin las dependencias adicionales.
+
+Si una fase futura necesita operaciones espaciales más complejas (reproyección, `sjoin`,
+lectura de Shapefile/GPKG), ahí sí se justificaría agregar `geopandas` — no antes.
 
 ## Función de normalización de texto reutilizable
 
@@ -35,13 +55,14 @@ Esta función **nunca reemplaza el campo original**: cada columna de texto relev
 queda con su valor original intacto más una columna `*_norm` adicional, para mantener
 trazabilidad.
 
-## Filas antes / después por fuente
+## Filas / features antes / después por fuente
 
-| Fuente | Filas entrada | Filas salida | Diferencia | Tamaño CSV |
+| Fuente | Entrada | Salida | Diferencia | Tamaño |
 |---|---|---|---|---|
 | DIVIPOLA - Códigos de municipios (DANE) | 1.135 | 1.122 | -13 | 86,9 KB |
 | ANM Títulos Mineros - Anotaciones RMN | 37.763 | 37.555 | -208 | 14,3 MB |
 | IDEAM - Data Histórica de Calidad de Agua | 134.261 | 134.216 | -45 | 32,4 MB |
+| Catastro Minero ANM - Títulos Vigentes (WFS) | 6.294 | 6.294 | 0 | 9,1 MB |
 
 ## Columnas finales por fuente
 
@@ -55,6 +76,14 @@ trazabilidad.
   `nombre_subzona_hidrografica`, `departamento`, `departamento_norm`, `municipio`,
   `municipio_norm`, `fecha`, `anio`, `propiedad_observada`, `propiedad_observada_norm`,
   `resultado`, `resultado_numerico`, `unidad_del_resultado`, `proyecto`, `codigo_muestra`
+- **Catastro Minero ANM (properties del GeoJSON):** `codigo_expediente`, `estado`,
+  `estado_norm`, `modalidad`, `modalidad_norm`, `etapa`, `etapa_norm`, `area_ha`,
+  `minerales`, `minerales_norm`, `nombre_de_titular`, `numero_identificacion`,
+  `tipo_de_identificacion`, `identificacion_titulares`, `pto_pti`,
+  `instrumento_ambiental`, `departamentos`, `departamentos_norm`, `municipios`,
+  `municipios_norm`, `grupo_de_trabajo`, `fecha_de_inscripcion`, `anio_inscripcion`,
+  `fecha_terminacion`, `anio_terminacion`, `objectid` — más el campo `geometry`
+  (`MultiPolygon`) estándar de cada Feature, fuera de `properties`.
 
 ## Registros eliminados y motivo
 
@@ -71,7 +100,11 @@ trazabilidad.
 ### Calidad de agua IDEAM
 - **45 filas** completamente duplicadas eliminadas.
 
-## Calidad de fechas / coordenadas / resultados
+### Catastro Minero ANM
+- **0 features eliminadas** (0 duplicados completos no geométricos; `CODIGO_EXPEDIENTE`
+  ya era único en el origen).
+
+## Calidad de fechas / coordenadas / resultados / geometrías
 
 - **DIVIPOLA:** `cod_dane_mpio` tiene longitud 5 en el 100% de las 1.122 filas finales
   (0 con longitud distinta), 0 códigos DANE duplicados.
@@ -84,26 +117,52 @@ trazabilidad.
   buena parte a notación de censura de límite de detección (`"<0.4"`, `"<10"`, etc.), que
   se conserva intacta en el campo original `resultado` (texto) para no perder esa
   información.
+- **Catastro Minero ANM:**
+  - `codigo_expediente`: 0 vacíos, 0 duplicados, **es único** en las 6.294 features.
+  - Geometría: 0 nulas; **22 topológicamente inválidas** (verificado con shapely), no
+    corregidas ni descartadas en esta fase.
+  - `area_ha`: 100% numérica (0 no numéricas).
+  - `fecha_de_inscripcion`: 0 no parseables. `fecha_terminacion`: **91 no parseables**
+    (todas por el valor de texto literal `'null'` en el origen, correctamente convertido
+    a nulo real — no es un problema del parser).
+  - 3 features tienen `fecha_terminacion` en el año 9999 (valor centinela probable de
+    "sin vencimiento"); con la versión de pandas usada (3.x, resolución `datetime64[us]`)
+    estas fechas sí se representan sin overflow, así que `anio_terminacion=9999` aparece
+    tal cual en la salida y debe tratarse como caso especial, no como fecha real lejana.
+  - 138 features tenían `ETAPA = 'null'` (texto literal), corregido a nulo real antes de
+    normalizar.
 
 ## Riesgos pendientes para integración (Fase 4+)
 
-- Ninguna de las 3 fuentes comparte hoy una llave territorial 100% directa: DIVIPOLA
+- Ninguna de las 4 fuentes comparte hoy una llave territorial 100% directa: DIVIPOLA
   tiene `cod_dane_mpio` (código DANE), pero ANM Anotaciones RMN no tiene territorio en
-  absoluto, y calidad de agua solo tiene `departamento_norm`/`municipio_norm` de texto
-  (sin código DANE).
-- El cruce territorial de calidad de agua con DIVIPOLA requerirá emparejar
-  `municipio_norm` contra `nombre_mpio_norm` (texto normalizado, no código), con riesgo
-  de nombres compuestos o variantes de escritura no cubiertas por las equivalencias
-  conocidas hoy (solo se resolvió explícitamente el caso Bogotá D.C.).
-- `codigo_expediente` de ANM sigue siendo una llave 1-a-muchos (6.769 expedientes únicos
-  sobre 37.555 filas): cualquier integración futura debe decidir si se agrega a nivel de
-  expediente antes de cruzar con otras fuentes.
+  absoluto, calidad de agua solo tiene `departamento_norm`/`municipio_norm` de texto (sin
+  código DANE), y el catastro minero tiene geometría pero también
+  `departamentos_norm`/`municipios_norm` de texto (a veces con varias unidades
+  territoriales en una sola cadena).
+- El cruce territorial de calidad de agua/catastro minero con DIVIPOLA requerirá
+  emparejar texto normalizado (no código), con riesgo de nombres compuestos o variantes
+  de escritura no cubiertas por las equivalencias conocidas hoy (solo se resolvió
+  explícitamente el caso Bogotá D.C.).
+- `codigo_expediente` de ANM Anotaciones RMN sigue siendo una llave 1-a-muchos (6.769
+  expedientes únicos sobre 37.555 filas): cualquier integración futura debe decidir si se
+  agrega a nivel de expediente antes de cruzar con otras fuentes. En cambio,
+  `codigo_expediente` del catastro minero geoespacial **sí es único por feature**, y
+  podría usarse para enlazar ambas fuentes de ANM entre sí.
 - `resultado_numerico` de calidad de agua tiene ~28,6% de nulos por censura de límite de
   detección; un análisis agregado ingenuo (promedios simples, etc.) debe decidir
   explícitamente cómo tratar esos casos en vez de ignorarlos silenciosamente.
-- El catastro minero geoespacial de la ANM (WFS, con `DEPARTAMENTOS`/`MUNICIPIOS` de
-  texto libre) sigue pendiente de validación desde la Fase 1.5 y sería la vía natural
-  para dar ubicación geográfica a ANM Anotaciones RMN vía `codigo_expediente`.
+- Las 22 geometrías inválidas del catastro minero deben corregirse (p. ej. `buffer(0)`) o
+  descartarse explícitamente antes de cualquier operación espacial (intersección, área
+  exacta, unión con otras capas).
+- `FECHA_TERMINACION = 9999-12-31` (y similares) del catastro minero no debe usarse en
+  cálculos de vigencia/antigüedad sin tratarse como caso especial.
+- `DEPARTAMENTOS`/`MUNICIPIOS` del catastro minero pueden traer varias unidades
+  territoriales en una sola cadena separada por coma: un cruce por municipio individual
+  requerirá "explotar" (split) estos campos primero.
+- El geoservicio WFS de la ANM sigue declarando última actualización "22/03/2023"
+  (Fase 1.5/2B/3C); conviene confirmar vigencia con la entidad antes de un uso analítico
+  o público del catastro.
 
 ## Próximos pasos (Fase 4+, no ejecutados aquí)
 
@@ -111,5 +170,8 @@ trazabilidad.
    (más allá del caso Bogotá D.C. ya resuelto) antes de cualquier cruce real.
 2. Decidir el nivel de agregación de ANM Anotaciones RMN (por expediente vs. detalle de
    anotación) antes de integrarlo con otras fuentes.
-3. Solo entonces, avanzar a cruces y a la construcción de un dataset maestro — todavía
-   sin tocar RUNAP, SMByC, el catastro minero WFS completo ni el MGN completo.
+3. Decidir el tratamiento de las 22 geometrías inválidas y del valor centinela
+   `FECHA_TERMINACION = 9999-12-31` del catastro minero.
+4. Solo entonces, avanzar a cruces y a la construcción de un dataset maestro — todavía
+   sin tocar RUNAP, SMByC, el MGN completo, Global Forest Watch, MapBiomas, Sentinel ni
+   Landsat.

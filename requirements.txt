@@ -9,6 +9,14 @@ pandas
 numpy
 openpyxl  # necesario para que pandas lea archivos .xlsx (DIVIPOLA), Fase 3A
 
+# Geoespacial (liviano)
+shapely  # validar geometrias (nulas/tipo/validez) del catastro minero ANM, Fase 3C.
+         # Se elige shapely en vez de geopandas: solo se necesita construir
+         # geometrias desde GeoJSON y chequear is_valid/tipo; geopandas exige
+         # ademas fiona/pyproj/GDAL (mucho mas pesado de instalar) para
+         # funcionalidad de I/O que aqui no hace falta, porque el GeoJSON ya
+         # se lee/escribe con json estandar.
+
 # Configuración y entorno
 python-dotenv
 pyyaml

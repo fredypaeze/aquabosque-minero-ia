@@ -19,19 +19,25 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def write_json(path: Path, data: Any, *, compact: bool = False) -> int:
+def write_json(path: Path, data: Any, *, compact: bool = False, default: Any = None) -> int:
     """Escribe un objeto como JSON (UTF-8) y devuelve el tamaño en bytes.
 
     compact=False (por defecto) usa indent=2, legible para archivos pequeños
     como metadata. compact=True usa separadores sin espacios, para no inflar
     el tamaño de payloads de datos grandes por encima de los límites de
-    descarga controlada.
+    descarga controlada. `default`, si se pasa, se reenvía a json.dumps para
+    serializar tipos no nativos (p. ej. numpy.int64) sin tener que
+    convertirlos a mano antes de llamar a esta función.
     """
     ensure_dir(path.parent)
+    kwargs: dict[str, Any] = {"ensure_ascii": False}
+    if default is not None:
+        kwargs["default"] = default
     if compact:
-        text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+        kwargs["separators"] = (",", ":")
     else:
-        text = json.dumps(data, ensure_ascii=False, indent=2)
+        kwargs["indent"] = 2
+    text = json.dumps(data, **kwargs)
     path.write_text(text, encoding="utf-8")
     return path.stat().st_size
 
