@@ -1,4 +1,4 @@
-"""Fase 2A / 2A.1 / 2B: descarga controlada de las fuentes MVP aprobadas.
+"""Fase 2A / 2A.1 / 2B / 2C: descarga controlada de las fuentes MVP aprobadas.
 
 Descarga únicamente:
   1. DIVIPOLA - Códigos de municipios (DANE), XLSX directo.
@@ -6,10 +6,12 @@ Descarga únicamente:
   3. IDEAM - Data Histórica de Calidad de Agua (API Socrata, paginada, POR LOTES:
      el dataset completo no cabe en un solo archivo de <20 MB).
   4. Catastro Minero ANM - capa Titulo_Vigente (WFS/GeoJSON, paginada, POR LOTES).
+  5. Límites municipales DANE - capa Municipios del MapServer/DIVIPOLA (ArcGIS
+     REST, GeoJSON, paginada resultOffset/resultRecordCount, POR LOTES).
 
-No descarga RUNAP, SMByC, el MGN completo, Global Forest Watch, MapBiomas,
-Sentinel ni Landsat: esas fuentes quedan para fases posteriores, según lo
-acordado en la Fase 1.5.
+No descarga RUNAP, SMByC, el MGN completo por otras vías, Global Forest Watch,
+MapBiomas, Sentinel ni Landsat: esas fuentes quedan para fases posteriores,
+según lo acordado en la Fase 1.5.
 
 No procesa ni limpia los datos: solo guarda el archivo crudo y su metadata en
 data/raw/. Ningún archivo individual supera 20 MB (ver
@@ -36,11 +38,14 @@ if str(SRC_DIR) not in sys.path:
 from aquabosque.data.download import (  # noqa: E402
     BatchDownloadResult,
     DownloadResult,
+    download_arcgis_geojson_batched,
     download_direct_file,
     download_socrata_batched,
     download_socrata_json,
     download_wfs_geojson_batched,
+    get_arcgis_layer_metadata,
     get_wfs_capabilities_abstract,
+    write_arcgis_batch_manifest,
     write_batch_manifest,
     write_wfs_batch_manifest,
 )
@@ -84,6 +89,15 @@ BATCH_SOURCES = [
         "typename": "ANM_ServiciosANM:Titulo_Vigente",
         "dest_dir": DATA_RAW / "mineria" / "catastro_minero_anm",
         "filename_prefix": "catastro_minero_anm_titulo_vigente",
+    },
+    {
+        "id": "dane_limites_municipales",
+        "kind": "arcgis_batch",
+        "fuente": "Límites municipales DANE (DIVIPOLA - capa Municipios)",
+        "url": "https://geoportal.dane.gov.co/mparcgis/rest/services/Divipola/Cache_DivipolaEntidadesTerritorialesCP/MapServer/9",
+        "layer_id": 9,
+        "dest_dir": DATA_RAW / "territorio" / "limites_municipales_dane",
+        "filename_prefix": "limites_municipales_dane",
     },
 ]
 
@@ -159,6 +173,23 @@ def run_batch_source(source: dict) -> BatchDownloadResult:
         )
         formato_parte = "GeoJSON (WFS 2.0.0, GetFeature outputFormat=GEOJSON, parte de lote)"
         rango_label = "startIndex WFS"
+    elif source["kind"] == "arcgis_batch":
+        # page_size=100: el servicio devuelve HTTP 500 ("Error performing query
+        # operation") con páginas más grandes (probado: falla entre 100 y 300
+        # features por página, con geometrías municipales muy detalladas que
+        # generan respuestas de 15-30 MB). download_arcgis_geojson_batched ya
+        # reintenta con la mitad del tamaño si de todas formas falla.
+        result = download_arcgis_geojson_batched(
+            fuente=source["fuente"],
+            base_url=source["url"],
+            dest_dir=source["dest_dir"],
+            filename_prefix=source["filename_prefix"],
+            out_sr=4326,
+            page_size=100,
+            max_bytes_per_part=MAX_BYTES,
+        )
+        formato_parte = "GeoJSON (ArcGIS REST query, f=geojson, parte de lote)"
+        rango_label = "resultOffset ArcGIS"
     else:
         raise ValueError(f"Tipo de descarga por lotes desconocido: {source['kind']}")
 
@@ -189,6 +220,24 @@ def run_batch_source(source: dict) -> BatchDownloadResult:
             tipo_servicio="WFS 2.0.0 (ArcGIS Server)",
             capa=source["typename"],
             formato="GeoJSON",
+        )
+    elif source["kind"] == "arcgis_batch":
+        layer_meta = get_arcgis_layer_metadata(source["url"]) or {}
+        source_sr = layer_meta.get("sourceSpatialReference", {})
+        max_record_count = layer_meta.get("maxRecordCount")
+        result.observaciones = (
+            f"{result.observaciones} sourceSpatialReference del servicio (nativo): "
+            f"wkid={source_sr.get('wkid')}. maxRecordCount del servicio: {max_record_count}."
+        )
+        write_arcgis_batch_manifest(
+            manifest_path,
+            result,
+            entidad="DANE (Departamento Administrativo Nacional de Estadística)",
+            layer_id=source["layer_id"],
+            formato="GeoJSON",
+            sistema_referencia_origen=f"EPSG:{source_sr.get('wkid', 'desconocido')} (sourceSpatialReference del servicio)",
+            sistema_referencia_salida="EPSG:4326 (outSR=4326 solicitado explícitamente en cada petición)",
+            campos_clave=["COD_DPTO", "COD_MPIO", "NOM_DPTO", "NOM_MPIO"],
         )
     else:
         write_batch_manifest(manifest_path, result)
@@ -221,11 +270,15 @@ def validate_batch_result(source: dict, result: BatchDownloadResult) -> list[str
 
     # Todos los JSON/GeoJSON deben ser parseables (se relee cada archivo desde disco).
     is_wfs = source["kind"] == "wfs_batch"
+    is_arcgis = source["kind"] == "arcgis_batch"
+    is_geojson_features = is_wfs or is_arcgis
+    n_geometrias_nulas = 0
+    n_cod_mpio_no_5_digitos = 0
     for part in result.parts:
         try:
             with open(part.path, encoding="utf-8") as fh:
                 data = json.load(fh)
-            n_registros = len(data["features"]) if is_wfs else len(data)
+            n_registros = len(data["features"]) if is_geojson_features else len(data)
             if n_registros != part.filas:
                 problems.append(
                     f"parte {part.part_num}: registros en disco ({n_registros}) no coincide "
@@ -237,8 +290,27 @@ def validate_batch_result(source: dict, result: BatchDownloadResult) -> list[str
                     problems.append(f"parte {part.part_num}: no se encontró CODIGO_EXPEDIENTE en properties")
                 if not primera.get("geometry"):
                     problems.append(f"parte {part.part_num}: no se encontró geometría (campo SHAPE del WFS)")
+            if is_arcgis and n_registros > 0:
+                primera = data["features"][0]
+                props = primera.get("properties", {})
+                if "COD_MPIO" not in props:
+                    problems.append(f"parte {part.part_num}: no se encontró COD_MPIO en properties")
+                if "COD_DPTO" not in props:
+                    problems.append(f"parte {part.part_num}: no se encontró COD_DPTO en properties")
+                for feat in data["features"]:
+                    if not feat.get("geometry"):
+                        n_geometrias_nulas += 1
+                    cod_mpio = feat.get("properties", {}).get("COD_MPIO")
+                    if cod_mpio is None or len(str(cod_mpio)) != 5:
+                        n_cod_mpio_no_5_digitos += 1
         except (OSError, json.JSONDecodeError, KeyError) as exc:
             problems.append(f"parte {part.part_num} no es JSON válido: {exc}")
+
+    if is_arcgis:
+        if n_geometrias_nulas:
+            problems.append(f"{n_geometrias_nulas} features con geometría nula")
+        if n_cod_mpio_no_5_digitos:
+            problems.append(f"{n_cod_mpio_no_5_digitos} features con COD_MPIO distinto de 5 dígitos")
 
     # No debe haber offsets duplicados ni huecos entre partes consecutivas.
     ordered = sorted(result.parts, key=lambda p: p.offset_inicio)
@@ -273,7 +345,7 @@ def validate_batch_result(source: dict, result: BatchDownloadResult) -> list[str
 
 
 def main() -> int:
-    print("=== AquaBosque Minero IA — Fase 2A / 2A.1 / 2B: descarga controlada ===\n")
+    print("=== AquaBosque Minero IA — Fase 2A / 2A.1 / 2B / 2C: descarga controlada ===\n")
 
     results: list[tuple[dict, DownloadResult, str | None]] = []
     for source in SOURCES:
@@ -294,6 +366,23 @@ def main() -> int:
             abstract = get_wfs_capabilities_abstract(source["url"])
             if abstract:
                 print(f"   GetCapabilities Abstract: {abstract}")
+        if source["kind"] == "arcgis_batch":
+            layer_meta = get_arcgis_layer_metadata(source["url"])
+            if layer_meta:
+                campos = [f["name"] for f in layer_meta.get("fields", [])]
+                print(
+                    f"   Validación de capa: geometryType={layer_meta.get('geometryType')} | "
+                    f"maxRecordCount={layer_meta.get('maxRecordCount')} | "
+                    f"sourceSpatialReference.wkid={layer_meta.get('sourceSpatialReference', {}).get('wkid')} | "
+                    f"supportsPagination={layer_meta.get('advancedQueryCapabilities', {}).get('supportsPagination')}"
+                )
+                print(
+                    f"   Campos: {campos} | "
+                    f"COD_MPIO presente: {'COD_MPIO' in campos} | COD_DPTO presente: {'COD_DPTO' in campos} | "
+                    f"soporta geoJSON: {'geoJSON' in layer_meta.get('supportedQueryFormats', '')}"
+                )
+            else:
+                print("   ADVERTENCIA: no se pudo validar la metadata de la capa (?f=json falló)")
         batch_result = run_batch_source(source)
         batch_problems = validate_batch_result(source, batch_result)
         batch_results.append((source, batch_result, batch_problems))

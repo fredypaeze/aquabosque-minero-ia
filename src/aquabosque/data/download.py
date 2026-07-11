@@ -708,3 +708,258 @@ def download_wfs_geojson_batched(
         estado=estado,
         observaciones=observaciones,
     )
+
+
+# ---------------------------------------------------------------------------
+# ArcGIS REST (Esri MapServer/FeatureServer), p. ej. MGN/DIVIPOLA del DANE
+# ---------------------------------------------------------------------------
+
+
+def get_arcgis_layer_metadata(base_url: str, *, timeout: int = DEFAULT_TIMEOUT) -> dict | None:
+    """Consulta los metadatos de una capa ArcGIS REST (`?f=json`): tipo de
+    geometría, spatialReference nativo, maxRecordCount, campos, formatos
+    soportados, etc. Devuelve None si falla la petición."""
+    headers = {"User-Agent": USER_AGENT}
+    try:
+        response = requests.get(base_url, headers=headers, params={"f": "json"}, timeout=timeout)
+        response.raise_for_status()
+        data = response.json()
+        if "error" in data:
+            return None
+        return data
+    except (requests.RequestException, ValueError):
+        return None
+
+
+def get_arcgis_feature_count(
+    base_url: str, *, where: str = "1=1", timeout: int = DEFAULT_TIMEOUT
+) -> int | None:
+    """Cuenta features vía `query?returnCountOnly=true&f=json`."""
+    headers = {"User-Agent": USER_AGENT}
+    try:
+        response = requests.get(
+            f"{base_url}/query",
+            headers=headers,
+            params={"where": where, "returnCountOnly": "true", "f": "json"},
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return int(data["count"]) if "count" in data else None
+    except (requests.RequestException, ValueError, KeyError):
+        return None
+
+
+def download_arcgis_geojson_batched(
+    fuente: str,
+    base_url: str,
+    dest_dir: Path,
+    *,
+    filename_prefix: str,
+    where: str = "1=1",
+    out_sr: int = 4326,
+    page_size: int = 1000,
+    max_bytes_per_part: int = MAX_BYTES_DEFAULT,
+    timeout: int = DEFAULT_TIMEOUT,
+) -> BatchDownloadResult:
+    """Descarga completa y paginada (`resultOffset`/`resultRecordCount`) de
+    una capa ArcGIS REST en GeoJSON, partida en varios archivos para que
+    ninguno supere `max_bytes_per_part`. Cada parte es un `FeatureCollection`
+    GeoJSON válido por sí mismo.
+    """
+    ensure_dir(dest_dir)
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+
+    total_origin = get_arcgis_feature_count(base_url, where=where, timeout=timeout)
+
+    parts: list[BatchPart] = []
+    part_features: list[dict] = []
+    part_start_offset = 0
+    part_num = 0
+    offset = 0
+    total_features = 0
+    error_msg: str | None = None
+
+    def flush_part(features: list[dict], start_offset: int, end_offset: int) -> None:
+        nonlocal part_num
+        part_num += 1
+        part_path = dest_dir / f"{filename_prefix}_part_{part_num:04d}.geojson"
+        fc = {"type": "FeatureCollection", "features": features}
+        size = write_json(part_path, fc, compact=True)
+        local_features = features
+        while size > max_bytes_per_part and local_features:
+            local_features = local_features[: -max(1, int(len(local_features) * 0.05))]
+            fc = {"type": "FeatureCollection", "features": local_features}
+            size = write_json(part_path, fc, compact=True)
+        parts.append(
+            BatchPart(
+                part_num=part_num,
+                path=part_path,
+                offset_inicio=start_offset,
+                offset_fin=start_offset + len(local_features),
+                filas=len(local_features),
+                tamano_bytes=size,
+            )
+        )
+
+    # Algunos servidores ArcGIS devuelven HTTP 500 ("Error performing query
+    # operation") cuando la respuesta GeoJSON de una página es demasiado
+    # pesada (geometrías muy detalladas), sin que eso dependa linealmente del
+    # número de features pedidos. Para no fallar toda la descarga por eso,
+    # cada página se reintenta con la mitad de tamaño hasta un mínimo.
+    current_page_size = page_size
+    min_page_size = 10
+
+    while True:
+        page_features = None
+        last_exc: Exception | None = None
+        requested_size = current_page_size
+        while True:
+            requested_size = current_page_size
+            params = {
+                "where": where,
+                "outFields": "*",
+                "returnGeometry": "true",
+                "f": "geojson",
+                "outSR": out_sr,
+                "resultRecordCount": requested_size,
+                "resultOffset": offset,
+            }
+            try:
+                response = requests.get(f"{base_url}/query", headers=headers, params=params, timeout=timeout)
+                response.raise_for_status()
+                data = response.json()
+                if "error" in data:
+                    raise requests.RequestException(str(data["error"]))
+                page_features = data.get("features", [])
+                break
+            except (requests.RequestException, ValueError) as exc:
+                last_exc = exc
+                if current_page_size <= min_page_size:
+                    break
+                current_page_size = max(min_page_size, current_page_size // 2)
+
+        if page_features is None:
+            error_msg = (
+                f"Fallo en petición paginada (resultOffset={offset}, "
+                f"page_size={requested_size}): {last_exc}"
+            )
+            break
+
+        if not page_features:
+            break
+
+        candidate_features = part_features + page_features
+        candidate_size = _geojson_feature_collection_bytes_len(candidate_features)
+
+        if candidate_size > max_bytes_per_part and part_features:
+            flush_part(part_features, part_start_offset, offset)
+            part_features = list(page_features)
+            part_start_offset = offset
+        elif candidate_size > max_bytes_per_part and not part_features:
+            trimmed = list(page_features)
+            while trimmed and _geojson_feature_collection_bytes_len(trimmed) > max_bytes_per_part:
+                trimmed = trimmed[:-1]
+            if trimmed:
+                flush_part(trimmed, offset, offset + len(trimmed))
+            part_features = []
+            part_start_offset = offset + len(trimmed)
+        else:
+            part_features = candidate_features
+
+        total_features += len(page_features)
+        offset += len(page_features)
+
+        if len(page_features) < requested_size:
+            break
+
+    if part_features:
+        flush_part(part_features, part_start_offset, offset)
+
+    total_size = sum(p.tamano_bytes for p in parts)
+    total_features_written = sum(p.filas for p in parts)
+
+    if error_msg and not parts:
+        estado = "error"
+        observaciones = error_msg
+    elif error_msg:
+        estado = "incompleto_por_error"
+        observaciones = (
+            f"Se descargaron {total_features_written} features en {len(parts)} partes antes de un "
+            f"error de red; hay que reintentar para completar. {error_msg}"
+        )
+    elif total_origin is not None and total_features_written < total_origin:
+        estado = "incompleto"
+        observaciones = (
+            f"Se esperaban {total_origin} features según returnCountOnly, pero solo se "
+            f"descargaron {total_features_written}."
+        )
+    else:
+        estado = "completo"
+        observaciones = (
+            f"Descarga por lotes completa: {total_features_written} features en {len(parts)} "
+            f"partes, ninguna mayor a {max_bytes_per_part} bytes."
+        )
+
+    return BatchDownloadResult(
+        fuente=fuente,
+        url=base_url,
+        dest_dir=dest_dir,
+        total_filas_origen=total_origin,
+        total_filas_descargadas=total_features_written,
+        numero_partes=len(parts),
+        tamano_total_bytes=total_size,
+        parts=parts,
+        estado=estado,
+        observaciones=observaciones,
+    )
+
+
+def write_arcgis_batch_manifest(
+    manifest_path: Path,
+    result: BatchDownloadResult,
+    *,
+    entidad: str,
+    layer_id: int,
+    formato: str,
+    sistema_referencia_origen: str,
+    sistema_referencia_salida: str,
+    campos_clave: list[str],
+) -> None:
+    """Escribe el manifest.json de una descarga por lotes de una capa
+    ArcGIS REST, con los campos pedidos para geoservicios territoriales."""
+    manifest = {
+        "fuente": result.fuente,
+        "entidad": entidad,
+        "url": result.url,
+        "layer_id": layer_id,
+        "fecha_descarga": utc_now_iso(),
+        "formato": formato,
+        "sistema_referencia_origen": sistema_referencia_origen,
+        "sistema_referencia_salida": sistema_referencia_salida,
+        "total_features_origen": result.total_filas_origen,
+        "total_features_descargadas": result.total_filas_descargadas,
+        "numero_partes": result.numero_partes,
+        "tamano_total_bytes": result.tamano_total_bytes,
+        "campos_clave": campos_clave,
+        "tamano_por_parte": [
+            {
+                "parte": p.part_num,
+                "archivo": p.path.name,
+                "features": p.filas,
+                "tamano_bytes": p.tamano_bytes,
+            }
+            for p in result.parts
+        ],
+        "rangos_resultoffset_usados": [
+            {
+                "parte": p.part_num,
+                "result_offset_inicio": p.offset_inicio,
+                "result_offset_fin": p.offset_fin,
+            }
+            for p in result.parts
+        ],
+        "estado_final": result.estado,
+        "observaciones": result.observaciones,
+    }
+    write_json(manifest_path, manifest)
