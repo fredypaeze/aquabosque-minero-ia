@@ -290,3 +290,82 @@ fases anteriores del proyecto (DIVIPOLA, Fase 3A).
 
 Verificada con dos corridas completas consecutivas de `scripts/15_audit_water_quality.py`:
 resultados numéricos idénticos en las 6 salidas.
+
+## Corrección canónica Fase 4B.2
+
+Corrección canónica de normalización hídrica y validación independiente de códigos de sitio,
+generada por `scripts/17_correct_water_normalization.py` (nuevo módulo
+`src/aquabosque/features/water_normalization.py`, extensión de
+`src/aquabosque/features/water_audit.py`) y `scripts/18_write_water_phase4b2_reports.py`.
+**No recalculó la asignación espacial punto-territorio** (el georreferenciado nunca se abrió
+en modo escritura; huella en bytes verificada sin cambios antes/después). No aplicó límites
+legales. No integró minería ni deforestación. No construyó índice de riesgo.
+
+### A. Auditoría independiente de códigos originales
+
+`calidad_agua_codigos_sitio_origen_audit.csv` agrupa por `codigo_sitio_origen` — construido
+con prioridad estación/punto (bracket en `nombre_del_punto_de_monitoreo`, 113.026
+observaciones) > código de muestra (`codigo_muestra`, 21.190 observaciones; único usado como
+respaldo real, ya que nunca está vacío) > proyecto > nombre completo — **sin coordenadas en
+la llave de agrupación**, a diferencia de `sitio_monitoreo_id`. Los 194 códigos de
+estación/punto reales clasificaron 100% `codigo_ubicacion_estable` (**0 reutilizados en
+ubicaciones distantes**), confirmando de forma independiente el hallazgo de la Fase 4B.1. Los
+824 grupos restantes derivados de `codigo_muestra` se etiquetaron `posible_codigo_de_muestra`
+(no como reutilización, porque es un campo de otra granularidad, ya evaluado y descartado
+como identificador de sitio). **49 sitios** siguen sin código de estación/punto real
+disponible, reportados por separado.
+
+### B/C. Corrección de normalización y tabla de correspondencia
+
+`normalize_water_parameter_name` (nueva función especializada, separada de
+`normalize_text` genérico) corrige la causa raíz encontrada en la Fase 4B.1: el filtro
+`[^A-Z0-9 ]` de `normalize_text` trata las letras griegas de isómero (α/β/γ/ɣ/δ) como signos
+de puntuación y las elimina. La función traduce cada letra griega a su nombre en español
+(ALFA/BETA/GAMMA/DELTA) antes de la limpieza genérica, y unifica el único typo de deletreo
+detectado (`HEXACLOROCICLOHEXA` → `HEXACLOROCICLOHEXANO`, solo en el nombre del isómero
+delta). Resultado: **77 → 80 parámetros normalizados distintos**, **5 separaciones de
+isómero** (`calidad_agua_normalizacion_parametros_comparison.csv`, 2.125 observaciones
+afectadas), **0 fusiones técnicamente dudosas restantes** (antes: 5 filas / 2 grupos).
+
+### D. Regeneración de productos derivados
+
+Regenerados con la normalización corregida, sin recalcular asignación espacial: catálogo de
+parámetros, tabla sitio+parámetro+año, tendencias territoriales, indicadores territoriales
+(1.122 unidades, con conteos por parámetro/categoría/sitio recalculados), diccionario de
+normalización, clasificación de idoneidad, auditoría de límites de detección y auditoría de
+tendencias. El catálogo mantiene 85 combinaciones (las unidades de cada isómero ya diferían
+entre sí, así que el catálogo agrupado por propiedad+unidad nunca mezcló valores numéricos
+entre isómeros), pero 6 combinaciones cambiaron de identidad. Las 2.896 tendencias
+calculables no cambiaron de universo.
+
+### E. Reevaluación metodológica de tendencias
+
+`calidad_agua_tendencias_audit.csv` reemplaza el booleano único de la Fase 4B.1 por cinco
+señales no excluyentes: `pendiente_reproducida_correctamente` (2.896/2.896),
+`apta_para_interpretacion_descriptiva` (2.267), `requiere_precaucion_por_censura` (509),
+`requiere_precaucion_por_limite_deteccion_variable` (**371**, señal nueva, calculada por
+combinación municipio+parámetro+unidad) y `no_recomendada_para_interpretacion_numerica` (12).
+De las 371 con límite variable, 108 habrían sido "aptas" solo por censura — confirma que una
+pendiente puede estar matemáticamente bien calculada y aun así no ser recomendable para
+interpretación.
+
+### F. Nivel D y candidatos ausentes
+
+La clasificación de idoneidad A/B/C/D es por **combinación parámetro + unidad** (no por
+parámetro aislado). `parametros_agua_candidatos_ausentes.csv` separa explícitamente los
+candidatos evaluados pero ausentes de la fuente (**arsénico, confirmado, 0 observaciones en
+todo el dataset**) del Nivel D (combinaciones observadas sin asignación espacial, 0 casos en
+esta corrida) — nunca se mezclan. Niveles finales: A=31, B=33, C=21, D=0; suma=85=universo.
+
+### G. Promoción canónica
+
+Los 8 archivos derivados se promovieron como canónicos (mismos nombres de archivo);
+la versión previa de cada uno se conserva como `<nombre>_legacy_normalizacion_previa.csv`.
+Metadata de cada archivo promovido incluye `version_normalizacion_parametros =
+"water_parameter_normalization_v2"`.
+
+### Idempotencia (Fase 4B.2)
+
+Verificada con dos corridas completas consecutivas de
+`scripts/17_correct_water_normalization.py`: los 11 archivos generados/promovidos son
+byte-idénticos entre ambas corridas (SHA-256), único cambio entre corridas: tiempo total.

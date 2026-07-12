@@ -8,6 +8,7 @@ metodológica de lo que la Fase 4B ya produjo.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import numpy as np
@@ -25,6 +26,17 @@ UMBRAL_CENSURA_PRECAUCION_PCT = 20.0
 UMBRAL_CENSURA_NO_RECOMENDADA_PCT = 80.0
 UMBRAL_DIST_CERCA_LIMITE_KM = 2.0
 UMBRAL_DIST_ERROR_COORDENADA_KM = 50.0
+
+# Fase 4B.2 - auditoría independiente de códigos originales (sección A)
+_CODIGO_PUNTO_RE = re.compile(r"\[([^\]]+)\]\s*$")
+
+CAMPO_ORIGEN_ESTACION_PUNTO = "codigo_estacion_punto_extraido"
+CAMPO_ORIGEN_MUESTRA = "codigo_muestra"
+CAMPO_ORIGEN_PROYECTO = "proyecto"
+CAMPO_ORIGEN_NOMBRE = "nombre_punto_texto_completo"
+CAMPO_ORIGEN_NINGUNO = "sin_codigo_original"
+
+UMBRAL_N_OBS_MIN_EVALUABLE = 3
 
 # Parámetros candidatos a Nivel B por diseño (censura estructuralmente alta
 # en química analítica de trazas): se confirma con datos reales, no se
@@ -113,6 +125,139 @@ def propose_composite_key_for_reused_codes(df_sitios_audit: pd.DataFrame) -> lis
             }
         )
     return propuestas
+
+
+# ---------------------------------------------------------------------------
+# A (Fase 4B.2). Validación independiente de códigos originales, SIN agregar
+# coordenadas a la llave de agrupación (a diferencia de sitio_monitoreo_id,
+# que para los 49 sitios sin código incorpora coordenadas por construcción).
+# ---------------------------------------------------------------------------
+
+
+def build_source_code_column(df: pd.DataFrame) -> pd.DataFrame:
+    """Sección A: construye `codigo_sitio_origen` con prioridad documentada,
+    exactamente en el orden pedido por el encargo (estación/punto > muestra >
+    proyecto > nombre completo del punto), sin usar latitud/longitud en
+    ningún momento. `campo_origen_codigo` documenta de qué columna original
+    provino cada valor. Los valores de respaldo (codigo_muestra, proyecto)
+    se prefijan con el nombre del campo para que nunca colisionen por
+    coincidencia textual con un código de estación real."""
+    out = df.copy()
+    codigo_punto = out["nombre_del_punto_de_monitoreo"].str.extract(_CODIGO_PUNTO_RE)[0]
+
+    codigo_sitio_origen = codigo_punto.copy()
+    campo_origen = pd.Series(np.where(codigo_punto.notna(), CAMPO_ORIGEN_ESTACION_PUNTO, None), index=out.index, dtype=object)
+
+    falta = codigo_sitio_origen.isna()
+    usa_muestra = falta & out["codigo_muestra"].notna()
+    codigo_sitio_origen = codigo_sitio_origen.where(~usa_muestra, "muestra::" + out["codigo_muestra"].astype(str))
+    campo_origen = campo_origen.where(~usa_muestra, CAMPO_ORIGEN_MUESTRA)
+
+    falta = codigo_sitio_origen.isna()
+    usa_proyecto = falta & out["proyecto"].notna()
+    codigo_sitio_origen = codigo_sitio_origen.where(~usa_proyecto, "proyecto::" + out["proyecto"].astype(str))
+    campo_origen = campo_origen.where(~usa_proyecto, CAMPO_ORIGEN_PROYECTO)
+
+    falta = codigo_sitio_origen.isna()
+    usa_nombre = falta & out["nombre_del_punto_de_monitoreo"].notna()
+    codigo_sitio_origen = codigo_sitio_origen.where(~usa_nombre, "nombre::" + out["nombre_del_punto_de_monitoreo"].astype(str))
+    campo_origen = campo_origen.where(~usa_nombre, CAMPO_ORIGEN_NOMBRE)
+
+    campo_origen = campo_origen.fillna(CAMPO_ORIGEN_NINGUNO)
+
+    out["codigo_sitio_origen"] = codigo_sitio_origen
+    out["campo_origen_codigo"] = campo_origen
+    return out
+
+
+def audit_source_codes(df_with_code: pd.DataFrame, transformer) -> pd.DataFrame:
+    """Sección A: agrupa SOLO por `codigo_sitio_origen` (nunca por
+    sitio_monitoreo_id) y calcula evidencia real de estabilidad espacial.
+    Cuando el código proviene de un campo ya sabido inestable (codigo_muestra
+    o proyecto, evaluados y descartados como identificador de sitio en la
+    Fase 4B.1), la clasificación lo etiqueta como tal en vez de forzarlo a
+    'reutilizado en ubicaciones distantes' — no es un error de dato, es un
+    campo de otra granularidad usado solo como último respaldo."""
+    con_codigo = df_with_code[df_with_code["codigo_sitio_origen"].notna()]
+    filas = []
+    for codigo, grupo in con_codigo.groupby("codigo_sitio_origen"):
+        coords = grupo[["latitud", "longitud"]].drop_duplicates()
+        n_coords = len(coords)
+        dist_max_m = 0.0
+        if n_coords > 1:
+            pts_proj = [reproject_geometry(Point(lon, lat), transformer) for lat, lon in coords.itertuples(index=False)]
+            for i in range(len(pts_proj)):
+                for j in range(i + 1, len(pts_proj)):
+                    dist_max_m = max(dist_max_m, pts_proj[i].distance(pts_proj[j]))
+
+        n_obs = len(grupo)
+        n_sitio_ids = grupo["sitio_monitoreo_id"].nunique()
+        n_mpios = grupo["cod_dane_mpio_asignado"].nunique()
+        n_dptos = grupo["cod_dane_dpto_asignado"].nunique()
+        campo_origen = grupo["campo_origen_codigo"].iloc[0]
+        nombres_asociados = "; ".join(sorted(grupo["nombre_del_punto_de_monitoreo"].dropna().unique().astype(str)))
+        proyectos_asociados = "; ".join(sorted(grupo["proyecto"].dropna().unique().astype(str)))
+
+        if campo_origen == CAMPO_ORIGEN_MUESTRA:
+            clasif = "posible_codigo_de_muestra"
+            razon = (
+                f"codigo_sitio_origen derivado de codigo_muestra (respaldo, no código de estación real): "
+                f"{n_sitio_ids} sitio(s) de monitoreo, {n_mpios} municipio(s) espaciales bajo este código."
+            )
+        elif campo_origen == CAMPO_ORIGEN_PROYECTO:
+            clasif = "posible_codigo_de_proyecto"
+            razon = (
+                f"codigo_sitio_origen derivado de proyecto (respaldo, no código de estación real): "
+                f"{n_sitio_ids} sitio(s) de monitoreo, {n_mpios} municipio(s) espaciales bajo este código."
+            )
+        elif n_obs < UMBRAL_N_OBS_MIN_EVALUABLE:
+            clasif = "requiere_revision_manual"
+            razon = f"solo {n_obs} observación(es) bajo este código: evidencia insuficiente para clasificar estabilidad."
+        elif n_coords == 1:
+            clasif = "codigo_ubicacion_estable"
+            razon = "una única coordenada asociada a este código de estación/punto, evaluada de forma independiente de sitio_monitoreo_id."
+        elif dist_max_m <= UMBRAL_COORD_CERCANAS_M:
+            clasif = "codigo_con_variacion_menor_100m"
+            razon = f"{n_coords} coordenadas distintas, distancia máxima {dist_max_m:.1f} m (<= {UMBRAL_COORD_CERCANAS_M:.0f} m)."
+        else:
+            clasif = "codigo_reutilizado_en_ubicaciones_distantes"
+            razon = f"{n_coords} coordenadas distintas, distancia máxima {dist_max_m:.1f} m (> {UMBRAL_COORD_CERCANAS_M:.0f} m)."
+
+        filas.append(
+            {
+                "codigo_sitio_origen": codigo,
+                "campo_origen_codigo": campo_origen,
+                "n_observaciones": n_obs,
+                "n_coordenadas_distintas": n_coords,
+                "n_sitio_monitoreo_id": n_sitio_ids,
+                "n_municipios_espaciales": n_mpios,
+                "n_departamentos_espaciales": n_dptos,
+                "distancia_maxima_entre_coordenadas_m": round(dist_max_m, 2),
+                "primera_fecha": grupo["fecha"].min(),
+                "ultima_fecha": grupo["fecha"].max(),
+                "nombres_asociados": nombres_asociados,
+                "proyectos_asociados": proyectos_asociados,
+                "clasificacion": clasif,
+                "razon": razon,
+            }
+        )
+    return pd.DataFrame(filas).sort_values("codigo_sitio_origen").reset_index(drop=True)
+
+
+def summarize_sites_without_original_code(df_with_code: pd.DataFrame) -> dict[str, Any]:
+    """Sección A: reporta por separado los sitios construidos únicamente
+    mediante hash (sin código de estación/punto real disponible en
+    `nombre_del_punto_de_monitoreo`) — aunque `codigo_sitio_origen` haya
+    podido resolverse con un campo de respaldo (codigo_muestra/proyecto),
+    estos sitios siguen sin tener un código de estación/punto propio."""
+    sin_codigo_estacion = df_with_code[df_with_code["campo_origen_codigo"] != CAMPO_ORIGEN_ESTACION_PUNTO]
+    sitios = sorted(sin_codigo_estacion["sitio_monitoreo_id"].unique().tolist())
+    campos_respaldo_usados = sin_codigo_estacion.groupby("sitio_monitoreo_id")["campo_origen_codigo"].agg(lambda s: sorted(s.unique().tolist())).to_dict()
+    return {
+        "n_sitios_sin_codigo_estacion_punto": len(sitios),
+        "sitios_sin_codigo_estacion_punto": sitios,
+        "campos_respaldo_por_sitio": {k: v for k, v in campos_respaldo_usados.items()},
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -259,6 +404,47 @@ def classify_parameter_suitability_v2(catalogo: pd.DataFrame, df_assigned: pd.Da
 
 
 # ---------------------------------------------------------------------------
+# F (Fase 4B.2). Candidatos ausentes de la fuente.
+#
+# `classify_parameter_suitability_v2` clasifica por COMBINACIÓN
+# propiedad_observada_norm + unidad_norm observada en el catálogo (nunca
+# solo por parámetro): su Nivel D ("0 observaciones asignadas
+# espacialmente") solo puede aplicar a una combinación que SÍ aparece en el
+# catálogo pero perdió la asignación espacial — nunca a un parámetro que no
+# aparece en la fuente en absoluto. Esta función cubre ese segundo caso por
+# separado, para no mezclar "ausente de la fuente" con "presente pero sin
+# asignar" bajo la misma etiqueta.
+# ---------------------------------------------------------------------------
+
+
+def build_absent_parameter_candidates(df_assigned: pd.DataFrame, candidatos: list[str]) -> pd.DataFrame:
+    """Sección F: evalúa cada candidato de la lista `candidatos` (nombres ya
+    normalizados) contra el dataset completo (no solo el catálogo) y
+    confirma con datos reales cuáles están totalmente ausentes de la
+    fuente."""
+    filas = []
+    for nombre in candidatos:
+        n_obs = int((df_assigned["propiedad_observada_norm"] == nombre).sum())
+        ausente = n_obs == 0
+        filas.append(
+            {
+                "nombre_candidato_evaluado": nombre,
+                "presente_en_fuente": not ausente,
+                "n_observaciones_en_fuente": n_obs,
+                "confirmado_ausente": ausente,
+                "observaciones": (
+                    "Ausente de la fuente de datos en su totalidad (0 observaciones en todo el dataset). "
+                    "No corresponde a 'Nivel D' de clasificacion_idoneidad_parametros_agua.csv — ese nivel se "
+                    "reserva a combinaciones que sí aparecen en el catálogo pero sin asignación espacial."
+                    if ausente
+                    else "Presente en la fuente; ver clasificacion_idoneidad_parametros_agua.csv para su evaluación como indicador."
+                ),
+            }
+        )
+    return pd.DataFrame(filas).sort_values(["confirmado_ausente", "nombre_candidato_evaluado"], ascending=[False, True]).reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
 # D. Auditoría de límites de detección
 # ---------------------------------------------------------------------------
 
@@ -373,6 +559,128 @@ def audit_trends(df_tendencias: pd.DataFrame, df_assigned: pd.DataFrame) -> pd.D
                 "no_recomendada_para_interpretacion_numerica": bool(pct_cens > 80),
                 "razon_invalidez": "" if calculo_solo_numericos else razon,
                 "observaciones": razon,
+            }
+        )
+    return pd.DataFrame(filas)
+
+
+# ---------------------------------------------------------------------------
+# E (Fase 4B.2). Reevaluación metodológica de tendencias: separa
+# reproducibilidad matemática (¿la pendiente se calculó bien?) de idoneidad
+# interpretativa (¿es razonable leerla como una tendencia real?) e incorpora
+# la variabilidad del límite de detección de la sección D como un motivo de
+# precaución adicional, independiente de la censura.
+# ---------------------------------------------------------------------------
+
+UMBRAL_LIMITES_DISTINTOS_ALTA_VARIABILIDAD = 4
+
+
+def _detection_limit_stats_for_group(grupo: pd.DataFrame) -> dict[str, Any]:
+    censurados = grupo[grupo["resultado_es_censurado_inferior"]]
+    if censurados.empty:
+        return {
+            "n_limites_deteccion_distintos": 0,
+            "limite_deteccion_min": None,
+            "limite_deteccion_max": None,
+            "variacion_limite_deteccion": False,
+            "advertencia_limite_variable": False,
+        }
+    limites = censurados["limite_deteccion"].dropna()
+    limites_distintos = sorted(limites.unique())
+    variacion_por_anio = censurados.groupby("anio")["limite_deteccion"].apply(lambda s: s.mode().iloc[0] if len(s.mode()) else np.nan)
+    limite_cambia_entre_anios = variacion_por_anio.nunique(dropna=True) > 1
+    alta_variabilidad = len(limites_distintos) >= UMBRAL_LIMITES_DISTINTOS_ALTA_VARIABILIDAD or limite_cambia_entre_anios
+    return {
+        "n_limites_deteccion_distintos": len(limites_distintos),
+        "limite_deteccion_min": min(limites_distintos) if limites_distintos else None,
+        "limite_deteccion_max": max(limites_distintos) if limites_distintos else None,
+        "variacion_limite_deteccion": bool(limite_cambia_entre_anios),
+        "advertencia_limite_variable": bool(alta_variabilidad),
+    }
+
+
+def audit_trends_v2(df_tendencias: pd.DataFrame, df_assigned: pd.DataFrame) -> pd.DataFrame:
+    """Sección E (Fase 4B.2): reemplaza el único booleano
+    `tendencia_valida_metodologicamente` de la Fase 4B.1 por cinco señales
+    explícitas y no excluyentes entre sí, porque una pendiente puede estar
+    matemáticamente bien calculada y, al mismo tiempo, no ser recomendable
+    para interpretación:
+
+    - `pendiente_reproducida_correctamente`: el recálculo independiente
+      coincide con lo reportado por `build_trends_table` (Fase 4B).
+    - `apta_para_interpretacion_descriptiva`: reproducida correctamente,
+      censura baja (<=20%) y sin advertencia de límite de detección variable.
+    - `requiere_precaucion_por_censura`: 20-80% de censura en el universo
+      completo de esa combinación.
+    - `requiere_precaucion_por_limite_deteccion_variable`: el límite de
+      detección de esta combinación municipio+parámetro+unidad varió de
+      forma relevante durante el periodo de la tendencia (>=4 límites
+      distintos o el límite modal cambia de un año a otro).
+    - `no_recomendada_para_interpretacion_numerica`: >80% de censura."""
+    calculables = df_tendencias[df_tendencias["tendencia_calculable"]].copy()
+    asignados = df_assigned[df_assigned["cod_dane_mpio_asignado"].notna()]
+
+    filas = []
+    for _, row in calculables.iterrows():
+        cod_mpio, prop, unidad = row["cod_dane_mpio"], row["propiedad_observada_norm"], row["unidad_norm"]
+        universo = asignados[
+            (asignados["cod_dane_mpio_asignado"] == cod_mpio)
+            & (asignados["propiedad_observada_norm"] == prop)
+            & (asignados["unidad_norm"] == unidad)
+        ]
+        n_total = len(universo)
+        n_num = int(universo["resultado_es_numerico"].sum())
+        n_cens = int((universo["resultado_es_censurado_inferior"] | universo["resultado_es_censurado_superior"]).sum())
+        pct_cens = round(n_cens / n_total * 100, 2) if n_total else 0.0
+
+        pendiente_reproducida = n_num == row["n_observaciones"]
+        limite_stats = _detection_limit_stats_for_group(universo)
+
+        requiere_precaucion_censura = 20 < pct_cens <= 80
+        no_recomendada = pct_cens > 80
+        requiere_precaucion_limite = limite_stats["advertencia_limite_variable"] and not no_recomendada
+        apta_descriptiva = pendiente_reproducida and pct_cens <= 20 and not limite_stats["advertencia_limite_variable"]
+
+        notas = []
+        if not pendiente_reproducida:
+            notas.append("INCONSISTENCIA: la pendiente reportada no coincide con el conteo de resultados numéricos recalculado.")
+        if no_recomendada:
+            notas.append(f"no_recomendada_para_interpretacion_numerica: {pct_cens:.1f}% censurado.")
+        elif requiere_precaucion_censura:
+            notas.append(f"requiere_precaucion_por_censura: {pct_cens:.1f}% censurado.")
+        if requiere_precaucion_limite:
+            notas.append(
+                f"requiere_precaucion_por_limite_deteccion_variable: {limite_stats['n_limites_deteccion_distintos']} límites "
+                f"distintos observados ({limite_stats['limite_deteccion_min']}-{limite_stats['limite_deteccion_max']})."
+            )
+        if apta_descriptiva:
+            notas.append("apta_para_interpretacion_descriptiva.")
+        if not notas:
+            notas.append("sin observaciones adicionales.")
+
+        filas.append(
+            {
+                "cod_dane_mpio": cod_mpio,
+                "propiedad_observada_norm": prop,
+                "unidad_norm": unidad,
+                "n_observaciones_totales": n_total,
+                "n_resultados_numericos": n_num,
+                "n_resultados_censurados": n_cens,
+                "pct_censurado": pct_cens,
+                "anio_inicio": row["anio_inicio"],
+                "anio_fin": row["anio_fin"],
+                "pendiente_anual": row["pendiente_anual"],
+                "n_limites_deteccion_distintos": limite_stats["n_limites_deteccion_distintos"],
+                "limite_deteccion_min": limite_stats["limite_deteccion_min"],
+                "limite_deteccion_max": limite_stats["limite_deteccion_max"],
+                "variacion_limite_deteccion": limite_stats["variacion_limite_deteccion"],
+                "advertencia_limite_variable": limite_stats["advertencia_limite_variable"],
+                "pendiente_reproducida_correctamente": bool(pendiente_reproducida),
+                "apta_para_interpretacion_descriptiva": bool(apta_descriptiva),
+                "requiere_precaucion_por_censura": bool(requiere_precaucion_censura),
+                "requiere_precaucion_por_limite_deteccion_variable": bool(requiere_precaucion_limite),
+                "no_recomendada_para_interpretacion_numerica": bool(no_recomendada),
+                "observaciones": " ".join(notas),
             }
         )
     return pd.DataFrame(filas)
