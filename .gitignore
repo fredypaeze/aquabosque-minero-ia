@@ -14,9 +14,19 @@ dist/
 data/raw/*
 data/processed/*
 data/external/*
+data/interim/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/external/.gitkeep
+!data/interim/.gitkeep
+
+# Caché espacial regenerable (Fase 4A): geometrías reproyectadas, no se versiona.
+# La carpeta debe des-ignorarse explícitamente (!.../) antes de poder des-ignorar
+# un archivo puntual dentro de ella (data/interim/* ya la excluye por completo y
+# git no recorre directorios podados solo por un patrón de archivo más específico).
+!data/interim/spatial_cache/
+data/interim/spatial_cache/*
+!data/interim/spatial_cache/.gitkeep
 
 # Salidas generadas
 outputs/figures/*
