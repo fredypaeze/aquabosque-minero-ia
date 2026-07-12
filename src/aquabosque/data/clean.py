@@ -566,3 +566,193 @@ def clean_catastro_minero_anm(
         ],
     }
     return df, report
+
+
+# ---------------------------------------------------------------------------
+# Límites municipales DANE (ArcGIS REST, capa Municipios) — Fase 3D
+# ---------------------------------------------------------------------------
+
+
+def _geometry_to_multipolygon(geom) -> Any:
+    """Convierte una geometría shapely Polygon/MultiPolygon a MultiPolygon de
+    forma consistente. No acepta otros tipos (deben filtrarse antes)."""
+    from shapely.geometry import MultiPolygon, Polygon
+
+    if isinstance(geom, MultiPolygon):
+        return geom
+    if isinstance(geom, Polygon):
+        return MultiPolygon([geom])
+    raise ValueError(f"Se esperaba Polygon o MultiPolygon, llegó {geom.geom_type}")
+
+
+def repair_invalid_geometry(geom_dict: dict, *, cod_dane_mpio: str) -> tuple[dict | None, dict]:
+    """Repara UNA geometría GeoJSON inválida con `shapely.make_valid` (no
+    `buffer(0)`). Devuelve (geometría GeoJSON final o None si quedó vacía,
+    registro de la reparación con trazabilidad completa).
+
+    Si `make_valid` produce una `GeometryCollection` (mezcla de tipos), se
+    conservan únicamente los componentes `Polygon`/`MultiPolygon`; los demás
+    (líneas, puntos) se cuentan y se listan en el registro, nunca se
+    descartan en silencio.
+    """
+    from shapely import make_valid
+    from shapely.geometry import MultiPolygon, Polygon, mapping, shape
+    from shapely.validation import explain_validity
+
+    s = shape(geom_dict)
+    motivo = explain_validity(s)
+    tipo_original = s.geom_type
+
+    repaired = make_valid(s)
+    tipo_resultante = repaired.geom_type
+
+    componentes_poligonales: list[Any] = []
+    componentes_descartados: list[str] = []
+
+    if repaired.geom_type == "GeometryCollection":
+        for g in repaired.geoms:
+            if g.geom_type == "Polygon":
+                componentes_poligonales.append(g)
+            elif g.geom_type == "MultiPolygon":
+                componentes_poligonales.extend(list(g.geoms))
+            else:
+                componentes_descartados.append(g.geom_type)
+    elif repaired.geom_type == "Polygon":
+        componentes_poligonales.append(repaired)
+    elif repaired.geom_type == "MultiPolygon":
+        componentes_poligonales.extend(list(repaired.geoms))
+    else:
+        componentes_descartados.append(repaired.geom_type)
+
+    final = MultiPolygon(componentes_poligonales) if componentes_poligonales else MultiPolygon([])
+
+    registro = {
+        "cod_dane_mpio": cod_dane_mpio,
+        "motivo_invalidez": motivo,
+        "tipo_original": tipo_original,
+        "tipo_resultante_make_valid": tipo_resultante,
+        "paso_a_geometrycollection": repaired.geom_type == "GeometryCollection",
+        "quedo_vacia": final.is_empty,
+        "n_componentes_poligonales_finales": len(final.geoms) if not final.is_empty else 0,
+        "componentes_no_poligonales_descartados": componentes_descartados,
+    }
+
+    return (None if final.is_empty else mapping(final)), registro
+
+
+def clean_limites_municipales_dane(features: list[dict]) -> tuple[pd.DataFrame, dict]:
+    """Limpia la capa de límites municipales DANE (ArcGIS REST).
+
+    `features` es la lista completa de Features GeoJSON crudas (properties +
+    geometry). Devuelve un DataFrame con las propiedades limpias más una
+    columna auxiliar `_geometry` (geometría final, siempre Polygon/MultiPolygon
+    homogéneo como MultiPolygon, o None si quedó irremediablemente vacía tras
+    reparar) y un reporte detallado de la limpieza, incluida la reparación de
+    geometrías inválidas.
+
+    No se elimina ninguna fila por invalidez de geometría: toda feature de
+    entrada conserva su registro de propiedades en la salida, con la
+    geometría reparada o documentada como vacía si no se pudo recuperar.
+    """
+    from shapely.geometry import mapping, shape
+
+    n_entrada = len(features)
+    props_list = [f.get("properties", {}) for f in features]
+    df = normalize_column_names(pd.DataFrame(props_list))
+
+    df["cod_dane_mpio"] = df["cod_mpio"].astype(str).str.strip().str.zfill(5)
+    df["cod_dane_dpto"] = df["cod_dpto"].astype(str).str.strip().str.zfill(2)
+    df["nombre_mpio_norm"] = df["nom_mpio"].map(normalize_text)
+    df["nombre_dpto_norm"] = df["nom_dpto"].map(normalize_text)
+
+    n_geometrias_nulas_entrada = 0
+    n_geometrias_invalidas_entrada = 0
+    n_geometrias_invalidas_salida = 0
+    n_geometrias_vacias_salida = 0
+    tipos_finales: dict[str, int] = {}
+    reparaciones: list[dict] = []
+    geometries_out: list[dict | None] = []
+
+    codigos = df["cod_dane_mpio"].tolist()
+    for feat, cod in zip(features, codigos):
+        geom_dict = feat.get("geometry")
+        if not geom_dict:
+            n_geometrias_nulas_entrada += 1
+            geometries_out.append(None)
+            continue
+
+        s = shape(geom_dict)
+        if s.is_valid:
+            geom_out = mapping(_geometry_to_multipolygon(s))
+        else:
+            n_geometrias_invalidas_entrada += 1
+            geom_out, registro = repair_invalid_geometry(geom_dict, cod_dane_mpio=cod)
+            reparaciones.append(registro)
+
+        if geom_out is None:
+            n_geometrias_vacias_salida += 1
+            tipos_finales["(vacía)"] = tipos_finales.get("(vacía)", 0) + 1
+        else:
+            # Verificación dura: la geometría de salida (original ya válida,
+            # o recién reparada) debe quedar válida; si no, se documenta,
+            # nunca se asume silenciosamente que la reparación funcionó.
+            if not shape(geom_out).is_valid:
+                n_geometrias_invalidas_salida += 1
+            tipos_finales[geom_out["type"]] = tipos_finales.get(geom_out["type"], 0) + 1
+        geometries_out.append(geom_out)
+
+    df["_geometry"] = geometries_out
+
+    columnas_finales = [
+        "objectid",
+        "cod_dane_dpto",
+        "nom_dpto",
+        "nombre_dpto_norm",
+        "cod_dane_mpio",
+        "nom_mpio",
+        "nombre_mpio_norm",
+        "mpio_corrdeptal",
+        "_geometry",
+    ]
+    df = df[columnas_finales].reset_index(drop=True)
+
+    n_salida = len(df)
+    n_cod_vacios = int((df["cod_dane_mpio"].isna() | (df["cod_dane_mpio"].str.strip() == "")).sum())
+    n_cod_duplicados = int(df["cod_dane_mpio"].duplicated().sum())
+    longitudes_ok = bool((df["cod_dane_mpio"].str.len() == 5).all())
+
+    report = {
+        "filas_entrada": n_entrada,
+        "filas_salida": n_salida,
+        "registros_eliminados": {
+            "filas_eliminadas_por_invalidez_de_geometria": 0,
+        },
+        "columnas_finales": columnas_finales,
+        "validaciones": {
+            "n_cod_dane_mpio_vacios": n_cod_vacios,
+            "n_cod_dane_mpio_duplicados": n_cod_duplicados,
+            "cod_dane_mpio_es_unico": n_cod_duplicados == 0 and n_cod_vacios == 0,
+            "cod_dane_mpio_longitud_5_para_todas_las_filas": longitudes_ok,
+            "n_geometrias_nulas_entrada": n_geometrias_nulas_entrada,
+            "n_geometrias_invalidas_entrada": n_geometrias_invalidas_entrada,
+            "n_geometrias_reparadas": len(reparaciones),
+            "n_geometrias_invalidas_salida": n_geometrias_invalidas_salida,
+            "n_geometrias_vacias_salida": n_geometrias_vacias_salida,
+            "tipos_geometricos_finales": tipos_finales,
+        },
+        "reparaciones_detalle": reparaciones,
+        "observaciones": [
+            "No se eliminó ninguna fila por invalidez de geometría: toda feature de entrada "
+            "conserva su registro de propiedades en la salida.",
+            f"{n_geometrias_invalidas_entrada} geometrías de entrada eran inválidas; se repararon "
+            "con shapely.make_valid (no buffer(0) como primera opción).",
+            "La salida geométrica final se normalizó siempre a MultiPolygon, incluso cuando el "
+            "Polygon original o reparado era simple.",
+            "Si make_valid devolvió una GeometryCollection mixta, se conservaron solo los "
+            "componentes Polygon/MultiPolygon; los componentes de línea/punto se cuentan y quedan "
+            "listados en 'reparaciones_detalle', nunca se descartan en silencio.",
+            "CRS de la geometría: EPSG:4326 (mismo sistema de origen del servicio ArcGIS REST; no "
+            "se reproyectó ni se simplificó ninguna coordenada).",
+        ],
+    }
+    return df, report

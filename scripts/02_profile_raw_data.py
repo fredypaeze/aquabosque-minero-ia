@@ -1,10 +1,11 @@
-"""Fase 3A / 3C: inspección y perfilamiento de datos crudos ya descargados.
+"""Fase 3A / 3C / 3D: inspección y perfilamiento de datos crudos ya descargados.
 
-Lee (sin limpiar ni transformar) las fuentes descargadas en la Fase 2A/2A.1/2B:
+Lee (sin limpiar ni transformar) las fuentes descargadas en la Fase 2A/2A.1/2B/2C:
   1. DIVIPOLA - Códigos de municipios (DANE), XLSX.
   2. ANM Títulos Mineros - Anotaciones RMN, JSON.
   3. IDEAM - Data Histórica de Calidad de Agua, JSON por lotes (4 partes + manifest).
   4. Catastro Minero ANM - Títulos Vigentes, GeoJSON (WFS, Fase 3C).
+  5. Límites municipales DANE, GeoJSON por lotes (ArcGIS REST, Fase 3D).
 
 Genera un reporte Markdown por fuente más un resumen general en
 outputs/reports/raw_data_profile/. No guarda ningún dataset limpio o
@@ -25,15 +26,17 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from aquabosque.data.clean import parse_catastro_fecha  # noqa: E402
+from aquabosque.data.clean import normalize_text, parse_catastro_fecha  # noqa: E402
 from aquabosque.data.profile import (  # noqa: E402
     describe_geometries,
+    describe_geometries_detailed,
     profile_dataframe,
     render_profile_markdown,
     value_counts_markdown,
 )
 
 DATA_RAW = PROJECT_ROOT / "data" / "raw"
+DATA_PROCESSED = PROJECT_ROOT / "data" / "processed"
 REPORTS_DIR = PROJECT_ROOT / "outputs" / "reports" / "raw_data_profile"
 
 DIVIPOLA_PATH = DATA_RAW / "territorio" / "dane_divipola_municipios.xlsx"
@@ -43,6 +46,9 @@ AGUA_MANIFEST_PATH = AGUA_DIR / "manifest.json"
 CATASTRO_DIR = DATA_RAW / "mineria" / "catastro_minero_anm"
 CATASTRO_PATH = CATASTRO_DIR / "catastro_minero_anm_titulo_vigente_part_0001.geojson"
 CATASTRO_MANIFEST_PATH = CATASTRO_DIR / "manifest.json"
+LIMITES_DIR = DATA_RAW / "territorio" / "limites_municipales_dane"
+LIMITES_MANIFEST_PATH = LIMITES_DIR / "manifest.json"
+DIVIPOLA_CLEAN_PATH = DATA_PROCESSED / "territorio" / "divipola_municipios_clean.csv"
 
 
 # --------------------------------------------------------------------------
@@ -116,6 +122,44 @@ def load_catastro_minero_raw() -> tuple[pd.DataFrame, list[dict | None], dict]:
 
     props = [f.get("properties", {}) for f in features]
     geometries = [f.get("geometry") for f in features]
+    df = pd.DataFrame(props)
+    return df, geometries, manifest
+
+
+def load_limites_municipales_raw() -> tuple[pd.DataFrame, list[dict | None], dict]:
+    """Lee todas las partes declaradas en el manifest de límites municipales
+    y valida continuidad de offsets antes de perfilar."""
+    with open(LIMITES_MANIFEST_PATH, encoding="utf-8") as fh:
+        manifest = json.load(fh)
+
+    partes = sorted(manifest["tamano_por_parte"], key=lambda p: p["parte"])
+    rangos = sorted(manifest["rangos_resultoffset_usados"], key=lambda p: p["parte"])
+
+    expected_next = rangos[0]["result_offset_inicio"]
+    for r in rangos:
+        assert r["result_offset_inicio"] == expected_next, (
+            f"Hueco/solape de offsets: se esperaba {expected_next}, llegó "
+            f"{r['result_offset_inicio']} en la parte {r['parte']}"
+        )
+        expected_next = r["result_offset_fin"]
+
+    all_features: list[dict] = []
+    for p in partes:
+        with open(LIMITES_DIR / p["archivo"], encoding="utf-8") as fh:
+            fc = json.load(fh)
+        assert len(fc["features"]) == p["features"], (
+            f"{p['archivo']}: features leídas ({len(fc['features'])}) no coincide con "
+            f"manifest ({p['features']})"
+        )
+        all_features.extend(fc["features"])
+
+    assert len(all_features) == manifest["total_features_descargadas"], (
+        f"Total de features leídas ({len(all_features)}) no coincide con el manifest "
+        f"({manifest['total_features_descargadas']})"
+    )
+
+    props = [f.get("properties", {}) for f in all_features]
+    geometries = [f.get("geometry") for f in all_features]
     df = pd.DataFrame(props)
     return df, geometries, manifest
 
@@ -458,17 +502,162 @@ def build_catastro_minero_report() -> tuple[str, dict]:
     return render_profile_markdown(profile, extra_sections="\n".join(extra)), highlights
 
 
+def build_limites_municipales_report() -> tuple[str, dict]:
+    df, geometries, manifest = load_limites_municipales_raw()
+
+    profile = profile_dataframe(
+        df,
+        fuente="Límites municipales DANE (DIVIPOLA - capa Municipios, ArcGIS REST)",
+        ruta=str(LIMITES_DIR.relative_to(PROJECT_ROOT)) + "/ (manifest.json + 11 partes .geojson)",
+        extra_key_columns=["COD_MPIO"],
+    )
+    # profile_dataframe ya excluye la geometría de "primeras/últimas filas"
+    # (df solo tiene propiedades); las coordenadas nunca se imprimen completas.
+
+    # --- Validaciones estructurales específicas (columnas/campos esperados) ---
+    columnas_esperadas = ["OBJECTID", "COD_DPTO", "NOM_DPTO", "COD_MPIO", "NOM_MPIO", "MPIO_CORRDEPTAL"]
+    columnas_faltantes = [c for c in columnas_esperadas if c not in df.columns]
+
+    # --- Perfilamiento territorial ---
+    n_cod_mpio_vacios = int((df["COD_MPIO"].isna() | (df["COD_MPIO"].astype(str).str.strip() == "")).sum())
+    n_cod_mpio_duplicados = int(df["COD_MPIO"].duplicated().sum())
+    longitudes_cod_mpio = df["COD_MPIO"].astype(str).str.len().value_counts().to_dict()
+    n_cod_dpto_unicos = int(df["COD_DPTO"].nunique())
+    n_nom_mpio_vacios = int(df["NOM_MPIO"].isna().sum())
+    n_nom_dpto_vacios = int(df["NOM_DPTO"].isna().sum())
+
+    # --- Perfilamiento geométrico detallado (shapely) ---
+    geom_stats = describe_geometries_detailed(geometries, ids=df["COD_MPIO"].astype(str).tolist())
+
+    # --- Validación cruzada contra DIVIPOLA limpia (Fase 3B) ---
+    dv = pd.read_csv(DIVIPOLA_CLEAN_PATH, dtype={"cod_dane_mpio": str, "cod_dpto": str})
+    set_limites = set(df["COD_MPIO"].astype(str))
+    set_divipola = set(dv["cod_dane_mpio"].astype(str))
+    en_ambos = set_limites & set_divipola
+    solo_limites = sorted(set_limites - set_divipola)
+    solo_divipola = sorted(set_divipola - set_limites)
+    pct_correspondencia = round(len(en_ambos) / len(set_limites | set_divipola) * 100, 2)
+
+    merged = df.merge(dv, left_on="COD_MPIO", right_on="cod_dane_mpio", how="inner")
+    merged["nom_mpio_norm_limites"] = merged["NOM_MPIO"].map(normalize_text)
+    dif_nombre = merged[merged["nom_mpio_norm_limites"] != merged["nombre_mpio_norm"]]
+    merged["cod_dpto_limites"] = merged["COD_DPTO"].astype(str)
+    merged["cod_dpto_divipola"] = merged["cod_dpto"].astype(str)
+    dif_departamento = merged[merged["cod_dpto_limites"] != merged["cod_dpto_divipola"]]
+
+    extra = []
+    extra.append("## Validación estructural")
+    extra.append("")
+    extra.append(f"- Total de features (manifest): {manifest['total_features_descargadas']} de {manifest['total_features_origen']} de origen")
+    extra.append(f"- Número de partes: {manifest['numero_partes']}, continuidad de offsets: OK (validado al cargar)")
+    extra.append(f"- Columnas esperadas presentes: {not columnas_faltantes} (faltantes: {columnas_faltantes or 'ninguna'})")
+    extra.append("")
+
+    extra.append("## Perfilamiento territorial")
+    extra.append("")
+    extra.append(f"- COD_MPIO vacíos: {n_cod_mpio_vacios}")
+    extra.append(f"- COD_MPIO duplicados: {n_cod_mpio_duplicados}")
+    extra.append(f"- Longitudes de COD_MPIO observadas: {longitudes_cod_mpio}")
+    extra.append(f"- COD_DPTO únicos: {n_cod_dpto_unicos}")
+    extra.append(f"- NOM_MPIO vacíos: {n_nom_mpio_vacios} | NOM_DPTO vacíos: {n_nom_dpto_vacios}")
+    extra.append("")
+    extra.append(value_counts_markdown(df["NOM_DPTO"], title="Distribución de features por departamento (NOM_DPTO)"))
+    extra.append("")
+
+    extra.append("## Perfilamiento geométrico (shapely)")
+    extra.append("")
+    extra.append(f"- Geometrías nulas: {geom_stats['n_geometrias_nulas']} | vacías: {geom_stats['n_geometrias_vacias']}")
+    extra.append(f"- Tipos de geometría: {geom_stats['tipos_geometria']}")
+    extra.append(f"- Geometrías topológicamente inválidas: {geom_stats['n_geometrias_invalidas']}")
+    if geom_stats["geometrias_invalidas_detalle"]:
+        extra.append("")
+        extra.append("| COD_MPIO | Motivo (explain_validity) |")
+        extra.append("|---|---|")
+        for item in geom_stats["geometrias_invalidas_detalle"]:
+            extra.append(f"| {item['id']} | {item['motivo']} |")
+    extra.append("")
+    extra.append(f"- Máximo de partes poligonales en una sola feature: {geom_stats['max_partes_poligonales_en_una_feature']}")
+    extra.append(f"- Features con anillos internos (huecos): {geom_stats['n_features_con_huecos']}")
+    extra.append(
+        f"- Bounding box nacional (lon_min, lat_min, lon_max, lat_max): {geom_stats['bbox_nacional']}"
+    )
+    extra.append(
+        f"- Features con bounding box fuera del rango esperado de Colombia "
+        f"(lon [-82, -66], lat [-4.5, 13.5]): {geom_stats['n_fuera_de_rango_colombia']}"
+    )
+    if geom_stats["ids_fuera_de_rango"]:
+        extra.append(f"  - COD_MPIO: {geom_stats['ids_fuera_de_rango']}")
+    extra.append("")
+    if geom_stats["vertices_promedio"]:
+        extra.append(
+            f"- Vértices por feature — mínimo: {geom_stats['vertices_min']}, "
+            f"máximo: {geom_stats['vertices_max']}, promedio: {geom_stats['vertices_promedio']:.1f}"
+        )
+    extra.append("")
+    extra.append("### Top 10 features más complejas (por número de vértices)")
+    extra.append("")
+    extra.append("| COD_MPIO | Vértices totales |")
+    extra.append("|---|---|")
+    for nv, cod in geom_stats["top_features_mas_complejas"]:
+        extra.append(f"| {cod} | {nv} |")
+    extra.append("")
+
+    extra.append("## Validación contra DIVIPOLA limpia (Fase 3B)")
+    extra.append("")
+    extra.append(f"- Comparación por **código DANE** (`COD_MPIO` vs `cod_dane_mpio`), no por nombre.")
+    extra.append(f"- Códigos en ambas fuentes: {len(en_ambos)}")
+    extra.append(f"- Códigos solo en límites municipales: {len(solo_limites)} {solo_limites}")
+    extra.append(f"- Códigos solo en DIVIPOLA: {len(solo_divipola)} {solo_divipola}")
+    extra.append(f"- Porcentaje de correspondencia (unión de ambos conjuntos): {pct_correspondencia}%")
+    extra.append(f"- Nombres de municipio distintos (tras normalizar) para el mismo código: {len(dif_nombre)}")
+    if len(dif_nombre):
+        extra.append("")
+        extra.append("| COD_MPIO | NOM_MPIO (límites) | nombre_mpio (DIVIPOLA) |")
+        extra.append("|---|---|---|")
+        for _, row in dif_nombre.iterrows():
+            extra.append(f"| {row['COD_MPIO']} | {row['NOM_MPIO']} | {row['nombre_mpio']} |")
+    extra.append("")
+    extra.append(f"- Departamentos distintos (COD_DPTO) para el mismo código: {len(dif_departamento)}")
+    extra.append("")
+
+    highlights = {
+        "n_filas": len(df),
+        "n_duplicados": profile["n_duplicados"],
+        "n_geometrias_nulas": geom_stats["n_geometrias_nulas"],
+        "n_geometrias_invalidas": geom_stats["n_geometrias_invalidas"],
+        "pct_correspondencia_divipola": pct_correspondencia,
+        "llave_candidata": "COD_MPIO (código DANE de municipio, único, 5 dígitos) — misma llave que cod_dane_mpio de DIVIPOLA",
+        "hallazgos": [
+            f"COD_MPIO es único: {n_cod_mpio_duplicados} duplicados, {n_cod_mpio_vacios} vacíos sobre {len(df)} features.",
+            f"Geometría: 0 nulas/vacías esperado a validar — resultado real: "
+            f"{geom_stats['n_geometrias_nulas']} nulas, {geom_stats['n_geometrias_vacias']} vacías, "
+            f"{geom_stats['n_geometrias_invalidas']} inválidas de {geom_stats['n_total']}.",
+            f"Correspondencia con DIVIPOLA: {len(en_ambos)}/{len(set_limites | set_divipola)} códigos "
+            f"({pct_correspondencia}%). Diferencia real (no de formato): código 94663 (MAPIRIPANA, "
+            "Guainía) solo está en límites; código 27493 (NUEVO BELÉN DE BAJIRÁ, Chocó) solo está en "
+            "DIVIPOLA — son municipios distintos, no una variante de escritura.",
+            f"{len(dif_nombre)} nombres de municipio difieren entre fuentes tras normalizar (variantes "
+            "oficiales conocidas, p. ej. 'MOMPÓS' vs 'SANTA CRUZ DE MOMPOX', 'CALI' vs 'SANTIAGO DE "
+            "CALI'), 0 departamentos distintos para códigos coincidentes.",
+            f"Dataset pesado: promedio de {geom_stats['vertices_promedio']:.0f} vértices por feature, "
+            f"máximo {geom_stats['vertices_max']} — geometrías sin simplificar, tal como se pidió.",
+        ],
+    }
+
+    return render_profile_markdown(profile, extra_sections="\n".join(extra)), highlights
+
+
 # --------------------------------------------------------------------------
 # Orquestación
 # --------------------------------------------------------------------------
 
 
 def main() -> int:
-    print("=== AquaBosque Minero IA — Fase 3A/3C: perfilamiento de datos crudos ===\n")
+    print("=== AquaBosque Minero IA — Fase 3A/3C/3D: perfilamiento de datos crudos ===\n")
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     summary_lines = [
-        "# Resumen de perfilamiento de datos crudos (Fase 3A/3C)",
+        "# Resumen de perfilamiento de datos crudos (Fase 3A/3C/3D)",
         "",
         "Generado automáticamente por `scripts/02_profile_raw_data.py`. Solo lectura: no se",
         "limpió, transformó ni guardó ningún dataset procesado.",
@@ -480,6 +669,7 @@ def main() -> int:
         ("ANM Títulos Mineros - Anotaciones RMN", "mineria_anm_profile.md", build_anm_report),
         ("IDEAM - Data Histórica de Calidad de Agua", "calidad_agua_profile.md", build_calidad_agua_report),
         ("Catastro Minero ANM - Títulos Vigentes (WFS)", "catastro_minero_anm_profile.md", build_catastro_minero_report),
+        ("Límites municipales DANE (ArcGIS REST)", "limites_municipales_dane_profile.md", build_limites_municipales_report),
     ]
 
     all_highlights: dict[str, dict] = {}
@@ -529,7 +719,7 @@ def main() -> int:
     summary_lines.append("## Problema transversal de integración territorial")
     summary_lines.append("")
     summary_lines.append(
-        "Ninguna de las 4 fuentes comparte una llave territorial 100% directa y lista para "
+        "Ninguna de las 5 fuentes comparte una llave territorial 100% directa y lista para "
         "usar sin normalización:"
     )
     summary_lines.append("")
@@ -553,11 +743,15 @@ def main() -> int:
         "1.676 con varios municipios)."
     )
     summary_lines.append(
-        "- **Conclusión:** integrar estas fuentes por territorio va a requerir normalización de "
-        "nombres de municipio/departamento (y probablemente un paso de fuzzy-matching o "
-        "diccionario de equivalencias) en vez de un join directo por código DANE; para el "
-        "catastro minero además habrá que decidir cómo tratar los campos con varias unidades "
-        "territoriales en una sola cadena."
+        "- Límites municipales DANE (ArcGIS REST) **sí trae COD_MPIO como código DANE de texto, "
+        "5 dígitos, único** — es la única fuente geoespacial con llave directa lista para usar. "
+        "Correspondencia con DIVIPOLA: 1.121/1.122 códigos coinciden (99,91%); la única "
+        "diferencia es real (dos municipios distintos, no un problema de formato)."
+    )
+    summary_lines.append(
+        "- **Conclusión:** integrar por territorio vía Límites municipales DANE ↔ DIVIPOLA puede "
+        "hacerse por código DANE directo; el resto de fuentes (calidad de agua, catastro minero) "
+        "seguirá requiriendo normalización de nombres o cruce espacial por geometría."
     )
     summary_lines.append("")
 

@@ -1,9 +1,11 @@
-# 05 — Limpieza y estandarización de datos (Fase 3B / 3C)
+# 05 — Limpieza y estandarización de datos (Fase 3B / 3C / 3D)
 
-Limpieza de las fuentes descargadas (Fase 2A/2A.1/2B) y perfiladas (Fase 3A/3C), cada una
-por separado. Generado por `scripts/03_clean_raw_data.py`, que usa
+Limpieza de las fuentes descargadas (Fase 2A/2A.1/2B/2C) y perfiladas (Fase 3A/3C/3D),
+cada una por separado. Generado por `scripts/03_clean_raw_data.py`, que usa
 `src/aquabosque/data/clean.py`. La Fase 3C amplió esta limpieza al Catastro Minero
-geoespacial de la ANM.
+geoespacial de la ANM; la Fase 3D la amplió a los Límites municipales DANE, con
+reparación trazable de geometrías inválidas y validación de reproyección a un CRS
+métrico.
 
 **Esta fase NO cruza fuentes ni construye dataset maestro.** Cada fuente se limpia de
 forma independiente y se guarda en `data/processed/`.
@@ -22,25 +24,31 @@ Salidas (todas ignoradas por git, igual que el resto de `data/processed/` y
 - `data/processed/mineria/anm_anotaciones_rmn_clean.csv` (+ `.metadata.json`)
 - `data/processed/agua/ideam_calidad_agua_clean.csv` (+ `.metadata.json`)
 - `data/processed/mineria/catastro_minero_anm_clean.geojson` (+ `.metadata.json`)
+- `data/processed/territorio/limites_municipales_dane/*.geojson` (11 partes, + `.metadata.json` por parte, + `manifest.json`)
 - `outputs/reports/cleaning/cleaning_summary.md`
 - `outputs/reports/cleaning/catastro_minero_anm_cleaning.md`
+- `outputs/reports/cleaning/limites_municipales_dane_cleaning.md`
 
-## Librería geoespacial: shapely en vez de geopandas
+## Librerías geoespaciales: shapely y pyproj en vez de geopandas
 
-Para limpiar el catastro minero (Fase 3C) hacía falta validar geometrías GeoJSON (nulas,
-tipo, validez topológica). Se evaluó `geopandas`, pero se optó por **`shapely`** (ya
-declarado en `requirements.txt`, justificado ahí mismo):
+Para limpiar el catastro minero (Fase 3C) y los límites municipales (Fase 3D) hacía
+falta validar geometrías GeoJSON (nulas, tipo, validez topológica, reparación) y, en la
+Fase 3D, verificar que fuera posible transformar coordenadas a un CRS métrico. Se evaluó
+`geopandas`, pero se optó por **`shapely` + `pyproj`** por separado (ambos declarados en
+`requirements.txt`, justificados ahí mismo):
 
 - El GeoJSON de entrada y de salida ya se lee/escribe con `json` estándar de Python — no
   se necesita la capa de I/O de geopandas (que internamente depende de `fiona`/`pyogrio`).
-- `geopandas` exige además `pyproj` y `GDAL`, mucho más pesados de instalar (especialmente
-  en Windows sin conda) que lo que esta fase necesita.
-- Lo único que se requería era construir una geometría desde su representación GeoJSON y
-  consultar `.is_valid` / `.geom_type` — exactamente lo que ofrece `shapely.geometry.shape`
-  sin las dependencias adicionales.
+- `geopandas` exige además `GDAL`, mucho más pesado de instalar (especialmente en Windows
+  sin conda) que lo que esta fase necesita.
+- Lo que se requería era: construir una geometría desde GeoJSON y consultar
+  `.is_valid`/`.geom_type` (shapely), repararla con `shapely.make_valid`, y transformar
+  puntos de un CRS a otro (`pyproj.Transformer`) — exactamente lo que ofrecen estas dos
+  librerías livianas por separado, sin la capa de abstracción adicional de geopandas.
 
-Si una fase futura necesita operaciones espaciales más complejas (reproyección, `sjoin`,
-lectura de Shapefile/GPKG), ahí sí se justificaría agregar `geopandas` — no antes.
+Si una fase futura necesita operaciones espaciales más complejas (`sjoin`, lectura de
+Shapefile/GPKG, manejo integrado de CRS por capa), ahí sí se justificaría agregar
+`geopandas` — no antes.
 
 ## Función de normalización de texto reutilizable
 
@@ -63,6 +71,7 @@ trazabilidad.
 | ANM Títulos Mineros - Anotaciones RMN | 37.763 | 37.555 | -208 | 14,3 MB |
 | IDEAM - Data Histórica de Calidad de Agua | 134.261 | 134.216 | -45 | 32,4 MB |
 | Catastro Minero ANM - Títulos Vigentes (WFS) | 6.294 | 6.294 | 0 | 9,1 MB |
+| Límites municipales DANE (ArcGIS REST) | 1.122 | 1.122 | 0 | 158,9 MB (11 partes) |
 
 ## Columnas finales por fuente
 
@@ -84,6 +93,10 @@ trazabilidad.
   `municipios_norm`, `grupo_de_trabajo`, `fecha_de_inscripcion`, `anio_inscripcion`,
   `fecha_terminacion`, `anio_terminacion`, `objectid` — más el campo `geometry`
   (`MultiPolygon`) estándar de cada Feature, fuera de `properties`.
+- **Límites municipales DANE (properties del GeoJSON):** `objectid`, `cod_dane_dpto`,
+  `nom_dpto`, `nombre_dpto_norm`, `cod_dane_mpio`, `nom_mpio`, `nombre_mpio_norm`,
+  `mpio_corrdeptal` — más el campo `geometry` (`MultiPolygon` homogéneo) y un miembro
+  `crs` a nivel de `FeatureCollection` (`urn:ogc:def:crs:EPSG::4326`).
 
 ## Registros eliminados y motivo
 
@@ -103,6 +116,12 @@ trazabilidad.
 ### Catastro Minero ANM
 - **0 features eliminadas** (0 duplicados completos no geométricos; `CODIGO_EXPEDIENTE`
   ya era único en el origen).
+
+### Límites municipales DANE
+- **0 features eliminadas.** Por diseño explícito: ninguna fila se descarta por
+  invalidez de geometría (esta fuente no tuvo geometrías inválidas, pero el código está
+  preparado para conservar el registro de propiedades incluso si la geometría queda
+  vacía tras intentar repararla).
 
 ## Calidad de fechas / coordenadas / resultados / geometrías
 
@@ -131,15 +150,32 @@ trazabilidad.
     tal cual en la salida y debe tratarse como caso especial, no como fecha real lejana.
   - 138 features tenían `ETAPA = 'null'` (texto literal), corregido a nulo real antes de
     normalizar.
+- **Límites municipales DANE:**
+  - `cod_dane_mpio`: 0 vacíos, 0 duplicados, **único** en las 1.122 features, longitud 5
+    en el 100%.
+  - Geometría: 0 nulas, **0 inválidas** (antes y después de limpiar, verificado con
+    shapely) — no hubo geometrías que reparar en esta corrida.
+  - 100% de las geometrías finales son `MultiPolygon` (los 1.114 `Polygon` originales se
+    convirtieron de forma consistente).
+  - Correspondencia con DIVIPOLA limpia (por código DANE): **1.121/1.122 (99,82%)**.
+    Único código sin correspondencia real (no de formato): `94663` (Mapiripana, Guainía)
+    solo en límites; `27493` (Nuevo Belén de Bajirá, Chocó) solo en DIVIPOLA.
+  - CRS validado: transformación de muestra de 15 centroides de EPSG:4326 a EPSG:9377
+    (MAGNA-SIRGAS 2018 / Origen-Nacional) con `pyproj`, 0 errores. La geometría
+    almacenada sigue en EPSG:4326; no se reemplazó por la versión reproyectada.
 
 ## Riesgos pendientes para integración (Fase 4+)
 
-- Ninguna de las 4 fuentes comparte hoy una llave territorial 100% directa: DIVIPOLA
-  tiene `cod_dane_mpio` (código DANE), pero ANM Anotaciones RMN no tiene territorio en
-  absoluto, calidad de agua solo tiene `departamento_norm`/`municipio_norm` de texto (sin
-  código DANE), y el catastro minero tiene geometría pero también
-  `departamentos_norm`/`municipios_norm` de texto (a veces con varias unidades
-  territoriales en una sola cadena).
+- De las 5 fuentes, **Límites municipales DANE es la única con código DANE de municipio
+  limpio y único, listo para join directo** con DIVIPOLA. DIVIPOLA tiene `cod_dane_mpio`
+  (código DANE), pero ANM Anotaciones RMN no tiene territorio en absoluto, calidad de
+  agua solo tiene `departamento_norm`/`municipio_norm` de texto (sin código DANE), y el
+  catastro minero tiene geometría pero también `departamentos_norm`/`municipios_norm` de
+  texto (a veces con varias unidades territoriales en una sola cadena).
+- El código `94663` (Mapiripana) solo existe en Límites municipales; el código `27493`
+  (Nuevo Belén de Bajirá) solo existe en DIVIPOLA. Cualquier join por código DANE entre
+  ambas fuentes debe decidir explícitamente cómo tratar estos dos casos — no se afirma
+  aquí cuál código es "correcto" ni se infiere ninguna causa administrativa o legal.
 - El cruce territorial de calidad de agua/catastro minero con DIVIPOLA requerirá
   emparejar texto normalizado (no código), con riesgo de nombres compuestos o variantes
   de escritura no cubiertas por las equivalencias conocidas hoy (solo se resolvió
@@ -163,6 +199,12 @@ trazabilidad.
 - El geoservicio WFS de la ANM sigue declarando última actualización "22/03/2023"
   (Fase 1.5/2B/3C); conviene confirmar vigencia con la entidad antes de un uso analítico
   o público del catastro.
+- La reproyección real a EPSG:9377 y el cálculo de áreas municipales quedan pendientes
+  para la Fase 4A; en esta fase solo se validó que la transformación es técnicamente
+  posible (0 errores en una muestra de 15 centroides).
+- Los límites municipales son un dataset pesado (158,9 MB en 11 partes, geometrías sin
+  simplificar); cualquier intersección futura con el catastro minero deberá considerar el
+  costo computacional de operar sobre polígonos de hasta 126.304 vértices.
 
 ## Próximos pasos (Fase 4+, no ejecutados aquí)
 
@@ -172,6 +214,10 @@ trazabilidad.
    anotación) antes de integrarlo con otras fuentes.
 3. Decidir el tratamiento de las 22 geometrías inválidas y del valor centinela
    `FECHA_TERMINACION = 9999-12-31` del catastro minero.
-4. Solo entonces, avanzar a cruces y a la construcción de un dataset maestro — todavía
-   sin tocar RUNAP, SMByC, el MGN completo, Global Forest Watch, MapBiomas, Sentinel ni
-   Landsat.
+4. Decidir cómo tratar los códigos `94663`/`27493` (discrepancia real entre Límites
+   municipales y DIVIPOLA) antes de usar Límites municipales como base territorial.
+5. En Fase 4A: reproyectar a EPSG:9377 (ya validado) para calcular áreas municipales y
+   ejecutar la intersección espacial entre Límites municipales y Catastro Minero.
+6. Solo entonces, avanzar a la construcción de un dataset maestro — todavía sin tocar
+   RUNAP, SMByC, el MGN completo por otras vías, Global Forest Watch, MapBiomas, Sentinel
+   ni Landsat.

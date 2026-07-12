@@ -16,6 +16,10 @@ shapely  # validar geometrias (nulas/tipo/validez) del catastro minero ANM, Fase
          # ademas fiona/pyproj/GDAL (mucho mas pesado de instalar) para
          # funcionalidad de I/O que aqui no hace falta, porque el GeoJSON ya
          # se lee/escribe con json estandar.
+pyproj   # transformar/validar coordenadas entre CRS (EPSG:4326 <-> EPSG:9377
+         # MAGNA-SIRGAS 2018 / Origen-Nacional) para los limites municipales
+         # DANE, Fase 3D. Necesario porque shapely no incluye reproyeccion;
+         # pyproj es mucho mas liviano que agregar geopandas solo para esto.
 
 # Configuración y entorno
 python-dotenv

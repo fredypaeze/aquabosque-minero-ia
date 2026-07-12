@@ -8,11 +8,17 @@ memoria (a partir de XLSX o JSON crudos) y producen estructuras de perfil
 
 from __future__ import annotations
 
+import math
 import re
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+# Rango geográfico esperado para Colombia (incluye territorio insular como
+# San Andrés/Providencia y Malpelo, por eso el rango de longitud es amplio).
+COLOMBIA_LON_RANGE = (-82.0, -66.0)
+COLOMBIA_LAT_RANGE = (-4.5, 13.5)
 
 # Nombres de columna que sugieren una llave de integración.
 KEY_NAME_HINTS = (
@@ -331,3 +337,126 @@ def describe_geometries(geometries: list[dict | None]) -> dict[str, Any]:
     resultado["n_geometrias_invalidas"] = n_invalidas
     resultado["validez_verificada_con"] = "shapely"
     return resultado
+
+
+def geometry_vertex_count(geom: dict) -> int:
+    """Cuenta vértices totales de una geometría GeoJSON Polygon/MultiPolygon
+    (todos los anillos, exterior + huecos)."""
+    from shapely.geometry import shape
+
+    s = shape(geom)
+    if s.geom_type == "Polygon":
+        return len(s.exterior.coords) + sum(len(r.coords) for r in s.interiors)
+    if s.geom_type == "MultiPolygon":
+        return sum(
+            len(p.exterior.coords) + sum(len(r.coords) for r in p.interiors) for p in s.geoms
+        )
+    return len(getattr(s, "coords", []))
+
+
+def geometry_parts_and_rings(geom: dict) -> tuple[int, int]:
+    """Devuelve (número de partes poligonales, número de anillos totales) de
+    una geometría GeoJSON Polygon/MultiPolygon. Un Polygon simple sin huecos
+    es (1, 1); cada hueco interior suma un anillo más."""
+    from shapely.geometry import shape
+
+    s = shape(geom)
+    if s.geom_type == "Polygon":
+        return 1, 1 + len(s.interiors)
+    if s.geom_type == "MultiPolygon":
+        n_partes = len(s.geoms)
+        n_anillos = sum(1 + len(p.interiors) for p in s.geoms)
+        return n_partes, n_anillos
+    return 0, 0
+
+
+def describe_geometries_detailed(
+    geometries: list[dict | None],
+    *,
+    ids: list[str] | None = None,
+    top_n_complex: int = 10,
+    max_invalid_detail: int = 50,
+) -> dict[str, Any]:
+    """Perfilamiento geométrico detallado con shapely: nulas, vacías, tipos,
+    validez con motivo (`explain_validity`), partes/anillos, bounding box
+    nacional, coordenadas fuera del rango esperado de Colombia y las
+    features más complejas por número de vértices.
+
+    `ids` es una lista paralela a `geometries` (p. ej. códigos DANE) para
+    poder referenciar features específicas en el reporte sin imprimir
+    geometría completa.
+    """
+    from shapely.geometry import shape
+    from shapely.validation import explain_validity
+
+    n_total = len(geometries)
+    if ids is None:
+        ids = [str(i) for i in range(n_total)]
+
+    n_nulas = 0
+    n_vacias = 0
+    tipos: dict[str, int] = {}
+    invalidas: list[dict[str, str]] = []
+    complejidad: list[tuple[int, str]] = []
+    fuera_de_rango: list[str] = []
+    partes_max = 0
+    n_con_huecos = 0
+    minx = miny = math.inf
+    maxx = maxy = -math.inf
+
+    for geom, id_ in zip(geometries, ids):
+        if not geom:
+            n_nulas += 1
+            continue
+        try:
+            s = shape(geom)
+        except Exception as exc:  # noqa: BLE001
+            invalidas.append({"id": id_, "motivo": f"geometría corrupta: {exc}"})
+            continue
+
+        tipos[s.geom_type] = tipos.get(s.geom_type, 0) + 1
+
+        if s.is_empty:
+            n_vacias += 1
+            continue
+
+        if not s.is_valid:
+            invalidas.append({"id": id_, "motivo": explain_validity(s)})
+
+        b = s.bounds
+        minx, miny, maxx, maxy = min(minx, b[0]), min(miny, b[1]), max(maxx, b[2]), max(maxy, b[3])
+        if not (
+            COLOMBIA_LON_RANGE[0] <= b[0]
+            and b[2] <= COLOMBIA_LON_RANGE[1]
+            and COLOMBIA_LAT_RANGE[0] <= b[1]
+            and b[3] <= COLOMBIA_LAT_RANGE[1]
+        ):
+            fuera_de_rango.append(id_)
+
+        n_partes, n_anillos = geometry_parts_and_rings(geom)
+        partes_max = max(partes_max, n_partes)
+        if n_anillos > n_partes:
+            n_con_huecos += 1
+
+        complejidad.append((geometry_vertex_count(geom), id_))
+
+    complejidad.sort(reverse=True)
+    vertices = [c[0] for c in complejidad]
+
+    return {
+        "n_total": n_total,
+        "n_geometrias_nulas": n_nulas,
+        "n_geometrias_vacias": n_vacias,
+        "tipos_geometria": tipos,
+        "n_geometrias_invalidas": len(invalidas),
+        "geometrias_invalidas_detalle": invalidas[:max_invalid_detail],
+        "bbox_nacional": (minx, miny, maxx, maxy) if vertices else None,
+        "n_fuera_de_rango_colombia": len(fuera_de_rango),
+        "ids_fuera_de_rango": fuera_de_rango[:20],
+        "max_partes_poligonales_en_una_feature": partes_max,
+        "n_features_con_huecos": n_con_huecos,
+        "vertices_min": min(vertices) if vertices else None,
+        "vertices_max": max(vertices) if vertices else None,
+        "vertices_promedio": (sum(vertices) / len(vertices)) if vertices else None,
+        "top_features_mas_complejas": complejidad[:top_n_complex],
+    }

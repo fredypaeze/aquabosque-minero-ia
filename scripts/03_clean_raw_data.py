@@ -1,6 +1,6 @@
-"""Fase 3B / 3C: limpieza y estandarización de las fuentes MVP.
+"""Fase 3B / 3C / 3D: limpieza y estandarización de las fuentes MVP.
 
-Lee los datos crudos ya descargados (Fase 2A/2A.1/2B) y perfilados (Fase 3A/3C) y
+Lee los datos crudos ya descargados (Fase 2A/2A.1/2B/2C) y perfilados (Fase 3A/3C/3D) y
 genera una versión limpia por fuente en data/processed/. Cada fuente se
 limpia por separado: este script NO cruza las fuentes entre sí ni construye
 ningún dataset maestro. No descarga nada nuevo, no entrena modelo, no crea
@@ -11,8 +11,10 @@ Salidas:
   data/processed/mineria/anm_anotaciones_rmn_clean.csv (+ .metadata.json)
   data/processed/agua/ideam_calidad_agua_clean.csv (+ .metadata.json)
   data/processed/mineria/catastro_minero_anm_clean.geojson (+ .metadata.json)
+  data/processed/territorio/limites_municipales_dane/*.geojson (+ manifest + metadata)
   outputs/reports/cleaning/cleaning_summary.md
   outputs/reports/cleaning/catastro_minero_anm_cleaning.md
+  outputs/reports/cleaning/limites_municipales_dane_cleaning.md
 """
 
 from __future__ import annotations
@@ -33,6 +35,7 @@ from aquabosque.data.clean import (  # noqa: E402
     clean_calidad_agua,
     clean_catastro_minero_anm,
     clean_divipola,
+    clean_limites_municipales_dane,
     dataframe_to_geojson,
     json_safe_default,
 )
@@ -49,6 +52,13 @@ AGUA_MANIFEST_PATH = AGUA_DIR / "manifest.json"
 CATASTRO_DIR = DATA_RAW / "mineria" / "catastro_minero_anm"
 CATASTRO_PATH = CATASTRO_DIR / "catastro_minero_anm_titulo_vigente_part_0001.geojson"
 CATASTRO_MANIFEST_PATH = CATASTRO_DIR / "manifest.json"
+LIMITES_RAW_DIR = DATA_RAW / "territorio" / "limites_municipales_dane"
+LIMITES_RAW_MANIFEST_PATH = LIMITES_RAW_DIR / "manifest.json"
+LIMITES_OUT_DIR = DATA_PROCESSED / "territorio" / "limites_municipales_dane"
+DIVIPOLA_CLEAN_PATH = DATA_PROCESSED / "territorio" / "divipola_municipios_clean.csv"
+
+CRS_ORIGEN = "EPSG:4326"
+CRS_METRICO_PROPUESTO = "EPSG:9377"  # MAGNA-SIRGAS 2018 / Origen-Nacional
 
 
 # --------------------------------------------------------------------------
@@ -110,6 +120,31 @@ def load_catastro_minero_raw() -> tuple[pd.DataFrame, list[dict | None], dict]:
     return df, geometries, manifest
 
 
+def load_limites_municipales_raw_features() -> tuple[list[dict], dict]:
+    """Lee todas las partes declaradas en el manifest crudo de límites
+    municipales y devuelve la lista completa de Features GeoJSON (sin
+    modificar) más el manifest."""
+    with open(LIMITES_RAW_MANIFEST_PATH, encoding="utf-8") as fh:
+        manifest = json.load(fh)
+
+    partes = sorted(manifest["tamano_por_parte"], key=lambda p: p["parte"])
+    all_features: list[dict] = []
+    for p in partes:
+        with open(LIMITES_RAW_DIR / p["archivo"], encoding="utf-8") as fh:
+            fc = json.load(fh)
+        assert len(fc["features"]) == p["features"], (
+            f"{p['archivo']}: features leídas ({len(fc['features'])}) no coincide con "
+            f"manifest ({p['features']})"
+        )
+        all_features.extend(fc["features"])
+
+    assert len(all_features) == manifest["total_features_descargadas"], (
+        f"Total de features leídas ({len(all_features)}) no coincide con el manifest "
+        f"({manifest['total_features_descargadas']})"
+    )
+    return all_features, manifest
+
+
 # --------------------------------------------------------------------------
 # Escritura de salidas
 # --------------------------------------------------------------------------
@@ -145,6 +180,17 @@ def write_cleaning_metadata(
         **report,
     }
     write_json(path, metadata)
+
+
+def write_clean_geojson_with_crs(
+    df: pd.DataFrame, path: Path, *, geometry_col: str = "_geometry", epsg: int = 4326
+) -> int:
+    """Como write_clean_geojson, pero además registra el CRS como miembro
+    `crs` del FeatureCollection (convención GeoJSON heredada, informativa)."""
+    ensure_dir(path.parent)
+    fc = dataframe_to_geojson(df, geometry_col=geometry_col)
+    fc["crs"] = {"type": "name", "properties": {"name": f"urn:ogc:def:crs:EPSG::{epsg}"}}
+    return write_json(path, fc, compact=True, default=json_safe_default)
 
 
 # --------------------------------------------------------------------------
@@ -242,6 +288,308 @@ def run_catastro_minero() -> tuple[str, dict]:
     )
 
 
+def validate_crs_transform_sample(df: pd.DataFrame, *, sample_size: int = 15) -> dict:
+    """Valida que sea posible transformar una muestra de centroides de
+    EPSG:4326 a EPSG:9377 con pyproj, SIN reemplazar la geometría almacenada.
+    Este CRS métrico es el propuesto para intersecciones/áreas en Fase 4A."""
+    from pyproj import Transformer
+    from shapely.geometry import shape
+
+    transformer = Transformer.from_crs(CRS_ORIGEN, CRS_METRICO_PROPUESTO, always_xy=True)
+
+    con_geometria = df[df["_geometry"].notna()]
+    n_muestra = min(sample_size, len(con_geometria))
+    sample = con_geometria.sample(n=n_muestra, random_state=42) if n_muestra else con_geometria
+
+    xs: list[float] = []
+    ys: list[float] = []
+    n_errores = 0
+    detalle = []
+    for _, row in sample.iterrows():
+        geom = shape(row["_geometry"])
+        cx, cy = geom.centroid.x, geom.centroid.y
+        try:
+            tx, ty = transformer.transform(cx, cy)
+            xs.append(tx)
+            ys.append(ty)
+            detalle.append(
+                {
+                    "cod_dane_mpio": row["cod_dane_mpio"],
+                    "centroide_epsg4326": [round(cx, 6), round(cy, 6)],
+                    "centroide_epsg9377_metros": [round(tx, 2), round(ty, 2)],
+                }
+            )
+        except Exception as exc:  # noqa: BLE001
+            n_errores += 1
+            detalle.append({"cod_dane_mpio": row["cod_dane_mpio"], "error": str(exc)})
+
+    return {
+        "muestra_tamano": n_muestra,
+        "n_errores_transformacion": n_errores,
+        "rango_x_metros": [min(xs), max(xs)] if xs else None,
+        "rango_y_metros": [min(ys), max(ys)] if ys else None,
+        "detalle_muestra": detalle,
+    }
+
+
+def compute_divipola_correspondence(df_limites: pd.DataFrame) -> dict:
+    """Compara COD_MPIO de límites municipales contra cod_dane_mpio de
+    DIVIPOLA limpia (Fase 3B), por código, no por nombre."""
+    dv = pd.read_csv(DIVIPOLA_CLEAN_PATH, dtype={"cod_dane_mpio": str})
+    set_limites = set(df_limites["cod_dane_mpio"].astype(str))
+    set_divipola = set(dv["cod_dane_mpio"].astype(str))
+    en_ambos = set_limites & set_divipola
+    solo_limites = sorted(set_limites - set_divipola)
+    solo_divipola = sorted(set_divipola - set_limites)
+    union = set_limites | set_divipola
+    pct = round(len(en_ambos) / len(union) * 100, 2) if union else 0.0
+    return {
+        "codigos_en_ambas_fuentes": len(en_ambos),
+        "codigos_solo_en_limites": solo_limites,
+        "codigos_solo_en_divipola": solo_divipola,
+        "porcentaje_correspondencia": pct,
+    }
+
+
+def build_limites_municipales_cleaning_report(
+    clean_report: dict,
+    crs_validation: dict,
+    correspondencia: dict,
+    archivos_info: list[dict],
+    total_size: int,
+) -> str:
+    lines = [
+        "# Reporte de limpieza — Límites municipales DANE (Fase 3D)",
+        "",
+        "Generado automáticamente por `scripts/03_clean_raw_data.py`. Preparación espacial de "
+        "la capa municipal descargada en la Fase 2C. **No se intersectó todavía con el "
+        "Catastro Minero ni se construyó ningún indicador.**",
+        "",
+        f"- Features: {clean_report['filas_entrada']} -> {clean_report['filas_salida']} "
+        "(ninguna se elimina por invalidez de geometría)",
+        f"- Partes procesadas: {len(archivos_info)} | Tamaño total: {format_bytes(total_size)}",
+        f"- CRS de almacenamiento: `{CRS_ORIGEN}` | CRS métrico propuesto (Fase 4A): `{CRS_METRICO_PROPUESTO}`",
+        "",
+        "## Calidad de cod_dane_mpio",
+        "",
+        f"- Vacíos: {clean_report['validaciones']['n_cod_dane_mpio_vacios']} | "
+        f"Duplicados: {clean_report['validaciones']['n_cod_dane_mpio_duplicados']} | "
+        f"Es único: {clean_report['validaciones']['cod_dane_mpio_es_unico']} | "
+        f"Longitud 5 en todas las filas: {clean_report['validaciones']['cod_dane_mpio_longitud_5_para_todas_las_filas']}",
+        "",
+        "## Calidad de geometrías",
+        "",
+        f"- Nulas (entrada): {clean_report['validaciones']['n_geometrias_nulas_entrada']}",
+        f"- Inválidas ANTES de limpiar: {clean_report['validaciones']['n_geometrias_invalidas_entrada']}",
+        f"- Geometrías reparadas (shapely.make_valid): {clean_report['validaciones']['n_geometrias_reparadas']}",
+        f"- Inválidas DESPUÉS de limpiar: {clean_report['validaciones']['n_geometrias_invalidas_salida']}",
+        f"- Vacías tras reparar (sin componente poligonal recuperable): {clean_report['validaciones']['n_geometrias_vacias_salida']}",
+        f"- Tipos geométricos finales: {clean_report['validaciones']['tipos_geometricos_finales']}",
+        "",
+    ]
+
+    lines.append("## Reparaciones de geometría (detalle)")
+    lines.append("")
+    if clean_report["reparaciones_detalle"]:
+        lines.append("| cod_dane_mpio | motivo | tipo original | tipo make_valid | GeometryCollection? | vacía? | componentes poligonales | descartados |")
+        lines.append("|---|---|---|---|---|---|---|---|")
+        for r in clean_report["reparaciones_detalle"]:
+            lines.append(
+                f"| {r['cod_dane_mpio']} | {r['motivo_invalidez']} | {r['tipo_original']} | "
+                f"{r['tipo_resultante_make_valid']} | {r['paso_a_geometrycollection']} | "
+                f"{r['quedo_vacia']} | {r['n_componentes_poligonales_finales']} | "
+                f"{r['componentes_no_poligonales_descartados'] or 'ninguno'} |"
+            )
+    else:
+        lines.append("_No hubo geometrías inválidas que reparar en esta corrida (0 detectadas)._")
+    lines.append("")
+
+    lines.append("## Validación CRS métrico propuesto (EPSG:9377)")
+    lines.append("")
+    lines.append(
+        f"- Muestra: {crs_validation['muestra_tamano']} centroides transformados de "
+        f"{CRS_ORIGEN} a {CRS_METRICO_PROPUESTO} con pyproj."
+    )
+    lines.append(f"- Errores de transformación: {crs_validation['n_errores_transformacion']}")
+    lines.append(f"- Rango X resultante (metros): {crs_validation['rango_x_metros']}")
+    lines.append(f"- Rango Y resultante (metros): {crs_validation['rango_y_metros']}")
+    lines.append(
+        "- **No se reemplazó la geometría almacenada**: la salida sigue en EPSG:4326. Esta "
+        "validación solo confirma que la transformación a EPSG:9377 es técnicamente viable "
+        "para la Fase 4A (intersecciones y cálculo de áreas), donde si se necesitará "
+        "reproyectar para obtener áreas en unidades métricas correctas."
+    )
+    lines.append("")
+
+    lines.append("## Correspondencia con DIVIPOLA limpia (Fase 3B)")
+    lines.append("")
+    lines.append(f"- Códigos en ambas fuentes: {correspondencia['codigos_en_ambas_fuentes']}")
+    lines.append(f"- Solo en límites municipales: {correspondencia['codigos_solo_en_limites']}")
+    lines.append(f"- Solo en DIVIPOLA: {correspondencia['codigos_solo_en_divipola']}")
+    lines.append(f"- Porcentaje de correspondencia: {correspondencia['porcentaje_correspondencia']}%")
+    lines.append("")
+
+    lines.append("## Archivos y tamaños")
+    lines.append("")
+    lines.append("| Parte | Archivo | Features | Tamaño |")
+    lines.append("|---|---|---|---|")
+    for a in archivos_info:
+        lines.append(f"| {a['parte']} | {a['archivo']} | {a['features']} | {format_bytes(a['tamano_bytes'])} |")
+    lines.append("")
+
+    lines.append("## Observaciones y decisiones de limpieza")
+    lines.append("")
+    for obs in clean_report["observaciones"]:
+        lines.append(f"- {obs}")
+    lines.append("")
+
+    lines.append("## Riesgos pendientes para integración (Fase 4+)")
+    lines.append("")
+    lines.append(
+        "- El municipio con código `94663` (Mapiripana, Guainía) está en esta capa pero no en "
+        "DIVIPOLA; el municipio `27493` (Nuevo Belén de Bajirá, Chocó) está en DIVIPOLA pero no "
+        "en esta capa geométrica. Cualquier cruce por código debe decidir explícitamente cómo "
+        "tratar estos dos casos (no se afirma aquí cuál código es 'correcto')."
+    )
+    lines.append(
+        "- La reproyección real a EPSG:9377 y el cálculo de áreas quedan para la Fase 4A; aquí "
+        "solo se validó que la transformación es técnicamente posible."
+    )
+    lines.append(
+        "- El dataset es pesado (geometrías sin simplificar); cualquier operación espacial "
+        "futura (intersección con catastro minero) deberá considerar el costo computacional."
+    )
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def run_limites_municipales() -> tuple[str, dict]:
+    features, raw_manifest = load_limites_municipales_raw_features()
+    df_clean, clean_report = clean_limites_municipales_dane(features)
+
+    crs_validation = validate_crs_transform_sample(df_clean)
+    correspondencia = compute_divipola_correspondence(df_clean)
+
+    ensure_dir(LIMITES_OUT_DIR)
+    partes_origen = sorted(raw_manifest["tamano_por_parte"], key=lambda p: p["parte"])
+
+    archivos_info = []
+    idx = 0
+    for p in partes_origen:
+        n = p["features"]
+        chunk = df_clean.iloc[idx : idx + n].reset_index(drop=True)
+        idx += n
+        assert len(chunk) > 0, f"Parte {p['parte']} quedó vacía al particionar la salida limpia"
+
+        out_path = LIMITES_OUT_DIR / f"limites_municipales_dane_clean_part_{p['parte']:04d}.geojson"
+        size = write_clean_geojson_with_crs(chunk, out_path, geometry_col="_geometry")
+        archivos_info.append(
+            {"parte": p["parte"], "archivo": out_path.name, "features": len(chunk), "tamano_bytes": size}
+        )
+
+        write_cleaning_metadata(
+            out_path.with_suffix(out_path.suffix + ".metadata.json"),
+            fuente=f"Límites municipales DANE (parte {p['parte']} de {len(partes_origen)})",
+            ruta_entrada=str((LIMITES_RAW_DIR / p["archivo"]).relative_to(PROJECT_ROOT)),
+            ruta_salida=str(out_path.relative_to(PROJECT_ROOT)),
+            tamano_bytes=size,
+            report={"filas": len(chunk), "estado": "completo", "crs": CRS_ORIGEN},
+        )
+
+    assert idx == len(df_clean), (
+        f"Partición incompleta: se repartieron {idx} de {len(df_clean)} features"
+    )
+
+    total_size = sum(a["tamano_bytes"] for a in archivos_info)
+
+    manifest_procesado = {
+        "fuente": "Límites municipales DANE (DIVIPOLA - capa Municipios, ArcGIS REST)",
+        "fecha_procesamiento": utc_now_iso(),
+        "crs": CRS_ORIGEN,
+        "crs_metrico_propuesto_fase4a": CRS_METRICO_PROPUESTO,
+        "total_features_entrada": clean_report["filas_entrada"],
+        "total_features_salida": clean_report["filas_salida"],
+        "numero_partes": len(archivos_info),
+        "codigos_unicos": int(df_clean["cod_dane_mpio"].nunique()),
+        "geometrias_nulas": clean_report["validaciones"]["n_geometrias_nulas_entrada"],
+        "geometrias_invalidas_antes": clean_report["validaciones"]["n_geometrias_invalidas_entrada"],
+        "geometrias_invalidas_despues": clean_report["validaciones"]["n_geometrias_invalidas_salida"],
+        "geometrias_reparadas": clean_report["validaciones"]["n_geometrias_reparadas"],
+        "tipos_geometricos_finales": clean_report["validaciones"]["tipos_geometricos_finales"],
+        "correspondencia_con_divipola": correspondencia,
+        "validacion_crs_9377": {
+            "muestra_tamano": crs_validation["muestra_tamano"],
+            "n_errores_transformacion": crs_validation["n_errores_transformacion"],
+            "rango_x_metros": crs_validation["rango_x_metros"],
+            "rango_y_metros": crs_validation["rango_y_metros"],
+        },
+        "archivos_y_tamanos": archivos_info,
+        "observaciones": clean_report["observaciones"]
+        + [
+            f"CRS métrico propuesto para intersecciones/áreas en Fase 4A: {CRS_METRICO_PROPUESTO} "
+            f"(MAGNA-SIRGAS 2018 / Origen-Nacional), validado con una muestra de "
+            f"{crs_validation['muestra_tamano']} centroides, {crs_validation['n_errores_transformacion']} errores.",
+            "No se reemplazó la geometría almacenada por la versión reproyectada; solo se validó "
+            "técnicamente que la transformación es posible. No se calcularon áreas definitivas.",
+        ],
+    }
+    write_json(LIMITES_OUT_DIR / "manifest.json", manifest_procesado, default=json_safe_default)
+
+    report_text = build_limites_municipales_cleaning_report(
+        clean_report, crs_validation, correspondencia, archivos_info, total_size
+    )
+    (REPORTS_DIR / "limites_municipales_dane_cleaning.md").write_text(report_text, encoding="utf-8")
+
+    fuente_label = "Límites municipales DANE (DIVIPOLA - capa Municipios, ArcGIS REST)"
+    result_for_summary = {
+        **clean_report,
+        "ruta_salida": str(LIMITES_OUT_DIR.relative_to(PROJECT_ROOT)) + "/",
+        "tamano_bytes": total_size,
+    }
+    return fuente_label, result_for_summary
+
+
+def validate_limites_municipales_output(result: dict) -> list[str]:
+    problems: list[str] = []
+    out_dir = PROJECT_ROOT / result["ruta_salida"]
+    manifest_path = out_dir / "manifest.json"
+    if not manifest_path.exists():
+        problems.append("no se generó manifest.json de la salida procesada")
+        return problems
+
+    with open(manifest_path, encoding="utf-8") as fh:
+        manifest = json.load(fh)
+
+    if manifest["total_features_salida"] == 0:
+        problems.append("0 features en la salida limpia")
+
+    total_leidas = 0
+    for a in manifest["archivos_y_tamanos"]:
+        part_path = out_dir / a["archivo"]
+        if not part_path.exists() or file_size_bytes(part_path) == 0:
+            problems.append(f"{a['archivo']}: no existe o está vacío")
+            continue
+        with open(part_path, encoding="utf-8") as fh:
+            fc = json.load(fh)
+        if fc["type"] != "FeatureCollection" or not fc["features"]:
+            problems.append(f"{a['archivo']}: no es un FeatureCollection no vacío")
+        total_leidas += len(fc["features"])
+
+    if total_leidas != manifest["total_features_salida"]:
+        problems.append(
+            f"suma de features en las partes ({total_leidas}) no coincide con "
+            f"total_features_salida del manifest ({manifest['total_features_salida']})"
+        )
+
+    if manifest["geometrias_invalidas_despues"] > 0:
+        problems.append(
+            f"{manifest['geometrias_invalidas_despues']} geometrías siguen inválidas después de la reparación"
+        )
+
+    return problems
+
+
 def validate_output(name: str, result: dict) -> list[str]:
     problems = []
     out_path = PROJECT_ROOT / result["ruta_salida"]
@@ -259,7 +607,7 @@ def validate_output(name: str, result: dict) -> list[str]:
 
 def build_cleaning_summary(results: dict[str, dict]) -> str:
     lines = [
-        "# Reporte de limpieza de datos crudos (Fase 3B)",
+        "# Reporte de limpieza de datos crudos (Fase 3B/3C/3D)",
         "",
         "Generado automáticamente por `scripts/03_clean_raw_data.py`. Cada fuente se limpió",
         "por separado; **no se cruzó ninguna fuente ni se construyó dataset maestro**.",
@@ -444,7 +792,7 @@ def build_catastro_minero_cleaning_report(result: dict) -> str:
 
 
 def main() -> int:
-    print("=== AquaBosque Minero IA — Fase 3B/3C: limpieza de datos crudos ===\n")
+    print("=== AquaBosque Minero IA — Fase 3B/3C/3D: limpieza de datos crudos ===\n")
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     runners = [run_divipola, run_anm, run_calidad_agua, run_catastro_minero]
@@ -462,6 +810,16 @@ def main() -> int:
         problems.extend(validate_output(fuente, result))
         print()
 
+    print("-> Limpiando: run_limites_municipales (requiere divipola_municipios_clean.csv ya generado) ...")
+    fuente_limites, result_limites = run_limites_municipales()
+    results[fuente_limites] = result_limites
+    print(
+        f"   features: {result_limites['filas_entrada']} -> {result_limites['filas_salida']} | "
+        f"tamaño total: {format_bytes(result_limites['tamano_bytes'])}"
+    )
+    problems.extend(validate_limites_municipales_output(result_limites))
+    print()
+
     summary = build_cleaning_summary(results)
     summary_path = REPORTS_DIR / "cleaning_summary.md"
     summary_path.write_text(summary, encoding="utf-8")
@@ -472,6 +830,7 @@ def main() -> int:
     catastro_report_path = REPORTS_DIR / "catastro_minero_anm_cleaning.md"
     catastro_report_path.write_text(catastro_report, encoding="utf-8")
     print(f"Reporte de limpieza (catastro minero) -> {catastro_report_path.relative_to(PROJECT_ROOT)}")
+    print(f"Reporte de limpieza (límites municipales) -> {(REPORTS_DIR / 'limites_municipales_dane_cleaning.md').relative_to(PROJECT_ROOT)}")
 
     print("\n=== Resumen ===")
     for fuente, r in results.items():
