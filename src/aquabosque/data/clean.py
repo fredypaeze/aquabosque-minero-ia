@@ -573,7 +573,7 @@ def clean_catastro_minero_anm(
 # ---------------------------------------------------------------------------
 
 
-def _geometry_to_multipolygon(geom) -> Any:
+def geometry_to_multipolygon(geom) -> Any:
     """Convierte una geometría shapely Polygon/MultiPolygon a MultiPolygon de
     forma consistente. No acepta otros tipos (deben filtrarse antes)."""
     from shapely.geometry import MultiPolygon, Polygon
@@ -585,10 +585,15 @@ def _geometry_to_multipolygon(geom) -> Any:
     raise ValueError(f"Se esperaba Polygon o MultiPolygon, llegó {geom.geom_type}")
 
 
-def repair_invalid_geometry(geom_dict: dict, *, cod_dane_mpio: str) -> tuple[dict | None, dict]:
+def repair_invalid_geometry(geom_dict: dict, *, feature_id: str) -> tuple[dict | None, dict]:
     """Repara UNA geometría GeoJSON inválida con `shapely.make_valid` (no
     `buffer(0)`). Devuelve (geometría GeoJSON final o None si quedó vacía,
     registro de la reparación con trazabilidad completa).
+
+    `feature_id` es el identificador de negocio de la feature (p. ej.
+    `cod_dane_mpio` para límites municipales o `codigo_expediente` para el
+    catastro minero) — la función es genérica y se reutiliza para ambas
+    fuentes.
 
     Si `make_valid` produce una `GeometryCollection` (mezcla de tipos), se
     conservan únicamente los componentes `Polygon`/`MultiPolygon`; los demás
@@ -627,7 +632,7 @@ def repair_invalid_geometry(geom_dict: dict, *, cod_dane_mpio: str) -> tuple[dic
     final = MultiPolygon(componentes_poligonales) if componentes_poligonales else MultiPolygon([])
 
     registro = {
-        "cod_dane_mpio": cod_dane_mpio,
+        "feature_id": feature_id,
         "motivo_invalidez": motivo,
         "tipo_original": tipo_original,
         "tipo_resultante_make_valid": tipo_resultante,
@@ -683,10 +688,10 @@ def clean_limites_municipales_dane(features: list[dict]) -> tuple[pd.DataFrame, 
 
         s = shape(geom_dict)
         if s.is_valid:
-            geom_out = mapping(_geometry_to_multipolygon(s))
+            geom_out = mapping(geometry_to_multipolygon(s))
         else:
             n_geometrias_invalidas_entrada += 1
-            geom_out, registro = repair_invalid_geometry(geom_dict, cod_dane_mpio=cod)
+            geom_out, registro = repair_invalid_geometry(geom_dict, feature_id=cod)
             reparaciones.append(registro)
 
         if geom_out is None:
@@ -753,6 +758,91 @@ def clean_limites_municipales_dane(features: list[dict]) -> tuple[pd.DataFrame, 
             "listados en 'reparaciones_detalle', nunca se descartan en silencio.",
             "CRS de la geometría: EPSG:4326 (mismo sistema de origen del servicio ArcGIS REST; no "
             "se reproyectó ni se simplificó ninguna coordenada).",
+        ],
+    }
+    return df, report
+
+
+# ---------------------------------------------------------------------------
+# Preparación espacial (Fase 3D.1): catastro minero listo para intersección
+# ---------------------------------------------------------------------------
+
+
+def prepare_catastro_minero_spatial_ready(df_clean: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """A partir del catastro minero ya limpio (Fase 3C, con las 22 geometrías
+    inválidas originales intactas en la columna `_geometry`), produce una
+    versión "spatial ready": geometrías inválidas reparadas con
+    `shapely.make_valid` (nunca `buffer(0)` como primera opción) y todas las
+    geometrías finales normalizadas a `MultiPolygon`.
+
+    NO modifica `df_clean` (se opera sobre una copia) y NO elimina ningún
+    `codigo_expediente`, incluso si su geometría queda irreparablemente vacía
+    (en ese caso `_geometry` queda en None, documentado en el reporte).
+    """
+    from shapely.geometry import mapping, shape
+
+    df = df_clean.copy()
+    n_entrada = len(df)
+
+    n_geom_nulas_entrada = 0
+    n_geom_invalidas_entrada = 0
+    n_geom_invalidas_salida = 0
+    n_geom_vacias_salida = 0
+    tipos_finales: dict[str, int] = {}
+    reparaciones: list[dict] = []
+    geometries_out: list[dict | None] = []
+
+    for geom_dict, cod in zip(df["_geometry"], df["codigo_expediente"]):
+        if not geom_dict or (isinstance(geom_dict, float) and pd.isna(geom_dict)):
+            n_geom_nulas_entrada += 1
+            geometries_out.append(None)
+            continue
+
+        s = shape(geom_dict)
+        if s.is_valid:
+            geom_out = mapping(geometry_to_multipolygon(s))
+        else:
+            n_geom_invalidas_entrada += 1
+            geom_out, registro = repair_invalid_geometry(geom_dict, feature_id=cod)
+            reparaciones.append(registro)
+
+        if geom_out is None:
+            n_geom_vacias_salida += 1
+            tipos_finales["(vacía)"] = tipos_finales.get("(vacía)", 0) + 1
+        else:
+            if not shape(geom_out).is_valid:
+                n_geom_invalidas_salida += 1
+            tipos_finales[geom_out["type"]] = tipos_finales.get(geom_out["type"], 0) + 1
+        geometries_out.append(geom_out)
+
+    df["_geometry"] = geometries_out
+    n_salida = len(df)
+
+    report = {
+        "filas_entrada": n_entrada,
+        "filas_salida": n_salida,
+        "registros_eliminados": {
+            "expedientes_eliminados": 0,
+        },
+        "validaciones": {
+            "n_geometrias_nulas_entrada": n_geom_nulas_entrada,
+            "n_geometrias_invalidas_entrada": n_geom_invalidas_entrada,
+            "n_geometrias_reparadas": len(reparaciones),
+            "n_geometrias_invalidas_salida": n_geom_invalidas_salida,
+            "n_geometrias_vacias_salida": n_geom_vacias_salida,
+            "tipos_geometricos_finales": tipos_finales,
+        },
+        "reparaciones_detalle": reparaciones,
+        "observaciones": [
+            "Ningún codigo_expediente se eliminó del catastro minero al prepararlo para "
+            "intersección espacial; toda fila de propiedades se conserva.",
+            f"{n_geom_invalidas_entrada} geometrías eran inválidas en el archivo limpio "
+            "original (catastro_minero_anm_clean.geojson, que NO se modificó); se repararon "
+            "aquí con shapely.make_valid, nunca con buffer(0) como primera opción.",
+            "La salida geométrica final se normalizó siempre a MultiPolygon.",
+            "Si make_valid devolvió una GeometryCollection mixta, se conservaron solo los "
+            "componentes Polygon/MultiPolygon; los componentes de línea/punto quedan listados "
+            "en 'reparaciones_detalle', nunca se descartan en silencio.",
         ],
     }
     return df, report

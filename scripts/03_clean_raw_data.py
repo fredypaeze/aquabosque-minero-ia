@@ -182,14 +182,19 @@ def write_cleaning_metadata(
     write_json(path, metadata)
 
 
-def write_clean_geojson_with_crs(
-    df: pd.DataFrame, path: Path, *, geometry_col: str = "_geometry", epsg: int = 4326
-) -> int:
-    """Como write_clean_geojson, pero además registra el CRS como miembro
-    `crs` del FeatureCollection (convención GeoJSON heredada, informativa)."""
+def write_rfc7946_geojson(df: pd.DataFrame, path: Path, *, geometry_col: str = "_geometry") -> int:
+    """Escribe un FeatureCollection GeoJSON compatible con RFC 7946.
+
+    RFC 7946 fija el CRS a WGS 84 (equivalente a `CRS84`, longitud/latitud en
+    ese orden) de forma implícita y **prohíbe** el miembro `crs` a nivel de
+    FeatureCollection (obsoleto desde RFC 7946 §4). Por eso esta función NO
+    inserta ningún objeto `crs`: el sistema de referencia se documenta en el
+    manifest y en la metadata que acompañan al archivo, no dentro del propio
+    GeoJSON. Reemplaza a la antigua `write_clean_geojson_with_crs`, que sí
+    insertaba ese miembro (convención GeoJSON pre-RFC 7946).
+    """
     ensure_dir(path.parent)
     fc = dataframe_to_geojson(df, geometry_col=geometry_col)
-    fc["crs"] = {"type": "name", "properties": {"name": f"urn:ogc:def:crs:EPSG::{epsg}"}}
     return write_json(path, fc, compact=True, default=json_safe_default)
 
 
@@ -395,7 +400,7 @@ def build_limites_municipales_cleaning_report(
         lines.append("|---|---|---|---|---|---|---|---|")
         for r in clean_report["reparaciones_detalle"]:
             lines.append(
-                f"| {r['cod_dane_mpio']} | {r['motivo_invalidez']} | {r['tipo_original']} | "
+                f"| {r['feature_id']} | {r['motivo_invalidez']} | {r['tipo_original']} | "
                 f"{r['tipo_resultante_make_valid']} | {r['paso_a_geometrycollection']} | "
                 f"{r['quedo_vacia']} | {r['n_componentes_poligonales_finales']} | "
                 f"{r['componentes_no_poligonales_descartados'] or 'ninguno'} |"
@@ -483,7 +488,7 @@ def run_limites_municipales() -> tuple[str, dict]:
         assert len(chunk) > 0, f"Parte {p['parte']} quedó vacía al particionar la salida limpia"
 
         out_path = LIMITES_OUT_DIR / f"limites_municipales_dane_clean_part_{p['parte']:04d}.geojson"
-        size = write_clean_geojson_with_crs(chunk, out_path, geometry_col="_geometry")
+        size = write_rfc7946_geojson(chunk, out_path, geometry_col="_geometry")
         archivos_info.append(
             {"parte": p["parte"], "archivo": out_path.name, "features": len(chunk), "tamano_bytes": size}
         )
