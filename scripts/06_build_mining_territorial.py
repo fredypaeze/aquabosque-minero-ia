@@ -663,7 +663,9 @@ def main() -> int:
         "data/processed/territorio/universo_territorial_divipola.csv (Fase 3D.1)",
         "data/processed/territorio/limites_municipales_dane/*.geojson (Fase 3D)",
         "data/processed/territorio/dane_mgn2025_nuevo_belen_bajira_27493_clean.geojson (Fase 3D.1)",
-        "data/processed/mineria/catastro_minero_anm_spatial_ready.geojson (Fase 3C)",
+        "data/processed/mineria/catastro_minero_anm_spatial_ready.geojson (Fase 3D.1: preparado para "
+        "interseccion espacial por scripts/05_reconcile_and_prepare_spatial.py a partir del catastro "
+        "limpio de la Fase 3C, catastro_minero_anm_clean.geojson, que si es producto de la Fase 3C)",
         "data/processed/mineria/anm_anotaciones_rmn_clean.csv (Fase 3B)",
     ]
     stats_dict = asdict(stats)

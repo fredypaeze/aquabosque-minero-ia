@@ -290,3 +290,127 @@ ilegalidad.
 - No se determinó si conviene simplificar geometrías para futuras integraciones a
   mayor escala (p. ej. con deforestación o RUNAP en fases posteriores); esta fase
   preservó fidelidad geométrica total.
+
+## Cierre de calidad Fase 4A.1
+
+Antes de integrar calidad hídrica, la Fase 4A.1 auditó y cerró la trazabilidad
+metodológica de la Fase 4A: explicó y clasificó las diferencias de asignación
+espacial detectadas, validó las métricas de unión territorial y corrigió la
+trazabilidad documental. **No recalculó ningún indicador, no integró calidad
+hídrica, no descargó fuentes nuevas y no modificó datos crudos ni límites
+administrativos.** Generada por `scripts/07_audit_mining_quality.py`, que usa el
+nuevo `src/aquabosque/features/mining_audit.py`.
+
+### Los 28 títulos fuera de tolerancia, explicados y clasificados
+
+`data/processed/audit/mineria_area_conservation_audit.csv` (28 filas) reconstruye,
+para cada título, el residual geométrico real (`geometría del título − unión de
+sus intersecciones territoriales`, en EPSG:9377) y lo clasifica:
+
+| Causa | N | Evidencia resumida |
+|---|---|---|
+| `hueco_entre_limites_territoriales` | 22 | el residual está a menos de 100 m de la unidad territorial (o 94663) más cercana — consistente con un *sliver* entre límites administrativos adyacentes, no con territorio sin cobertura. Incluye el único título sin ninguna intersección (`583`, a 24,0 m de `54001`). |
+| `solape_entre_limites_territoriales` | 5 | `asignacion_superior_100=True` pero el residual real es prácticamente vacío: la aparente sobre-asignación es un artefacto de que dos unidades territoriales se solapan entre sí (ver más abajo). |
+| `tolerancia_numerica` | 1 | diferencia absoluta < 0,01 ha: ruido numérico de reproyección. |
+| `area_en_94663_excluida` | 0 | ningún título fuera de tolerancia se solapa con la geometría de 94663 (usada solo como capa de auditoría, verificado geométricamente, nunca reincorporada al universo analítico). |
+| `fuera_universo_divipola_vigente`, `fuera_cobertura_geometrica_territorial`, `efecto_reparacion_geometrica`, `geometria_titulo_fuera_de_colombia` | 0 cada una | verificadas y descartadas con evidencia (ninguno de los 28 coincide con las 22 geometrías reparadas en la Fase 3D.1; todos los bbox caen dentro de la envolvente nacional). |
+
+- **Área residual total no asignada:** 5.899,94 ha (suma de los 28 residuales reales).
+- **Residual asociado a 94663:** 0 ha en todos los casos.
+- 15 de los 28 casos quedan marcados `requiere_revision_manual=True` (diferencia
+  ≥ 10 ha o causa no concluyente) — incluye títulos donde el residual real es
+  grande (p. ej. `ICQ-080212X`: 3.564,89 ha, `LI9-10311`: 1.777,56 ha) y la
+  cercanía de 0 m a una unidad territorial **no** implica que toda esa área sea
+  una franja delgada; se documenta esa advertencia explícitamente en el CSV.
+- **Autocorrección:** el resumen de la Fase 4A llamó "notables" a 6 casos sin
+  incluir `LI9-10311`, que en realidad tiene la tercera mayor diferencia absoluta
+  de los 28 — se documenta en `mining_area_conservation_audit.md`.
+
+### Hallazgo principal: solape territorial de 27493 (Bajirá)
+
+La auditoría de topología territorial (`territorial_topology_audit.md`) validó
+espacialmente las 1.122 unidades analíticas: 0 geometrías inválidas, 0 áreas no
+positivas, 0 códigos duplicados, 0 contenciones completas. Encontró **6 pares de
+unidades que se solapan con área positiva, totalizando 128.926,00 ha** — casi en
+su totalidad (>99,99 %) es **27493 (Nuevo Belén de Bajirá)**, cuya geometría se
+recuperó del DANE MGN2025 en la Fase 3D.1, solapándose con el territorio que la
+capa ArcGIS Divipola (usada para las otras 1.121 unidades) asigna a sus vecinos
+(27615, 05480, 05837, 27150, 05234). El área propia de 27493 es prácticamente
+idéntica al área total de solape, es decir, casi todo su polígono se superpone
+con territorio ya reclamado por otra fuente geométrica. **Esta fase no asume ni
+afirma ninguna causa administrativa o legal** para esa discrepancia de límites —
+solo reporta el hallazgo geométrico, verificado con `shapely`. Se verificó además
+que al menos 5 de los 28 títulos fuera de tolerancia (`HCA-144`, `HCA-145`,
+`HCA-146`, `GLL-15R`, `GLL-15T`) están físicamente ubicados en esa zona y quedan
+asociados a más de una unidad territorial en `mineria_titulo_unidad_territorial.csv`,
+lo que explica directamente su `asignacion_superior_100`. Ningún indicador POR
+UNIDAD queda inválido (cada unidad se validó contra su propia geometría), pero
+cualquier suma NACIONAL de `n_titulos_mineros` entre unidades sobreestimaría estos
+títulos.
+
+El único hueco relevante (>1 ha) detectado en la unión nacional de las 1.122
+unidades (470.232,17 ha) **coincide al 100 % con la geometría de 94663**: es el
+resultado esperado de excluirla del universo analítico mientras sigue presente en
+la capa geométrica, no un hueco de cobertura sin explicar.
+
+### Validación de área titulada por unidad territorial
+
+Las 6 reglas de la sección F (`area_titulada_union_ha ≤ area_unidad_territorial_ha`,
+`pct_area_unidad_titulada_union ≤ 100 %`, `area_titulada_union_ha ≤ area_titulada_suma_ha`,
+`n_titulos_mineros` = conteo distinto de `codigo_expediente`, sin pares
+`codigo_expediente`+`cod_dane_mpio` duplicados, unidades sin títulos en cero) se
+validaron sobre las 1.122 unidades y **las 1.122 pasaron sin ninguna excepción**
+— no se generó tabla de excepciones porque no hubo nada que reportar.
+
+### Auditoría de correspondencia de ANM Anotaciones RMN
+
+`data/processed/audit/anm_annotation_correspondence_audit.csv` (7.026 filas)
+clasifica los 6.294 títulos del catastro y los 732 expedientes de anotaciones sin
+correspondencia (95,92 % de correspondencia = 6.037/6.294). Se probó normalización
+determinista de espacios/mayúsculas sobre todos los códigos: **0 coincidencias
+recuperadas** — la ausencia de correspondencia no es un problema de formato de
+texto. Solo 4 de los 732 expedientes huérfanos tienen su última anotación antes de
+2020; el resto (728) tiene actividad reciente (2023-2025) sin explicación
+disponible en los datos de este proyecto. Se documenta como hipótesis no
+confirmada que el catastro WFS solo incluye títulos `Titulo_Vigente`, mientras el
+RMN registra trámites que pueden no haber llegado nunca a título vigente — no se
+confirmó contra la fuente ANM original (fuera de alcance).
+
+### Correcciones documentales
+
+- `scripts/06_build_mining_territorial.py` atribuía
+  `catastro_minero_anm_spatial_ready.geojson` a la **Fase 3C** en la metadata de
+  salida; corregido para identificarlo como producto de la **Fase 3D.1**
+  (preparado por `scripts/05_reconcile_and_prepare_spatial.py` a partir del
+  catastro limpio de la Fase 3C, que sí es un producto de esa fase).
+- Se revisó la consistencia de la fecha declarada del geoservicio ANM
+  (22/03/2023) en todos los documentos y reportes del proyecto: en todos los
+  casos ya se presenta explícitamente como "fecha declarada por el geoservicio",
+  nunca como fecha del análisis. No se encontraron correcciones adicionales
+  necesarias.
+
+### Archivos de la Fase 4A.1
+
+- `src/aquabosque/features/mining_audit.py` (nuevo).
+- `scripts/07_audit_mining_quality.py` (nuevo).
+- `data/processed/audit/mineria_area_conservation_audit.csv` (+ `.metadata.json`).
+- `data/processed/audit/anm_annotation_correspondence_audit.csv` (+ `.metadata.json`).
+- `outputs/reports/mining_integration/mining_area_conservation_audit.md`,
+  `mining_annotation_correspondence_audit.md`, `territorial_topology_audit.md`,
+  `phase4a_quality_closure.md` (nuevos).
+
+### Riesgos que permanecen abiertos tras la Fase 4A.1
+
+- El solape territorial de 27493 (128.926 ha) no se corrigió: mezclar la
+  geometría DANE MGN2025 de Bajirá con la capa ArcGIS Divipola del resto del
+  país seguirá produciendo doble conteo de títulos entre esas unidades en
+  cualquier suma nacional futura.
+- 22 de los 28 casos fuera de tolerancia se clasificaron como
+  `hueco_entre_limites_territoriales` por proximidad geométrica, sin verificar si
+  la causa de fondo es un artefacto de digitalización o una discrepancia real de
+  límites administrativos.
+- 728 expedientes de anotaciones sin correspondencia en el catastro quedan sin
+  explicación confirmada.
+- No se determinó si conviene, en una fase futura, resolver el solape de Bajirá
+  sustituyendo parte de la capa ArcGIS Divipola por MGN2025 en la zona en
+  disputa.
