@@ -193,3 +193,100 @@ metodológico (sin asumir causalidad) que las Fases 4A/4A.1/4A.2 aplicaron a la 
 - No se investigó la causa de las 45 discrepancias texto/geometría más allá de auditarlas.
 - Esta fase no cruza calidad hídrica con presión minera; ese cruce, si se hace, debe ser una
   fase explícita y separada, con el mismo cuidado de no asumir causalidad.
+
+## Cierre metodológico Fase 4B.1
+
+Auditoría metodológica de sitios, parámetros censurados y cobertura hídrica, **sin
+recalcular la asignación espacial ni construir indicadores de contaminación o riesgo**.
+Generada por `scripts/15_audit_water_quality.py` (nuevo módulo
+`src/aquabosque/features/water_audit.py`) y `scripts/16_write_water_audit_reports.py`.
+
+### A. Sitios de monitoreo
+
+Los 243 sitios se auditaron uno por uno (`calidad_agua_sitios_monitoreo_audit.csv`) y los
+**243 clasificaron como `sitio_estable`**: por construcción, `sitio_monitoreo_id` ya
+incorpora la coordenada, así que cada sitio tiene exactamente 1 coordenada, 1 municipio
+espacial y 1 departamento espacial — confirmado con datos reales, no asumido. **0 códigos**
+resultaron reutilizados en coordenadas distantes; el mecanismo de llave compuesta
+(`codigo_origen + coordenadas_redondeadas`) quedó implementado pero no fue necesario
+aplicarlo.
+
+### B. Diccionario de normalización de parámetros
+
+`diccionario_normalizacion_parametros_agua.csv` (96 filas) explica la reducción de 96
+combinaciones propiedad+unidad originales (80 nombres de propiedad) a 85 combinaciones
+normalizadas (77 parámetros): la mayor parte es normalización textual de unidad
+(`Kg`→`kg`, `pH`), y **exactamente 2 fusiones de nombre de parámetro son técnicamente
+dudosas** — `ENDOSULFAN EN AGUA` (fusiona α y β-endosulfán) y `HEXACLOROCICLOHEXANO HCH EN
+AGUA` (fusiona α, β y ɣ-HCH) — causadas por la eliminación de prefijos griegos en
+`normalize_text` (Fase 3B). Ambas quedan marcadas `requiere_revision_tecnica=True`. Se
+verificó que las unidades originales de cada isómero SÍ difieren, así que el catálogo de la
+Fase 4B (agrupado por propiedad+unidad) no mezcló ningún valor numérico entre isómeros — el
+riesgo queda limitado a análisis futuros que agrupen solo por `propiedad_observada_norm`
+sin considerar `unidad_norm`. No se encontraron fusiones por tilde, abreviatura, número,
+estado disuelto/total o método analítico.
+
+### C. Clasificación de idoneidad en 4 niveles
+
+Reemplaza el aprobado/no aprobado binario de la Fase 4B
+(`clasificacion_idoneidad_parametros_agua.csv`, 85 filas): **31 Nivel A** (indicador
+numérico descriptivo), **33 Nivel B** (solo detección/censura, censura ≥80%), **21 Nivel
+C** (cobertura insuficiente o unidades heterogéneas). **Plomo y cadmio se reclasifican de
+"aprobado" a Nivel B** (94,8% y 99,1% de censura respectivamente): permiten
+`pct_resultados_censurados`/`n_detecciones`/`límite de detección más frecuente`, pero NO
+promedio, mediana, tendencia numérica predeterminada ni ranking territorial.
+
+### D. Límites de detección
+
+`calidad_agua_limites_deteccion_audit.csv` (71 combinaciones censuradas): **53/71 muestran
+alta variabilidad** del límite de detección. Ejemplo documentado: el límite más frecuente
+de plomo pasó de 0,01 mg/L (2005) a 0,5 mg/L (2009-2016) a 0,025 mg/L (2018-2024) — hasta
+20x de diferencia, lo que impide comparar directamente resultados censurados entre esos
+periodos.
+
+### E. Tendencias
+
+Las 2.896 tendencias calculables de la Fase 4B se auditaron una a una
+(`calidad_agua_tendencias_audit.csv`): **2.896/2.896 confirmadas calculadas solo con
+resultados numéricos** (recálculo independiente, coincide exactamente). 509 marcadas
+`requiere_precaucion_por_censura` (20-80% de censura en el universo completo de esa
+combinación) y 12 `no_recomendada_para_interpretacion_numerica` (>80%). Ninguna pendiente
+se eliminó ni se interpretó como mejoría o deterioro.
+
+### F. Cobertura territorial separada
+
+| Categoría | N unidades |
+|---|---|
+| Sin monitoreo histórico | 950 |
+| Con monitoreo histórico | 172 |
+| — con monitoreo reciente (2020-2024) | 158 |
+| — con monitoreo histórico pero desactualizado | 14 |
+
+Partición verificada aritméticamente (950+172=1.122; 158+14=172).
+
+### G. Discrepancias texto-geometría por causa
+
+`calidad_agua_discrepancias_causa_audit.csv` clasifica los 45 sitios con evidencia
+geométrica computada (distancia real al municipio nombrado en el texto, no una
+suposición): **30 `coordenada_cerca_limite`** (≤2 km, casi siempre <100 m — el punto está
+justo al otro lado de un límite administrativo), **8 `nombre_historico_o_variante`**
+(p. ej. "GUICAN" en vez de "GÜICÁN DE LA SIERRA", "CÚCUTA" en vez de "SAN JOSÉ DE CÚCUTA" —
+misma unidad, nombre antiguo/corto), **2 `municipio_textual_incorrecto`**, **2
+`posible_error_coordenada`** (>50 km de distancia) y **3 `requiere_revision_manual`** (el
+texto no corresponde a ningún nombre DIVIPOLA válido). **19.499 observaciones** (de
+134.216) provienen de sitios con alguna discrepancia — se reporta por observaciones, no
+solo por sitios. **No se sobrescribió ninguna asignación espacial.**
+
+### Bug real encontrado y corregido durante esta fase
+
+Al releer `calidad_agua_observaciones_georreferenciadas.csv` sin especificar
+`dtype=str` para `cod_dane_mpio_asignado`, pandas infirió `int64` y perdió los ceros a la
+izquierda (`"05390"` → `5390`), lo que hacía fallar el 100% de la verificación de
+tendencias (comparaba contra códigos en formato `str` de otra tabla). Corregido antes de
+generar ningún resultado final — mismo patrón de error de tipos que ya había aparecido en
+fases anteriores del proyecto (DIVIPOLA, Fase 3A).
+
+### Idempotencia
+
+Verificada con dos corridas completas consecutivas de `scripts/15_audit_water_quality.py`:
+resultados numéricos idénticos en las 6 salidas.
