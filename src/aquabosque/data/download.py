@@ -750,6 +750,156 @@ def get_arcgis_feature_count(
         return None
 
 
+def get_arcgis_all_object_ids(
+    base_url: str, *, where: str = "1=1", timeout: int = DEFAULT_TIMEOUT
+) -> list[int] | None:
+    """Devuelve todos los OBJECTID de una capa en una sola petición liviana
+    (sin geometría, sin paginación). Útil para servidores ArcGIS que declaran
+    `advancedQueryCapabilities.supportsPagination=false` y rechazan
+    `resultOffset`/`resultRecordCount` incluso sin geometría."""
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+    try:
+        response = requests.get(
+            f"{base_url}/query",
+            headers=headers,
+            params={"where": where, "outFields": "OBJECTID", "returnGeometry": "false", "f": "json"},
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        data = response.json()
+        if "error" in data:
+            return None
+        return sorted(int(f["attributes"]["OBJECTID"]) for f in data.get("features", []))
+    except (requests.RequestException, ValueError, KeyError):
+        return None
+
+
+def download_arcgis_geojson_by_objectid_chunks(
+    fuente: str,
+    base_url: str,
+    dest_dir: Path,
+    *,
+    filename_prefix: str,
+    object_ids: list[int],
+    out_sr: int = 4326,
+    chunk_size: int = 60,
+    max_bytes_per_part: int = MAX_BYTES_DEFAULT,
+    timeout: int = DEFAULT_TIMEOUT,
+) -> BatchDownloadResult:
+    """Descarga completa de una capa ArcGIS REST en GeoJSON particionando por
+    listas explícitas de `objectIds` en vez de `resultOffset`/`resultRecordCount`.
+
+    Pensado para servidores que rechazan la paginación por offset
+    (`advancedQueryCapabilities.supportsPagination=false`) pero sí aceptan el
+    parámetro nativo `objectIds` (lista separada por comas). Cada chunk de
+    `object_ids` se pide en una sola petición; si falla o su respuesta supera
+    `max_bytes_per_part`, el chunk se divide a la mitad recursivamente
+    (mismo patrón de recorte adaptativo que `download_arcgis_geojson_batched`).
+    """
+    ensure_dir(dest_dir)
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+    parts: list[BatchPart] = []
+    part_num = 0
+    errores: list[str] = []
+
+    def fetch(ids: list[int]) -> list[dict] | None:
+        params = {
+            "objectIds": ",".join(str(i) for i in ids),
+            "outFields": "*",
+            "returnGeometry": "true",
+            "f": "geojson",
+            "outSR": out_sr,
+        }
+        try:
+            response = requests.get(f"{base_url}/query", headers=headers, params=params, timeout=timeout)
+            response.raise_for_status()
+            data = response.json()
+            if "error" in data:
+                errores.append(f"objectIds {ids[0]}-{ids[-1]}: {data['error']}")
+                return None
+            return data.get("features", [])
+        except (requests.RequestException, ValueError) as exc:
+            errores.append(f"objectIds {ids[0]}-{ids[-1]}: {exc}")
+            return None
+
+    def fetch_and_write(ids: list[int]) -> None:
+        nonlocal part_num
+        if not ids:
+            return
+        features = fetch(ids)
+        if features is None:
+            if len(ids) <= 1:
+                errores.append(f"objectId {ids[0]}: no se pudo descargar tras recorte adaptativo minimo.")
+                return
+            mid = len(ids) // 2
+            fetch_and_write(ids[:mid])
+            fetch_and_write(ids[mid:])
+            return
+
+        size_estimate = _geojson_feature_collection_bytes_len(features)
+        if size_estimate > max_bytes_per_part and len(ids) > 1:
+            mid = len(ids) // 2
+            fetch_and_write(ids[:mid])
+            fetch_and_write(ids[mid:])
+            return
+
+        part_num += 1
+        part_path = dest_dir / f"{filename_prefix}_part_{part_num:04d}.geojson"
+        fc = {"type": "FeatureCollection", "features": features}
+        size = write_json(part_path, fc, compact=True)
+        parts.append(
+            BatchPart(
+                part_num=part_num,
+                path=part_path,
+                offset_inicio=ids[0],
+                offset_fin=ids[-1],
+                filas=len(features),
+                tamano_bytes=size,
+            )
+        )
+
+    for i in range(0, len(object_ids), chunk_size):
+        fetch_and_write(object_ids[i : i + chunk_size])
+
+    total_size = sum(p.tamano_bytes for p in parts)
+    total_features_written = sum(p.filas for p in parts)
+    total_origin = len(object_ids)
+
+    if errores and total_features_written == 0:
+        estado = "error"
+        observaciones = "; ".join(errores)
+    elif errores:
+        estado = "incompleto_por_error"
+        observaciones = (
+            f"Se descargaron {total_features_written}/{total_origin} features en {len(parts)} partes; "
+            f"{len(errores)} chunk(s) fallaron incluso tras recorte adaptativo: " + "; ".join(errores)
+        )
+    elif total_features_written < total_origin:
+        estado = "incompleto"
+        observaciones = f"Se esperaban {total_origin} features, se descargaron {total_features_written}."
+    else:
+        estado = "completo"
+        observaciones = (
+            f"Descarga por particiones de objectIds completa: {total_features_written} features en "
+            f"{len(parts)} partes, ninguna mayor a {max_bytes_per_part} bytes. Partición por objectIds "
+            "porque el servidor declara advancedQueryCapabilities.supportsPagination=false y rechaza "
+            "resultOffset/resultRecordCount."
+        )
+
+    return BatchDownloadResult(
+        fuente=fuente,
+        url=base_url,
+        dest_dir=dest_dir,
+        total_filas_origen=total_origin,
+        total_filas_descargadas=total_features_written,
+        numero_partes=len(parts),
+        tamano_total_bytes=total_size,
+        parts=parts,
+        estado=estado,
+        observaciones=observaciones,
+    )
+
+
 def download_arcgis_geojson_batched(
     fuente: str,
     base_url: str,

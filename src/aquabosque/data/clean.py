@@ -763,6 +763,118 @@ def clean_limites_municipales_dane(features: list[dict]) -> tuple[pd.DataFrame, 
     return df, report
 
 
+def clean_mgn2025_municipios(features: list[dict]) -> tuple[pd.DataFrame, dict]:
+    """Limpia la capa nacional DANE MGN2025 - Municipio (layer 317, Fase 3D.2).
+
+    `features` es la lista completa de Features GeoJSON crudas (properties +
+    geometry, ya en EPSG:4326 vía `outSR=4326`). Devuelve un DataFrame con
+    columnas estandarizadas (mismo esquema de nombres que
+    `clean_limites_municipales_dane`: `cod_dane_mpio`, `cod_dane_dpto`,
+    `nombre_mpio_norm`, `nombre_dpto_norm`, más `_geometry`) y un reporte
+    detallado, incluida la reparación de geometrías inválidas si las hay.
+
+    No se elimina ninguna fila por invalidez de geometría ni por no estar en
+    DIVIPOLA vigente — ese filtro es responsabilidad de una etapa posterior
+    (Fase 3D.2, sección F/G), no de esta limpieza genérica de la fuente.
+    """
+    from shapely.geometry import mapping, shape
+
+    n_entrada = len(features)
+    props_list = [f.get("properties", {}) for f in features]
+    df = normalize_column_names(pd.DataFrame(props_list))
+
+    df["cod_dane_mpio"] = df["mpio_cdpmp"].astype(str).str.strip().str.zfill(5)
+    df["cod_dane_dpto"] = df["dpto_ccdgo"].astype(str).str.strip().str.zfill(2)
+    df["nombre_mpio_norm"] = df["mpio_cnmbre"].map(normalize_text)
+    df["nombre_dpto_norm"] = df["dpto_cnmbre"].map(normalize_text)
+
+    n_geometrias_nulas_entrada = 0
+    n_geometrias_invalidas_entrada = 0
+    n_geometrias_invalidas_salida = 0
+    n_geometrias_vacias_salida = 0
+    tipos_finales: dict[str, int] = {}
+    reparaciones: list[dict] = []
+    geometries_out: list[dict | None] = []
+
+    codigos = df["cod_dane_mpio"].tolist()
+    for feat, cod in zip(features, codigos):
+        geom_dict = feat.get("geometry")
+        if not geom_dict:
+            n_geometrias_nulas_entrada += 1
+            geometries_out.append(None)
+            continue
+
+        s = shape(geom_dict)
+        if s.is_valid:
+            geom_out = mapping(geometry_to_multipolygon(s))
+        else:
+            n_geometrias_invalidas_entrada += 1
+            geom_out, registro = repair_invalid_geometry(geom_dict, feature_id=cod)
+            reparaciones.append(registro)
+
+        if geom_out is None:
+            n_geometrias_vacias_salida += 1
+            tipos_finales["(vacía)"] = tipos_finales.get("(vacía)", 0) + 1
+        else:
+            if not shape(geom_out).is_valid:
+                n_geometrias_invalidas_salida += 1
+            tipos_finales[geom_out["type"]] = tipos_finales.get(geom_out["type"], 0) + 1
+        geometries_out.append(geom_out)
+
+    df["_geometry"] = geometries_out
+
+    columnas_finales = [
+        "objectid",
+        "cod_dane_dpto",
+        "dpto_cnmbre",
+        "nombre_dpto_norm",
+        "cod_dane_mpio",
+        "mpio_cnmbre",
+        "nombre_mpio_norm",
+        "mpio_tipo",
+        "mpio_narea",
+        "mpio_nano",
+        "_geometry",
+    ]
+    df = df[columnas_finales].reset_index(drop=True)
+
+    n_salida = len(df)
+    n_cod_vacios = int((df["cod_dane_mpio"].isna() | (df["cod_dane_mpio"].str.strip() == "")).sum())
+    n_cod_duplicados = int(df["cod_dane_mpio"].duplicated().sum())
+    longitudes_ok = bool((df["cod_dane_mpio"].str.len() == 5).all())
+    dpto_longitudes_ok = bool((df["cod_dane_dpto"].str.len() == 2).all())
+
+    report = {
+        "filas_entrada": n_entrada,
+        "filas_salida": n_salida,
+        "columnas_finales": columnas_finales,
+        "validaciones": {
+            "n_cod_dane_mpio_vacios": n_cod_vacios,
+            "n_cod_dane_mpio_duplicados": n_cod_duplicados,
+            "cod_dane_mpio_es_unico": n_cod_duplicados == 0 and n_cod_vacios == 0,
+            "cod_dane_mpio_longitud_5_para_todas_las_filas": longitudes_ok,
+            "cod_dane_dpto_longitud_2_para_todas_las_filas": dpto_longitudes_ok,
+            "n_geometrias_nulas_entrada": n_geometrias_nulas_entrada,
+            "n_geometrias_invalidas_entrada": n_geometrias_invalidas_entrada,
+            "n_geometrias_reparadas": len(reparaciones),
+            "n_geometrias_invalidas_salida": n_geometrias_invalidas_salida,
+            "n_geometrias_vacias_salida": n_geometrias_vacias_salida,
+            "tipos_geometricos_finales": tipos_finales,
+        },
+        "reparaciones_detalle": reparaciones,
+        "observaciones": [
+            "No se eliminó ninguna fila por invalidez de geometría ni por no estar en DIVIPOLA "
+            "vigente: ese filtro se aplica en una etapa posterior, no en esta limpieza genérica.",
+            f"{n_geometrias_invalidas_entrada} geometrías de entrada eran inválidas; se repararon "
+            "con shapely.make_valid (no buffer(0) como primera opción).",
+            "La salida geométrica final se normalizó siempre a MultiPolygon.",
+            "CRS de la geometría: EPSG:4326 (outSR=4326 solicitado explícitamente al servicio "
+            "ArcGIS REST; CRS nativo del servicio es EPSG:4686, MAGNA-SIRGAS geográfico).",
+        ],
+    }
+    return df, report
+
+
 # ---------------------------------------------------------------------------
 # Preparación espacial (Fase 3D.1): catastro minero listo para intersección
 # ---------------------------------------------------------------------------
