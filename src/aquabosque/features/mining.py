@@ -116,12 +116,21 @@ def build_title_territorial_table(
     df_catastro_full: pd.DataFrame,
     df_universo_analitico: pd.DataFrame,
     territorial_areas_ha: dict[str, float],
+    *,
+    fuente_geometria_territorial: str | None = None,
+    version_geometria_territorial: str | None = None,
 ) -> pd.DataFrame:
     """Construye `mineria_titulo_unidad_territorial.csv`: una fila por
     combinación real `codigo_expediente` + `cod_dane_mpio` con área de
     intersección **positiva** (regla E.1: los contactos de solo línea/punto,
     `solo_toca_limite=True`, NO entran en esta tabla; quedan solo en las
-    estadísticas de la corrida)."""
+    estadísticas de la corrida).
+
+    `fuente_geometria_territorial`/`version_geometria_territorial` son
+    opcionales (por defecto `None`, y entonces NO se agregan columnas, para
+    no cambiar el esquema de 26 columnas de la Fase 4A original). Se usan en
+    la Fase 4A.2 para dejar explícito en cada fila qué base geométrica
+    territorial (MGN2025 vs. la capa mixta anterior) produjo la intersección."""
     filas = []
     for rec in records:
         if rec.solo_toca_limite or rec.area_interseccion_m2 <= 0:
@@ -212,6 +221,14 @@ def build_title_territorial_table(
         "fuente_catastro",
         "fecha_actualizacion_fuente_catastro",
     ]
+
+    if fuente_geometria_territorial is not None:
+        df_rel["fuente_geometria_territorial"] = fuente_geometria_territorial
+        columnas_finales.append("fuente_geometria_territorial")
+    if version_geometria_territorial is not None:
+        df_rel["version_geometria_territorial"] = version_geometria_territorial
+        columnas_finales.append("version_geometria_territorial")
+
     return df_rel[columnas_finales].reset_index(drop=True)
 
 
