@@ -1,5 +1,8 @@
 # AquaBosque Minero IA
 
+## Demo en vivo
+[Abrir AquaBosque Minero IA](https://aquabosque-minero-ia-9pkqgjgonyxufpyjvteqwq.streamlit.app/)
+
 ## Problema
 
 Colombia no cuenta con una vista territorial unificada que combine, para las 1.122 unidades
@@ -51,7 +54,7 @@ El repositorio incluye ya los artefactos de datos y el modelo entrenado — no e
 descargar nada ni ejecutar el pipeline previo para ver la aplicación funcionando.
 
 ```powershell
-git clone <URL_DEL_REPOSITORIO>
+<git clone https://github.com/fredypaeze/aquabosque-minero-ia.git>
 cd aquabosque-minero-ia
 python -m venv venv
 .\venv\Scripts\Activate.ps1
@@ -133,15 +136,3 @@ unidades territoriales.
 - No clasifica legalmente la calidad del agua.
 - No confirma deforestación a nivel nacional — solo Puerto Rico (Meta) tiene piloto forestal validado.
 - No opera en tiempo real; cada fuente tiene su propio corte temporal.
-
-## Reglas de trabajo del proyecto
-
-1. Trabajo restringido a esta carpeta del repositorio.
-2. No se leen, borran, mueven ni modifican archivos fuera de esta carpeta.
-3. No se instalan paquetes globales; todo el trabajo usa el entorno virtual local `venv`.
-4. No se ejecutan comandos destructivos.
-5. No se hace push a repositorios remotos.
-6. No se usan servicios pagos.
-7. No se descargan archivos pesados sin avisar previamente.
-8. No se inventan datos.
-9. No se afirma causalidad ambiental ni minería ilegal; los análisis se limitan a lo que los datos permiten sustentar.
