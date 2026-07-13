@@ -35,7 +35,7 @@ tres tipos de producto pedidos (B.1, B.2, B.3).
 | 4 | Informes anuales de monitoreo de bosque y deforestación | Confirmado — última cifra: 2024, resumen ejecutivo publicado 2025-07-31 |
 | 5 | Detecciones Tempranas de Deforestación (DTD) | Confirmado — microdato vectorial `DTD_Trimestral` (249.895 puntos) + boletines PDF trimestrales |
 | 6 | Alertas Tempranas de Deforestación semanales | **No encontradas** como capa/microdato descargable independiente en esta fase — el sistema institucional vigente reporta con cadencia **trimestral** (DTD), no semanal; no se encontró un producto "alerta semanal" separado y oficial |
-| 7 | Datos Abiertos Colombia (IDEAM/MinAmbiente) | Confirmado — 2 datasets Socrata (`39dh-rc72` Nacional, `env9-bhc9` Amazonía), pero **desactualizados** (último año 2022) frente al servicio ArcGIS institucional (2024) |
+| 7 | Datos Abiertos Colombia (IDEAM/MinAmbiente) | Confirmado — 2 datasets Socrata (`39dh-rc72` Nacional, `env9-bhc9` Amazonía), pero **desactualizados** (último año 2022) frente al servicio ArcGIS institucional (2024) y **explícitamente no validados por IDEAM** según su propia metadata ("los datos... no han sido validados por el IDEAM") — corrección Fase 2D.1: `validado_oficialmente=False` |
 
 No se asumió que la página web, el boletín PDF y la capa geoespacial contuvieran el mismo
 nivel de detalle: cada uno se validó por separado (ver catálogo, columna `tipo_servicio`).
@@ -66,8 +66,9 @@ Dos productos complementarios, ambos con **el mismo alcance temporal real: hasta
 
 `Hosted/DTD_Trimestral/FeatureServer` — **249.895 puntos**, 36 combinaciones año+trimestre
 confirmadas (2017-I a 2025-IV), con núcleo trimestral (`nucleo_tri`), municipio, CAR y RUNAP
-asociados. Complementado por los boletines PDF trimestrales narrativos (último localizado:
-boletín 44, III trimestre 2025).
+asociados. Complementado por los boletines PDF trimestrales narrativos (último confirmado:
+**boletín 45, IV trimestre 2025, publicado 2026-03-31** — corrección Fase 2D.1; la Fase 2D
+había identificado erróneamente el boletín 44/III-2025 como el más reciente).
 
 **Nunca se denomina esta señal "deforestación confirmada", "tala ilegal", "minería ilegal" ni
 "daño ambiental probado"** — se mantiene siempre el término `detección temprana de posible
@@ -162,9 +163,10 @@ suficiente para confirmar estructura técnica (campos, geometría, CRS, paginaci
    el periodo de observación; no se confirmó en esta fase si existe una fecha exacta por
    punto (los campos disponibles son `anio`, `periodo`, `id_bolet`, sin campo de fecha
    explícita tipo `fecha_deteccion`).
-6. **Latencia:** no se pudo confirmar con precisión en esta fase (el microdato vectorial ya
-   cubre 2025-IV, un trimestre más reciente que el boletín narrativo más reciente localizado,
-   2025-III/boletín 44) — **queda como riesgo abierto**.
+6. **Latencia:** no se pudo confirmar con precisión en esta fase — **corrección Fase 2D.1:**
+   el boletín 45 (IV trimestre 2025) sí existe y cubre el mismo periodo que el microdato
+   vectorial más reciente (2025-IV); ver la sección "Validación técnica piloto Fase 2D.1"
+   más abajo para la comparación real entre ambos.
 7. **Histórico disponible:** 2017-I a 2025-IV, 36 trimestres consecutivos sin vacíos
    confirmados por consulta real.
 8. **Identificador estable:** existe el campo `cod_dtd`, pero esta fase no confirmó si es
@@ -185,8 +187,8 @@ suficiente para confirmar estructura técnica (campos, geometría, CRS, paginaci
 |---|---|---|---|---|
 | Informe anual + capas Bosque No Bosque / Cambio de Bosque | 2024 | 2025-07-31 | ~212 días | `historico_anual` |
 | Registro Nacional de Zonas Deforestadas (polígonos) | 2024 | 2025-07-31 | ~212 días | `historico_anual` |
-| DTD Trimestral (puntos) | 2025-IV | boletín narrativo más reciente: 2025-III | no determinada | `alerta_temprana` |
-| Datos Abiertos Colombia (Socrata, nacional y Amazonía) | 2022 | 2024-01-30 | — (2 años de rezago) | `actualizacion_periodica` |
+| DTD Trimestral (puntos) | 2025-IV | boletín 45 (IV trimestre 2025), publicado 2026-03-31 (corrección Fase 2D.1) | no determinada | `alerta_temprana` |
+| Datos Abiertos Colombia (Socrata, nacional y Amazonía) | 2022 | 2024-01-30 | — (2 años de rezago; **no validado por IDEAM según su propia metadata — corrección Fase 2D.1**) | `actualizacion_periodica` |
 
 No se usa la expresión "tiempo real" en ningún caso — no se encontró evidencia de
 transmisión continua; la señal más oportuna (DTD) tiene cadencia trimestral.
@@ -295,3 +297,70 @@ cada una de las 14 filas del catálogo.
   consume los mismos servicios ya validados aquí, pero no se confirmó de forma programática.
 - Las fuentes Socrata (Datos Abiertos Colombia) quedaron con 2 años de rezago frente al
   servicio ArcGIS institucional — no deben promoverse como fuente principal de actualidad.
+
+## Validación técnica piloto Fase 2D.1
+
+Piloto técnico de acceso, semántica y consistencia generado por
+`scripts/20_validate_forest_data_pilot.py`. No descargó la colección nacional completa. No
+calculó indicadores para los 1.122 territorios. No integró minería ni calidad hídrica. No
+construyó índice de riesgo.
+
+### Corrección de la Fase 2D (sección A)
+
+Boletín DTD más reciente corregido a **45 (IV trimestre 2025, publicado 2026-03-31)**;
+temporalidad de bosque aclarada como cortes 1990/2000/2005/2010/2012 + anual real 2013-2024
+(no serie anual continua); los 2 datasets Socrata marcados `validado_oficialmente=False`
+porque su propia metadata declara que no fueron validados por IDEAM.
+
+### WCS (sección B)
+
+Ambos servicios exponen WCS 2.0.1 real en la ruta `/gisserver/services/.../WCSServer` (no en
+`/rest/`). **Hallazgo crítico**: WCS entrega la imagen RGB renderizada, no el grid de códigos
+de clase — confirmado descargando un recorte real y comparando sus valores de píxel contra el
+colormap oficial obtenido con la operación `identify`. Ver `forest_wcs_validation.md`.
+
+### Municipios piloto (sección L), seleccionados con evidencia real
+
+| Rol | Municipio | Criterio |
+|---|---|---|
+| Deforestación reciente | Puerto Rico, Meta (50590) | Mayor `total_ha` deforestada 2024 entre municipios ≤600.000 ha (consulta de estadísticas real) |
+| Bosque, baja/nula deforestación | Miritı́-Paraná, Amazonas (91460) | 0 registros en `zonas_deforestadas_2013_2024` entre municipios amazónicos, mayor área |
+| Geometría compleja | Bolívar, Santander (68101) | Mayor índice de compacidad (perímetro²/(4π·área)) entre municipios de una sola parte |
+
+### Piloto ráster (secciones C-G)
+
+Método adoptado: **WCS GetCoverage + decodificación inversa del colormap**, validada contra
+`identify`. Códigos de clase confirmados: Bosque No Bosque {0=Sin Información, 1=Bosque,
+2=No Bosque}; Cambio de Bosque {0=Sin Información, 1=Bosque Estable, 2=Deforestación,
+5=No Bosque Estable}. Áreas piloto (Puerto Rico, EPSG:9377, `nearest`): Bosque 169.209,70 ha
+(49,7%), Deforestación 2023-2024 2.972,71 ha. La reproyección no creó valores de clase nuevos
+**después de corregir** un `dst_nodata` implícito de `rasterio.warp.reproject()` que
+colisionaba con el código real 0 — hallazgo real documentado en `forest_raster_pilot.md`.
+
+### Piloto vectorial y comparación (secciones H-I)
+
+913 polígonos reales para Puerto Rico/2024 (5 geometrías inválidas, 0 duplicadas, 0 ha de
+solape interno). Comparación ráster-vector: **correspondencia ALTA** (2.972,71 ha vs.
+2.981,51 ha, diferencia 0,30%). Ver `deforestation_raster_vector_comparison.md`.
+
+### Auditoría semántica DTD (secciones J-K)
+
+Muestra de 2.000/21.044 registros reales del IV trimestre de 2025 (9,5% del periodo, límite
+`maxRecordCount`). El esquema real NO tiene fecha exacta, fecha de publicación, área, nivel
+de confianza ni fuente satelital por registro — no se convierte ningún punto en hectáreas.
+Correspondencia cualitativa razonable con el Boletín 45 (mismos departamentos dominantes).
+Estabilidad de `cod_dtd` entre descargas y posibilidad de revisión retroactiva: **no
+confirmadas, riesgos abiertos**. Ver `dtd_semantic_validation.md`.
+
+### Decisión de arquitectura
+
+- **Bosque**: `Superficie_Bosque` vía WCS + decodificación de colormap.
+- **Deforestación anual**: `zonas_deforestadas_2013_2024` (vector) como fuente principal;
+  `Dinamica_Cambio_Cobertura_Bosque` (ráster) como validación cruzada.
+- **Monitoreo oportuno**: `DTD_Trimestral` aprobado solo para conteo y presencia/ausencia —
+  **no aprobado para área** (la semántica real de los puntos no lo permite).
+
+### Idempotencia
+
+Verificada con dos corridas completas consecutivas: las 4 tablas de auditoría y los 2
+recortes ráster descargados son byte-idénticos (SHA-256) entre ambas corridas.

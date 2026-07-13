@@ -132,7 +132,14 @@ def validate_arcgis_service(id_fuente: str, base_url: str, *, tipo_servicio: str
 def validate_socrata_dataset(id_fuente: str, resource_id: str) -> dict[str, Any]:
     """Valida un dataset de datos.gov.co (Socrata) leyendo la metadata real
     de la vista (`/api/views/{id}.json`) — nunca asume el contenido por el
-    nombre del recurso."""
+    nombre del recurso.
+
+    Corrección Fase 2D.1: la propia descripción de estos datasets (texto real
+    devuelto por la API, ver `descripcion`) declara explícitamente
+    "Los datos a visualizar o descargar a continuación no han sido validados
+    por el IDEAM" — por lo tanto NUNCA se marcan como `validado_oficialmente`,
+    aunque la petición HTTP haya sido exitosa (una cosa es que el servicio
+    responda, otra que la entidad respalde el contenido)."""
     url = f"https://www.datos.gov.co/api/views/{resource_id}.json"
     data, status, msg = get_json(url)
     resultado: dict[str, Any] = {"id_fuente": id_fuente, "url_servicio": url, "tipo_servicio": "socrata_api", "http_status": status, "validado": data is not None, "mensaje": msg}
@@ -143,6 +150,7 @@ def validate_socrata_dataset(id_fuente: str, resource_id: str) -> dict[str, Any]
     resultado["nombre"] = data.get("name")
     resultado["descripcion"] = data.get("description")
     resultado["categoria"] = data.get("category")
+    resultado["declara_no_validado_por_ideam"] = "no han sido validados por el IDEAM" in (data.get("description") or "")
     resultado["fecha_publicacion_unix"] = data.get("publicationDate")
     resultado["fecha_actualizacion_unix"] = data.get("rowsUpdatedAt")
     # En un dataset Socrata de tipo "blob" (un archivo adjunto, p. ej. un
@@ -214,7 +222,11 @@ def main() -> int:
         ("ideam_geovisor_bosque", "https://www.ideam.gov.co/temas/monitoreo-de-bosques/geovisor"),
         ("ideam_informe_anual_bosque_deforestacion", "https://www.ideam.gov.co/sala-de-prensa/informes/Informe-anual-del-monitoreo-de-bosque-y-la-deforestacion"),
         ("ideam_resumen_ejecutivo_defo_2024", "https://bart.ideam.gov.co/smbyc/Resultados%20Cifra%20Deforestacion%202024/Comunicados/Resumen%20ejecutivo_cifra%20Defo_2024_SMByC_compressed.pdf"),
-        ("ideam_boletin_dtd_44_iii_2025", "https://bart.ideam.gov.co/smbyc/Boletines%20Detecciones%20Tempranas%20de%20Deforestacion/2025/Boletin/Boletin%2044%20-%20III%20trimestre%202025.pdf"),
+        # Corrección Fase 2D.1: el boletín 44 (III trimestre 2025) ya NO es el
+        # más reciente — el boletín 45 (IV trimestre 2025) fue confirmado con
+        # petición HTTP real (HTTP 200) y con la página oficial de boletines
+        # de IDEAM (publicado 2026-03-31).
+        ("ideam_boletin_dtd_45_iv_2025", "https://bart.ideam.gov.co/smbyc/Boletines%20Detecciones%20Tempranas%20de%20Deforestacion/2025/Boletin/Boletin%2045%20-%20IV%20trimestre%202025.pdf"),
         ("ideam_smbyc_bart_root", "https://bart.ideam.gov.co/smbyc/"),
     ]
     for id_fuente, url in paginas:
@@ -324,20 +336,22 @@ def build_catalog(
     fila(
         id_fuente="smbyc_superficie_bosque", entidad="IDEAM", sistema="SMByC",
         nombre_producto="Superficie de Bosque Natural (Bosque No Bosque)", categoria_producto="bosque_no_bosque",
-        descripcion_oficial="Cartografía de la superficie remanente de bosque natural de Colombia por año, clasificada en Bosque / No Bosque / Sin Información.",
+        descripcion_oficial="Cartografía de la superficie remanente de bosque natural de Colombia, clasificada en Bosque / No Bosque / Sin Información, por cortes NO continuos (no es una serie anual continua 1990-2024).",
         url_pagina="https://www.ideam.gov.co/temas/monitoreo-de-bosques/geovisor", url_servicio=r.get("url_servicio"),
         tipo_servicio="ArcGIS MapServer", url_descarga=None, formato="Raster (capa de imagen dentro de MapServer)",
         tipo_geometria="raster", raster_o_vector="raster", resolucion_espacial="30 m (Landsat, según metodología SMByC publicada)",
         escala="1:100.000", CRS=f"EPSG:{r.get('spatial_reference_wkid')}", cobertura_geografica="Nacional",
-        periodo_inicial="1990", periodo_final="2024", frecuencia_actualizacion="Anual",
+        periodo_inicial="1990", periodo_final="2024",
+        frecuencia_actualizacion="Cortes 1990, 2000, 2005, 2010 y 2012 (NO anuales); anual real solo 2013-2024 (confirmado por nombre de capa)",
         ultimo_periodo_disponible="2024", fecha_publicacion="2025-07-31 (cifra 2024)", fecha_actualizacion_portal=None,
         validado_oficialmente=True, estado_validacion="validado_con_peticion_real",
         requiere_autenticacion=False, permite_descarga_directa=True, permite_consulta_programatica=True,
         licencia_o_condiciones="CC BY-SA 4.0 (misma licencia declarada por IDEAM para productos SMByC en datos.gov.co)",
         tamaño_estimado="No descargado en esta fase; capas ráster nacionales por año, orden de decenas de MB cada una (referencia: ZIP Amazonia-only de un año pesa ~9.7 MB en datos.gov.co)",
         utilidad_proyecto="Fuente principal candidata para bosque_natural_observado por unidad territorial y año.",
-        limitaciones=f"17 capas ráster (1990,2000,2005,2010,2012-2024); requiere exportImage/rasterio para extraer, no query vectorial. maxRecordCount={r.get('max_record_count')}.",
-        observaciones=f"Leyenda confirmada vía petición real: {clases_bosque_no_bosque}. capabilities={r.get('capabilities')}.",
+        limitaciones=f"17 capas ráster con cortes 1990, 2000, 2005, 2010, 2012 y luego anuales 2013-2024 (NO serie anual continua desde 1990); requiere exportImage/rasterio para extraer, no query vectorial. maxRecordCount={r.get('max_record_count')}.",
+        observaciones=f"Leyenda confirmada vía petición real: {clases_bosque_no_bosque}. capabilities={r.get('capabilities')}. Corrección Fase 2D.1: la Fase 2D describía erróneamente esta serie como 'anual 1990-2024'.",
+        decision_priorizacion="adoptar_fuente_principal",
     )
 
     r = _r(resultados, "smbyc_dinamica_cambio_cobertura_bosque")
@@ -349,15 +363,17 @@ def build_catalog(
         tipo_servicio="ArcGIS MapServer", url_descarga=None, formato="Raster (capa de imagen dentro de MapServer)",
         tipo_geometria="raster", raster_o_vector="raster", resolucion_espacial="30 m (Landsat)",
         escala="1:100.000", CRS=f"EPSG:{r.get('spatial_reference_wkid')}", cobertura_geografica="Nacional",
-        periodo_inicial="1990-2000", periodo_final="2023-2024", frecuencia_actualizacion="Anual (desde 2012-2013)",
+        periodo_inicial="1990-2000", periodo_final="2023-2024",
+        frecuencia_actualizacion="Cortes multianuales 1990-2000/2000-2005/2005-2010/2010-2012 (NO anuales); anual real solo desde 2012-2013",
         ultimo_periodo_disponible="2023-2024", fecha_publicacion="2025-07-31 (cifra 2024)", fecha_actualizacion_portal=None,
         validado_oficialmente=True, estado_validacion="validado_con_peticion_real",
         requiere_autenticacion=False, permite_descarga_directa=True, permite_consulta_programatica=True,
         licencia_o_condiciones="CC BY-SA 4.0",
         tamaño_estimado="No descargado en esta fase; referencia ZIP nacional de un año en datos.gov.co ~38.4 MB.",
         utilidad_proyecto="Fuente principal candidata para deforestacion_anual_confirmada (pérdida bruta, no cambio neto — la leyenda separa Deforestación de Regeneración).",
-        limitaciones=f"16 capas ráster por periodo (10, 5, 5, 2, y luego anuales); primeros 4 periodos NO son anuales (1990-2000, 2000-2005, 2005-2010, 2010-2012). maxRecordCount={r.get('max_record_count')}.",
+        limitaciones=f"16 capas ráster por periodo (10, 5, 5, 2 años, y luego anuales); primeros 4 periodos NO son anuales (1990-2000, 2000-2005, 2005-2010, 2010-2012). maxRecordCount={r.get('max_record_count')}.",
         observaciones=f"Leyenda confirmada vía petición real: {clases_cambio} — distingue explícitamente deforestación de regeneración, por lo que es pérdida bruta, no cambio neto.",
+        decision_priorizacion="adoptar_fuente_principal",
     )
 
     r = _r(resultados, "smbyc_zonas_deforestadas_2013_2024")
@@ -379,6 +395,7 @@ def build_catalog(
         utilidad_proyecto="Fuente vectorial de mayor detalle para deforestacion_anual_confirmada a nivel de polígono individual, con campos ya vinculados a cod_mpio/cod_depto — evita reconstruir la agregación municipal desde ráster.",
         limitaciones=f"Servicio soporta paginación estándar (supports_pagination={r.get('supports_pagination')}), maxRecordCount={r.get('max_record_count')} — requiere paginar en descargas futuras. Campos: {r.get('campos')}.",
         observaciones=f"geometryType={r.get('geometry_type')}. Años confirmados por consulta distinct real: {lista_anios_zonas}.",
+        decision_priorizacion="adoptar_fuente_principal",
     )
 
     r = _r(resultados, "smbyc_dtd_trimestral")
@@ -392,7 +409,7 @@ def build_catalog(
         escala=None, CRS="EPSG:3857 (Web Mercator)", cobertura_geografica="Nacional (histórico concentrado en Amazonía)",
         periodo_inicial="2017-I", periodo_final=lista_periodos_dtd[-1]["anio"] + "-" + lista_periodos_dtd[-1]["periodo"] if lista_periodos_dtd else None,
         frecuencia_actualizacion="Trimestral", ultimo_periodo_disponible=lista_periodos_dtd[-1]["anio"] + "-" + lista_periodos_dtd[-1]["periodo"] if lista_periodos_dtd else None,
-        fecha_publicacion="Boletín 44, III trimestre 2025 (más reciente encontrado en esta fase)", fecha_actualizacion_portal=None,
+        fecha_publicacion="Boletín 45, IV trimestre 2025, publicado 2026-03-31 (corrección Fase 2D.1; el boletín 44/III-2025 ya no es el más reciente)", fecha_actualizacion_portal=None,
         validado_oficialmente=True, estado_validacion="validado_con_peticion_real",
         requiere_autenticacion=False, permite_descarga_directa=True, permite_consulta_programatica=True,
         licencia_o_condiciones="CC BY-SA 4.0 (asumida)",
@@ -400,6 +417,7 @@ def build_catalog(
         utilidad_proyecto="Única fuente vectorial encontrada de deteccion_temprana_posible_deforestacion con microdatos descargables (no solo boletín PDF) — candidata a señal de monitoreo oportuno.",
         limitaciones=f"Granularidad de punto (no polígono ni ráster); campo 'nucleo_tri' agrupa puntos por núcleo trimestral pero no se confirmó en esta fase si un mismo núcleo puede fusionarse/dividirse entre boletines sucesivos (requiere_revision_manual). Campos: {r.get('campos')}.",
         observaciones=f"geometryType={r.get('geometry_type')}. tipo_dtd observado='trim' en todas las combinaciones. Periodos confirmados por consulta distinct real (36 combinaciones año+trimestre, 2017-I a 2025-IV).",
+        decision_priorizacion="adoptar_fuente_principal",
     )
 
     r = _r(resultados, "smbyc_deforestacion_car_deptos")
@@ -418,6 +436,7 @@ def build_catalog(
         utilidad_proyecto="Posible estadística agregada complementaria; no se validó su esquema de columnas en esta fase.",
         limitaciones=f"Servicio responde y expone tabla '{r.get('table_names')}', pero esta fase no consultó su contenido detallado (columnas/periodo) — requiere revisión manual antes de adoptar.",
         observaciones="No tiene capa espacial (0 layers, 1 tabla) — no es utilizable para asignación territorial directa por geometría, solo por join alfanumérico si comparte código DANE.",
+        decision_priorizacion="requiere_revision_manual",
     )
 
     r = _r(resultados, "smbyc_indicadores_diferencia")
@@ -436,6 +455,7 @@ def build_catalog(
         utilidad_proyecto="Alcance no confirmado; nombre de tabla ('Hoja1') sugiere una carga ad-hoc desde Excel, no necesariamente un producto oficial estable.",
         limitaciones="Nombre de tabla genérico ('Hoja1') y sin capas espaciales — baja confianza de que sea un producto institucional estable y documentado.",
         observaciones="requiere_revision_manual antes de considerarse como fuente.",
+        decision_priorizacion="requiere_revision_manual",
     )
 
     r = _r(resultados, "ideam_uso_recurso_bosque")
@@ -454,6 +474,7 @@ def build_catalog(
         utilidad_proyecto="No mide deforestación ni cobertura de bosque — mide aprovechamiento forestal legal autorizado; fuera de alcance de los 3 productos pedidos (B.1/B.2/B.3).",
         limitaciones="Periodo histórico muy desactualizado (2000-2006), sin evidencia de continuidad.",
         observaciones=f"n_layers={r.get('n_layers')}: {r.get('layer_names')}.",
+        decision_priorizacion="rechazar",
     )
 
     r = _r(resultados, "ideam_snif")
@@ -472,6 +493,7 @@ def build_catalog(
         utilidad_proyecto="No mide deforestación ni bosque natural remanente — mide restauración activa y plantaciones forestales productoras (bosque plantado, no natural); fuera de alcance de B.1/B.2/B.3.",
         limitaciones="Contenido temático distinto (gestión forestal, no monitoreo de pérdida/cobertura de bosque natural).",
         observaciones=f"n_layers={r.get('n_layers')}: {r.get('layer_names')}.",
+        decision_priorizacion="rechazar",
     )
 
     r = _r(resultados, "ideam_geovisor_bosque")
@@ -491,6 +513,7 @@ def build_catalog(
         utilidad_proyecto="Punto de entrada institucional y de verificación cruzada, no una fuente programática — probablemente consume los mismos servicios ArcGIS ya validados en esta fase.",
         limitaciones="La petición automática (WebFetch) no encontró enlaces directos a servicios ArcGIS en el HTML — es una SPA que carga el mapa dinámicamente; no se puede validar mediante HEAD/GET simple más allá de la disponibilidad de la página.",
         observaciones=f"HTTP status real: {r.get('http_status')}.",
+        decision_priorizacion="solo_validacion",
     )
 
     r = _r(resultados, "ideam_informe_anual_bosque_deforestacion")
@@ -509,24 +532,26 @@ def build_catalog(
         utilidad_proyecto="Documento metodológico de referencia obligatoria: aquí se define oficialmente el significado de las clases (pérdida bruta vs. cambio neto) y la cifra nacional 2024 = 113.608 ha.",
         limitaciones="Es un documento narrativo (PDF), no una capa descargable — se usa para interpretar, no para procesar programáticamente.",
         observaciones=f"HTTP status real del resumen ejecutivo 2024: {_r(resultados, 'ideam_resumen_ejecutivo_defo_2024').get('http_status')}.",
+        decision_priorizacion="solo_documental",
     )
 
-    r = _r(resultados, "ideam_boletin_dtd_44_iii_2025")
+    r = _r(resultados, "ideam_boletin_dtd_45_iv_2025")
     fila(
-        id_fuente="ideam_boletin_dtd_44_iii_2025", entidad="IDEAM", sistema="SMByC",
-        nombre_producto="Boletín de Detección Temprana de Deforestación (DTD) — edición 44", categoria_producto="documento_metodologico",
-        descripcion_oficial="Boletín trimestral narrativo con análisis de núcleos DTD del III trimestre de 2025 — complementa (no reemplaza) el microdato vectorial DTD_Trimestral.",
+        id_fuente="ideam_boletin_dtd_45_iv_2025", entidad="IDEAM", sistema="SMByC",
+        nombre_producto="Boletín de Detección Temprana de Deforestación (DTD) — edición 45", categoria_producto="documento_metodologico",
+        descripcion_oficial="Boletín trimestral narrativo con análisis de núcleos DTD del IV trimestre de 2025 — complementa (no reemplaza) el microdato vectorial DTD_Trimestral.",
         url_pagina="https://bart.ideam.gov.co/smbyc/Boletines%20Detecciones%20Tempranas%20de%20Deforestacion", url_servicio=None,
         tipo_servicio="Documento PDF", url_descarga=r.get("url_servicio"), formato="PDF", tipo_geometria=None, raster_o_vector=None,
         resolucion_espacial=None, escala=None, CRS=None, cobertura_geografica="Nacional (foco histórico en Amazonía)",
-        periodo_inicial="2016 (boletín 1)", periodo_final="2025-III", frecuencia_actualizacion="Trimestral",
-        ultimo_periodo_disponible="2025-III (boletín 44, el más reciente localizado en esta fase)", fecha_publicacion="2025 (III trimestre)",
+        periodo_inicial="2016 (boletín 1)", periodo_final="2025-IV", frecuencia_actualizacion="Trimestral",
+        ultimo_periodo_disponible="2025-IV (boletín 45, confirmado por petición HTTP real y por la página oficial de boletines de IDEAM, publicado 2026-03-31)", fecha_publicacion="2026-03-31",
         fecha_actualizacion_portal=None, validado_oficialmente=True, estado_validacion="validado_con_peticion_real",
         requiere_autenticacion=False, permite_descarga_directa=True, permite_consulta_programatica=False,
         licencia_o_condiciones="CC BY-SA 4.0 (asumida)", tamaño_estimado=None,
         utilidad_proyecto="Fuente narrativa que documenta la metodología y definición de 'núcleo' de deforestación — necesaria para interpretar correctamente el campo nucleo_tri de DTD_Trimestral.",
-        limitaciones="El microdato vectorial (DTD_Trimestral) ya llega hasta 2025-IV, un trimestre más reciente que el último boletín narrativo localizado en esta búsqueda (44 = III-2025) — sugiere que el boletín 45 podría existir sin haber sido indexado aún por el buscador usado.",
+        limitaciones="Corrección Fase 2D.1: la Fase 2D identificó erróneamente el boletín 44 (III-2025) como el más reciente; el boletín 45 (IV-2025) ya estaba publicado. Ver sección K de docs/11 para la comparación real entre este boletín y el FeatureServer.",
         observaciones=f"HTTP status real: {r.get('http_status')}.",
+        decision_priorizacion="solo_documental",
     )
 
     r = _r(resultados, "datosgovco_cambio_bosque_nacional")
@@ -541,13 +566,14 @@ def build_catalog(
         resolucion_espacial=None, escala=None, CRS=None, cobertura_geografica="Nacional", periodo_inicial=None, periodo_final="2022",
         frecuencia_actualizacion="Anual (declarada)", ultimo_periodo_disponible="2022",
         fecha_publicacion="2024-01-30", fecha_actualizacion_portal="2024-01-29",
-        validado_oficialmente=True, estado_validacion="validado_con_peticion_real",
+        validado_oficialmente=False, estado_validacion="publicado_en_portal_pero_no_validado_por_ideam",
         requiere_autenticacion=False, permite_descarga_directa=True, permite_consulta_programatica=True,
         licencia_o_condiciones="Datos abiertos sin validar por IDEAM según cláusulas propias del portal (ver descripción en metadata); no es la misma garantía de calidad que el servicio ArcGIS institucional.",
         tamaño_estimado=f"{tam_mb} MB ({r.get('blob_filename')}, blobFileSize real ={r.get('blob_filesize_bytes')} bytes, confirmado por petición real a la API Socrata; HEAD al archivo: HTTP {((r.get('blob_head') or {}).get('status'))})",
         utilidad_proyecto="Redundante y desactualizada frente al servicio ArcGIS (que ya tiene 2023-2024): última actualización 2022, dos años de rezago.",
-        limitaciones="Portal Socrata no se ha actualizado desde enero 2024 pese a que el servicio ArcGIS institucional ya publicó 2 años adicionales — no debe usarse como fuente principal de actualidad. La propia metadata Socrata aclara que estos datos 'no han sido validados por el IDEAM'.",
+        limitaciones=f"Portal Socrata no se ha actualizado desde enero 2024 pese a que el servicio ArcGIS institucional ya publicó 2 años adicionales — no debe usarse como fuente principal de actualidad. Corrección Fase 2D.1: la propia metadata Socrata (campo `description` real, declara_no_validado_por_ideam={r.get('declara_no_validado_por_ideam')}) aclara explícitamente que estos datos 'no han sido validados por el IDEAM' — ya NO se marca `validado_oficialmente=True`.",
         observaciones="Vista tipo blob (el recurso completo es un único archivo adjunto, no una tabla de filas) — confirmado con petición real a /api/views.",
+        decision_priorizacion="rechazar",
     )
 
     r = _r(resultados, "datosgovco_cambio_bosque_amazonia")
@@ -561,13 +587,14 @@ def build_catalog(
         formato=f"ZIP ({r.get('blob_mimetype')})", tipo_geometria=None, raster_o_vector=None, resolucion_espacial=None, escala=None, CRS=None,
         cobertura_geografica="Regional (Amazonía)", periodo_inicial=None, periodo_final="2022", frecuencia_actualizacion="Anual (declarada)",
         ultimo_periodo_disponible="2022", fecha_publicacion="2024-01-30", fecha_actualizacion_portal=None,
-        validado_oficialmente=True, estado_validacion="validado_con_peticion_real",
+        validado_oficialmente=False, estado_validacion="publicado_en_portal_pero_no_validado_por_ideam",
         requiere_autenticacion=False, permite_descarga_directa=True, permite_consulta_programatica=True,
         licencia_o_condiciones="Datos abiertos sin validar por IDEAM según cláusulas propias del portal.",
         tamaño_estimado=f"{tam_mb} MB ({r.get('blob_filename')}, blobFileSize real ={r.get('blob_filesize_bytes')} bytes, confirmado por petición real; HEAD: HTTP {((r.get('blob_head') or {}).get('status'))})",
         utilidad_proyecto="Subconjunto regional del dataset nacional anterior; misma desactualización (2022).",
-        limitaciones="No agrega cobertura nueva frente al dataset nacional ni frente al servicio ArcGIS — redundante.",
+        limitaciones=f"No agrega cobertura nueva frente al dataset nacional ni frente al servicio ArcGIS — redundante. Corrección Fase 2D.1: declara_no_validado_por_ideam={r.get('declara_no_validado_por_ideam')} confirmado en metadata real.",
         observaciones="Recurso Socrata separado por región (Amazonía), mismo patrón que el dataset nacional.",
+        decision_priorizacion="rechazar",
     )
 
     r = _r(resultados, "ideam_arcgis_root_catalog")
@@ -585,6 +612,7 @@ def build_catalog(
         utilidad_proyecto="Punto de descubrimiento: confirma que todos los servicios de bosque/deforestación viven bajo el mismo ArcGIS Server institucional ya usado en fases anteriores (MGN2025, minería) — mismo patrón de acceso reutilizable.",
         limitaciones="No es un producto de datos en sí, es el índice.",
         observaciones=f"{r.get('n_layers', 0) + 0} servicios listados directamente en la raíz; carpetas: incluye 'SNIF', 'Tematica', 'Hosted', entre otras.",
+        decision_priorizacion="solo_documental",
     )
 
     return pd.DataFrame(filas, columns=CATALOGO_COLUMNS)
@@ -598,6 +626,7 @@ CATALOGO_COLUMNS = [
     "fecha_publicacion", "fecha_actualizacion_portal", "validado_oficialmente", "estado_validacion",
     "requiere_autenticacion", "permite_descarga_directa", "permite_consulta_programatica",
     "licencia_o_condiciones", "tamaño_estimado", "utilidad_proyecto", "limitaciones", "observaciones",
+    "decision_priorizacion",
 ]
 
 
@@ -638,7 +667,7 @@ def build_actualidad(lista_anios_zonas: list[str], lista_periodos_dtd: list[dict
         {
             "producto": "Detecciones Tempranas de Deforestación (DTD) Trimestral (puntos, FeatureServer)",
             "ultimo_periodo_observado": ultimo_periodo_dtd,
-            "fecha_publicacion": "Boletín narrativo más reciente localizado: 2025-III (el microdato vectorial ya llega a 2025-IV)",
+            "fecha_publicacion": "Boletín 45 (IV trimestre 2025), publicado 2026-03-31 — corrección Fase 2D.1, confirmado con petición HTTP real",
             "fecha_actualizacion_servicio": "No determinada mediante campo de servicio en esta fase",
             "latencia_dias_aproximada": None,
             "frecuencia_declarada": "Trimestral",

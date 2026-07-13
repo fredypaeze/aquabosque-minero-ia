@@ -20,6 +20,9 @@ pyproj   # transformar/validar coordenadas entre CRS (EPSG:4326 <-> EPSG:9377
          # MAGNA-SIRGAS 2018 / Origen-Nacional) para los limites municipales
          # DANE, Fase 3D. Necesario porque shapely no incluye reproyeccion;
          # pyproj es mucho mas liviano que agregar geopandas solo para esto.
+rasterio # leer/inspeccionar/reproyectar rasters (bosque/cambio de bosque IDEAM,
+         # formato GeoTIFF via WCS), Fase 2D.1. Trae su propio GDAL empaquetado
+         # en el wheel de Windows, no requiere instalacion de GDAL aparte.
 
 # Configuración y entorno
 python-dotenv
