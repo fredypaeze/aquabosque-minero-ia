@@ -45,6 +45,20 @@ variables de minería, agua, DTD y disponibilidad de datos — exclusivamente co
 supervisado de patrones territoriales atípicos**. Ver `docs/MVP_METODOLOGIA.md` y
 `docs/MVP_LIMITACIONES.md` para el alcance exacto y lo que el modelo NO afirma.
 
+## Ejecución rápida para evaluación
+
+El repositorio incluye ya los artefactos de datos y el modelo entrenado — no es necesario
+descargar nada ni ejecutar el pipeline previo para ver la aplicación funcionando.
+
+```powershell
+git clone <URL_DEL_REPOSITORIO>
+cd aquabosque-minero-ia
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
 ## Instalación
 
 ```powershell
@@ -55,28 +69,62 @@ pip install -r requirements.txt
 ## Ejecución
 
 ```powershell
-# Opción 1: script de arranque (genera el dataset si falta y abre la app)
+# Opción 1: script de arranque (usa los artefactos ya incluidos; solo reconstruye si faltan)
 .\run_mvp.ps1
 
-# Opción 2: manual
-python scripts/24_build_mvp_dataset.py   # genera data/processed/mvp/*.csv y el modelo
+# Opción 2: manual (los artefactos ya están versionados, este paso no es obligatorio)
 python -m streamlit run app.py
 ```
 
 ## Estructura relevante del MVP
 
 ```
-scripts/24_build_mvp_dataset.py   # construye el dataset integrado, el score y el modelo IA
-app.py                             # aplicación Streamlit
-models/isolation_forest_mvp.joblib # modelo entrenado
-data/processed/mvp/                # dataset de entrega (regenerable, no versionado)
-docs/MVP_METODOLOGIA.md            # metodología detallada
-docs/MVP_LIMITACIONES.md           # limitaciones explícitas
-docs/DEMO_GUION.md                 # guion de demo (máx. 4 minutos)
+app.py                                        # aplicación Streamlit (lee directamente los artefactos versionados)
+run_mvp.ps1                                   # arranque de un solo paso
+scripts/24_build_mvp_dataset.py               # script de reproducibilidad: reconstruye dataset + modelo desde cero
+models/isolation_forest_mvp.joblib            # modelo entrenado (versionado)
+data/processed/mvp/
+├── aquabosque_municipios_mvp.csv             # dataset integrado (1.122 municipios) — versionado
+├── aquabosque_priorizacion_mvp.csv           # priorización + resultados IA — versionado
+├── aquabosque_top20_mvp.csv                  # top 20 nacional — versionado
+├── municipios_demo.csv                       # 3 municipios de demo — versionado
+└── municipios_mvp_simplificado.geojson       # geometría simplificada para el mapa — versionado
+docs/MVP_METODOLOGIA.md                       # metodología detallada
+docs/MVP_LIMITACIONES.md                      # limitaciones explícitas
+docs/DEMO_GUION.md                            # guion de demo (máx. 4 minutos)
 ```
 
 Para la estructura completa del repositorio (fases forestales/hídricas/mineras previas), ver
 `docs/01` a `docs/11`.
+
+## Municipios demo
+
+1. **Puerto Rico, Meta** — obligatorio: único municipio con bosque/deforestación confirmados con el piloto WCS IDEAM real (Fases 2D.1/2D.2).
+2. **Montelíbano, Córdoba** — prioridad "Muy alta" con minería y agua disponibles simultáneamente.
+3. **Marmato, Caldas** — anomalía IA alta (percentil 99) sin monitoreo hídrico disponible, perfil contrastante con el municipio 2.
+
+Razón exacta de cada selección en `data/processed/mvp/municipios_demo.csv`.
+
+## Reproducibilidad
+
+Los artefactos versionados permiten evaluar el MVP sin reconstruir nada. Para regenerarlos
+desde las fuentes (por ejemplo, tras actualizar los datos de agua, minería o DTD):
+
+```powershell
+python scripts/24_build_mvp_dataset.py
+```
+
+Esto sobrescribe `data/processed/mvp/*` y `models/isolation_forest_mvp.joblib` de forma
+determinística (`random_state=42` en el modelo).
+
+## Siguiente fase (posterior al concurso)
+
+La arquitectura forestal nacional (grilla fija de 896 tiles, colormap propio validado por capa
+con 0 % de RGB desconocido, mosaico y política de concurrencia de descarga) ya quedó diseñada
+y validada en las Fases 2D.1-2D.4 (`docs/11_fuentes_bosque_deforestacion.md`). El siguiente
+paso natural, no implementado en este MVP, es ejecutar la adquisición nacional con esa
+arquitectura y extender la cobertura forestal confirmada de Puerto Rico (Meta) a las 1.122
+unidades territoriales.
 
 ## Limitaciones (resumen — detalle en `docs/MVP_LIMITACIONES.md`)
 
@@ -85,15 +133,6 @@ Para la estructura completa del repositorio (fases forestales/hídricas/mineras 
 - No clasifica legalmente la calidad del agua.
 - No confirma deforestación a nivel nacional — solo Puerto Rico (Meta) tiene piloto forestal validado.
 - No opera en tiempo real; cada fuente tiene su propio corte temporal.
-
-## Escalabilidad
-
-El dataset y el modelo son reproducibles ejecutando `scripts/24_build_mvp_dataset.py` sobre
-datos actualizados. La arquitectura forestal nacional (grilla fija de 896 tiles, colormap
-validado por capa) ya quedó diseñada y validada en las Fases 2D.1-2D.4
-(`docs/11_fuentes_bosque_deforestacion.md`) para una futura adquisición de la serie completa —
-extender la cobertura forestal confirmada a las 1.122 unidades es el siguiente paso natural, no
-implementado en este MVP.
 
 ## Reglas de trabajo del proyecto
 
