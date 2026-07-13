@@ -324,7 +324,7 @@ colormap oficial obtenido con la operación `identify`. Ver `forest_wcs_validati
 | Rol | Municipio | Criterio |
 |---|---|---|
 | Deforestación reciente | Puerto Rico, Meta (50590) | Mayor `total_ha` deforestada 2024 entre municipios ≤600.000 ha (consulta de estadísticas real) |
-| Bosque, baja/nula deforestación | Miritı́-Paraná, Amazonas (91460) | 0 registros en `zonas_deforestadas_2013_2024` entre municipios amazónicos, mayor área |
+| Sin registros en vector de cobertura parcial *(corrección Fase 2D.3; antes descrito erróneamente como "bosque, baja/nula deforestación")* | Miritı́-Paraná, Amazonas (91460) | 0 registros en `zonas_deforestadas_2013_2024` entre municipios amazónicos, mayor área — la ausencia de registros refleja un vector con cobertura parcial (118/1.122 municipios), no evidencia de baja deforestación real |
 | Geometría compleja | Bolívar, Santander (68101) | Mayor índice de compacidad (perímetro²/(4π·área)) entre municipios de una sola parte |
 
 ### Piloto ráster (secciones C-G)
@@ -430,7 +430,7 @@ El vector es internamente limpio (118 municipios, todos con código DIVIPOLA vá
 nulos, 0 inconsistencias de nombre) pero **cubre solo 118 de los 1.122 municipios del
 país**. En Puerto Rico, 8/913 polígonos (0,9%) tienen desajuste geométrico real con MGN2025.
 
-### Decisiones actualizadas de arquitectura
+### Decisiones actualizadas de arquitectura (históricas — corregidas en la Fase 2D.3, ver más abajo)
 
 - **Bosque**: `aprobado_para_procesamiento_nacional` (0% de pérdida confirmado).
 - **Deforestación vectorial**: `candidato_principal_pendiente_validacion_nacional` — el
@@ -439,9 +439,85 @@ país**. En Puerto Rico, 8/913 polígonos (0,9%) tienen desajuste geométrico re
   huecos geográficos reales del vector.
 - **DTD**: `aprobado_para_conteo_y_presencia`; se mantiene `no_aprobado_para_area`.
 
+> Corrección Fase 2D.3: el ráster de cambio pasa a ser la **fuente principal** de
+> deforestación anual nacional; el vector pasa a **fuente complementaria de cobertura
+> parcial**, nunca principal. Ver la sección "Cierre técnico Fase 2D.3" más abajo.
+
 ### Idempotencia
 
 Verificada con dos corridas completas consecutivas de
 `scripts/21_forest_dtd_and_colormap_robustness.py`: las 6 tablas de auditoría son
 byte-idénticas (SHA-256) entre ambas corridas, incluida la paginación completa de 249.895
 registros históricos.
+
+## Cierre técnico Fase 2D.3
+
+Generado por `scripts/22_design_forest_national_acquisition.py` y los módulos nuevos
+`src/aquabosque/forest/{grid,colormap,tiles}.py` y `src/aquabosque/features/dtd.py`. No
+descargó la serie forestal nacional. No calculó indicadores para las 1.122 unidades. No
+integró minería ni agua. No construyó índice de riesgo. No entrenó modelos.
+
+### A. Correcciones de arquitectura vigentes
+
+El ráster `Dinamica_Cambio_Cobertura_Bosque` es la **fuente principal** de deforestación
+anual nacional (`aprobado_para_adquisicion_nacional_raster`); `zonas_deforestadas_2013_2024`
+es **fuente complementaria de cobertura parcial** (`fuente_complementaria_cobertura_parcial`,
+118/1.122 municipios, no puede usarse para asignar cero deforestación a municipios sin
+polígonos); Miritı́-Paraná se describe como
+`sin_registros_en_vector_de_cobertura_parcial`, nunca como "baja o nula deforestación"; DTD
+queda `aprobado_para_conteo_presencia_y_distribucion_espacial`, manteniendo
+`no_aprobado_para_area`.
+
+### B-D. Grilla nacional fija (896 tiles, 369 candidatos)
+
+`DescribeCoverage` real reveló que `Superficie_Bosque` y `Dinamica_Cambio_Cobertura_Bosque`
+**no comparten exactamente la misma grilla nativa** (resolución declarada difiere 0,02%,
+orígenes difieren en la 6ª-7ª cifra decimal) — la grilla nacional canónica
+(`config/forest_national_grid.json`) se alinea al origen de `Superficie_Bosque`; ambos
+productos se descargarán siempre con los mismos bounds/tiles, no con su origen nativo. 896
+tiles de 2.048×2.048 px generados por aritmética pura (nunca desde bbox municipal); 369
+(41,2%) intersectan territorio nacional MGN2025 (marcado solo para filtrar, no para recortar
+bounds).
+
+### E/N. Continuidad y mosaico — aprobados
+
+2 tiles contiguos reales se recomponen sin huecos ni superposición, misma resolución. Mosaico
+2×2 real reconstruido con dimensiones correctas y área por clase idéntica antes/después.
+
+### F/G/H. Colormap multitemporal — hallazgo crítico
+
+El colormap confirmado en 2024 (0% de pérdida) **no decodifica con exactitud** las capas de
+2012-2013 a 2018 (3,15%-3,66% de píxeles con RGB a 1-3 unidades de distancia de los valores
+base) — evidencia de configuración de renderer posiblemente distinta por año
+(`UniqueValueRenderer` vs. `RasterColormapRenderer`, confirmado con `identify()` real).
+`decode_ideam_rgb_classes` (nueva función reutilizable,
+`src/aquabosque/forest/colormap.py`) nunca asimiló un RGB desconocido a la clase 0 — los
+marcó `clase_desconocida` (254) y el proceso se habría detenido con la tolerancia por
+defecto (0,0%). `forest_layer_colormaps.csv` versiona cada colormap con hash de leyenda.
+
+### I/J/K. Identificación DTD corregida
+
+`dtd_registro_id` (hash SHA-256 determinístico, sin fecha de descarga) reemplaza a `cod_dtd`
+como llave de fila. Sobre el histórico completo (249.895 registros): 5 códigos placeholder
+(32.062 registros, ya conocido), 12 coordenadas repetidas bajo el mismo código, 2.080
+coordenadas con múltiples `cod_dtd` (esperado, por diseño del identificador). Ningún registro
+se eliminó. Metodología de asignación territorial (`covers()` sobre MGN2025) validada sobre
+una muestra de 20 puntos: 19/20 (95%) de concordancia con el código de la fuente.
+
+### L/M. Estimación y manifiesto
+
+369 tiles candidatos, ~12,6 MB/tile observado. Alternativa recomendada: 5 cortes de bosque
+clave (2013/2018/2020/2022/2024) + 16 cambios anuales completos (~97,5 GB, ~7.749
+peticiones, ~1,8 h estimadas) — ninguna descarga nacional se ejecutó en esta fase. Esquema de
+manifiesto diseñado en `data/raw/forest/manifest.json` (0 tiles reales registrados).
+
+### Arquitectura definitiva
+
+Bosque nacional y deforestación anual nacional: `WCS_RGB_FIXED_TILE_GRID`. Vector de zonas
+deforestadas: `COMPLEMENTARY_PARTIAL_COVERAGE`. DTD: `POINT_COUNTS_PRESENCE_DISTRIBUTION`.
+
+### Idempotencia
+
+Verificada con múltiples corridas completas consecutivas de
+`scripts/22_design_forest_national_acquisition.py`: las 8 tablas/archivos de referencia y
+auditoría son byte-idénticos (SHA-256) entre corridas.
