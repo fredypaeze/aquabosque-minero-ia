@@ -32,11 +32,33 @@ def extract_tiff_from_multipart(raw_bytes: bytes) -> bytes:
     raise ValueError("Respuesta WCS no contiene una parte image/tiff.")
 
 
-def download_tile_wcs(mapserver_services_url: str, coverage_id: str, tile: Tile, dest_path: Path, *, timeout: int = TIMEOUT_DEFAULT) -> dict[str, Any]:
+def download_tile_wcs(
+    mapserver_services_url: str,
+    coverage_id: str,
+    tile: Tile,
+    dest_path: Path,
+    *,
+    timeout: int = TIMEOUT_DEFAULT,
+    forzar_resolucion_canonica: bool = True,
+) -> dict[str, Any]:
     """Descarga un tile exacto (sus bounds, sin buffer adicional) vía WCS
     GetCoverage con interpolación `nearest-neighbor` fija — la misma
     interpolación para todos los tiles, requisito de reproducibilidad de la
-    sección F."""
+    sección F.
+
+    Hallazgo real de la Fase 2D.4 (sección H): sin forzar el tamaño de
+    salida, el servidor WCS devuelve cada coverage en SU PROPIA resolución
+    nativa para el mismo bbox solicitado (confirmado: la misma tesela de
+    prueba produjo 2048x2048 px para `Superficie_Bosque` 2024 pero 2063x2063
+    px para `Dinamica_Cambio_Cobertura_Bosque` 2023-2024, y 2033x2063 px para
+    `Superficie_Bosque` 2013/2018) — el parámetro `INTERPOLATION` por sí solo
+    NO fuerza el remuestreo a la grilla canónica. `forzar_resolucion_canonica`
+    (por defecto `True`) añade la extensión WCS `SCALESIZE` (confirmada como
+    soportada por el servicio vía `GetCapabilities` ->
+    `WCS_service-extension_scaling`) para que la tesela descargada tenga
+    exactamente `tile.width_px` x `tile.height_px`, alineada a la grilla
+    nacional. Se puede desactivar explícitamente (`False`) únicamente para
+    auditar la resolución nativa real de un producto/año (sección H)."""
     params = {
         "SERVICE": "WCS", "REQUEST": "GetCoverage", "VERSION": "2.0.1", "COVERAGEID": coverage_id,
         "FORMAT": "image/tiff",
@@ -45,10 +67,15 @@ def download_tile_wcs(mapserver_services_url: str, coverage_id: str, tile: Tile,
         "OUTPUTCRS": "http://www.opengis.net/def/crs/EPSG/0/4326",
         "INTERPOLATION": "http://www.opengis.net/def/interpolation/OGC/1/nearest-neighbor",
     }
+    if forzar_resolucion_canonica:
+        params["SCALESIZE"] = f"x({tile.width_px}),y({tile.height_px})"
     t0 = time.perf_counter()
     resp = SESSION.get(f"{mapserver_services_url}/WCSServer", params=params, timeout=timeout)
     tiempo_s = round(time.perf_counter() - t0, 2)
-    resultado: dict[str, Any] = {"tile_id": tile.tile_id, "http_status": resp.status_code, "tiempo_s": tiempo_s}
+    resultado: dict[str, Any] = {
+        "tile_id": tile.tile_id, "http_status": resp.status_code, "tiempo_s": tiempo_s,
+        "resolucion_canonica_forzada": forzar_resolucion_canonica,
+    }
     if resp.status_code != 200:
         resultado["exito"] = False
         resultado["mensaje"] = resp.text[:300]

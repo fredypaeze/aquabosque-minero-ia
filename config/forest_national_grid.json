@@ -18,5 +18,6 @@
   "politica_borde": "recortar_al_extent_nacional_declarado",
   "nodata_tecnico": 253,
   "remuestreo": "nearest",
-  "tolerancia_clase_desconocida_pct": 0.0
+  "tolerancia_clase_desconocida_pct": 0.0,
+  "grid_version": "national_grid_v1_2026-07-12"
 }

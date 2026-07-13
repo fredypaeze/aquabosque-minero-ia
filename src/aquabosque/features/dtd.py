@@ -25,6 +25,17 @@ PRECISION_COORDENADA = 5  # decimales (~1,1 m en el ecuador), mismo criterio que
 # superar unas pocas unidades).
 UMBRAL_APARICIONES_PLACEHOLDER = 10
 
+# `objectIdField` real del servicio (confirmado vía metadata del FeatureServer,
+# Fase 2D.4, sección I) — NO se llama `OBJECTID` en este servicio, se llama
+# `fid` (`esriFieldTypeOID`). Se documenta como constante para no repetir el
+# nombre de campo de forma dispersa por el código.
+OBJECTID_FIELD = "fid"
+
+# Atributos que componen el payload del hash de `dtd_event_fingerprint`
+# (antes llamado `dtd_registro_id`) — usado por `attribute_sensitivity_audit`
+# para medir el efecto de excluir cada uno.
+ATRIBUTOS_FINGERPRINT = ["anio", "periodo", "x", "y", "cod_mpio", "cod_depto", "nucleo_tri", "cod_dtd"]
+
 
 def build_dtd_registro_id(row: dict[str, Any]) -> str:
     """`dtd_registro_id`: hash determinístico SHA-256 (16 hex) de los
@@ -151,5 +162,142 @@ def assign_dtd_points_to_mgn2025(df: pd.DataFrame, territorial_index, assign_poi
             "cod_mpio_espacial_mgn2025": resultado.cod_dane_mpio_asignado,
             "metodo_asignacion": resultado.metodo_asignacion,
             "coincide_municipio_fuente_vs_espacial": (row.get("cod_mpio") == resultado.cod_dane_mpio_asignado) if resultado.cod_dane_mpio_asignado else None,
+        })
+    return pd.DataFrame(filas)
+
+
+# ---------------------------------------------------------------------------
+# Fase 2D.4, sección I: identidad canónica DTD.
+#
+# `dtd_registro_id` (Fase 2D.3) nunca se demostró que tuviera semántica de
+# llave única — solo se demostró que NO dependía de `cod_dtd` en solitario.
+# Esta sección separa explícitamente tres roles distintos que antes se
+# mezclaban en un solo campo:
+#   - `dtd_source_objectid`: el OBJECTID real del servicio (`fid`), tal cual.
+#   - `dtd_source_row_id`: identificador anclado a la fuente (`ideam_dtd::{fid}`),
+#     único por construcción mientras el servicio no reasigne `fid` (no es un
+#     hash — es una referencia directa).
+#   - `dtd_event_fingerprint`: el mismo hash determinístico que antes se
+#     llamaba `dtd_registro_id` (mismo cálculo, ver `build_dtd_registro_id`),
+#     usado ÚNICAMENTE para auditoría de duplicados/colisiones — nunca como
+#     llave primaria salvo que `audit_registro_id_uniqueness` demuestre que lo
+#     es sobre el conjunto real.
+# ---------------------------------------------------------------------------
+
+
+def build_dtd_source_row_id(row: dict[str, Any]) -> str:
+    """`dtd_source_row_id`: identificador anclado a la fuente, NO un hash —
+    referencia directa al `OBJECTID` real del servicio (`fid`)."""
+    return f"ideam_dtd::{row.get(OBJECTID_FIELD)}"
+
+
+def build_dtd_event_fingerprint(row: dict[str, Any]) -> str:
+    """`dtd_event_fingerprint`: mismo cálculo que `build_dtd_registro_id`
+    (Fase 2D.3), renombrado para reflejar su rol correcto (sección I): huella
+    de auditoría, no llave primaria por defecto."""
+    return build_dtd_registro_id(row)
+
+
+def add_dtd_identity_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Añade las tres columnas de identidad de la sección I sin eliminar
+    `dtd_registro_id` (se conserva por continuidad con la Fase 2D.3)."""
+    out = add_registro_id(df)
+    out["dtd_source_objectid"] = out.get(OBJECTID_FIELD)
+    out["dtd_source_row_id"] = out.apply(lambda r: build_dtd_source_row_id(r.to_dict()), axis=1)
+    out["dtd_event_fingerprint"] = out["dtd_registro_id"]
+    return out
+
+
+def audit_oid_uniqueness(df: pd.DataFrame) -> dict[str, Any]:
+    """Sección I: unicidad/nulos/duplicados del `OBJECTID` real (`fid`)."""
+    if OBJECTID_FIELD not in df.columns:
+        raise KeyError(f"El DataFrame no trae la columna '{OBJECTID_FIELD}' (OBJECTID real del servicio).")
+    serie = df[OBJECTID_FIELD]
+    n_nulos = int(serie.isna().sum())
+    no_nulos = serie.dropna()
+    conteos = no_nulos.value_counts()
+    duplicados = conteos[conteos > 1]
+    return {
+        "n_registros": len(df),
+        "n_objectid_no_nulos": int(len(no_nulos)),
+        "n_objectid_nulos": n_nulos,
+        "n_objectid_unicos": int(no_nulos.nunique()),
+        "n_objectid_valores_duplicados": int(len(duplicados)),
+        "n_filas_afectadas_por_objectid_duplicado": int(duplicados.sum()) if len(duplicados) else 0,
+    }
+
+
+def audit_registro_id_uniqueness(df: pd.DataFrame, id_column: str = "dtd_event_fingerprint") -> dict[str, Any]:
+    """Sección I: unicidad de `dtd_event_fingerprint`/`dtd_registro_id`,
+    duplicados exactos de fila, y colisiones reales de hash (mismo
+    fingerprint, contenido de atributos estables distinto — lo que
+    invalidaría su uso como llave)."""
+    atributos_presentes = [c for c in ATRIBUTOS_FINGERPRINT if c in df.columns]
+    n_filas_exactamente_duplicadas = int(df.duplicated(subset=atributos_presentes, keep=False).sum())
+
+    n_colisiones_contenido_distinto = 0
+    n_grupos_duplicado_exacto = 0
+    for _, grupo in df.groupby(id_column, dropna=False):
+        if len(grupo) <= 1:
+            continue
+        contenido_unico = grupo[atributos_presentes].drop_duplicates()
+        if len(contenido_unico) > 1:
+            n_colisiones_contenido_distinto += 1
+        else:
+            n_grupos_duplicado_exacto += 1
+
+    return {
+        "n_registros": len(df),
+        "n_fingerprint_unicos": int(df[id_column].nunique(dropna=True)),
+        "n_fingerprint_duplicados_valores": int(df[id_column].value_counts().gt(1).sum()),
+        "n_filas_exactamente_duplicadas_por_atributos": n_filas_exactamente_duplicadas,
+        "n_grupos_duplicado_exacto_mismo_fingerprint": n_grupos_duplicado_exacto,
+        "n_grupos_colision_hash_contenido_distinto": n_colisiones_contenido_distinto,
+        "tiene_semantica_de_llave_unica": bool(
+            df[id_column].nunique(dropna=True) == len(df) and n_colisiones_contenido_distinto == 0
+        ),
+    }
+
+
+def _valor_normalizado_para_hash(row: dict[str, Any], atributo: str) -> str:
+    """Mismo criterio de normalización que `build_dtd_registro_id` para
+    `x`/`y` (redondeo a `PRECISION_COORDENADA`) — necesario para que
+    `attribute_sensitivity_audit` aísle el efecto de EXCLUIR un atributo sin
+    contaminar el resultado con un cambio de precisión no solicitado (bug
+    real encontrado y corregido en la Fase 2D.4: sin este redondeo, dejar
+    `x`/`y` en el payload a precisión completa de `float` inflaba
+    artificialmente el conteo de únicos, sugiriendo falsamente que excluir
+    OTRO atributo "aumentaba" la unicidad, algo matemáticamente imposible al
+    remover un campo)."""
+    if atributo in ("x", "y"):
+        valor = row.get(atributo)
+        return str(round(float(valor), PRECISION_COORDENADA)) if valor is not None else "None"
+    return str(row.get(atributo))
+
+
+def attribute_sensitivity_audit(df: pd.DataFrame, atributos: list[str] | None = None) -> pd.DataFrame:
+    """Sección I: 'cambios posibles si se excluye o incluye cada atributo del
+    hash' — para cada atributo del payload, recalcula el fingerprint SIN ese
+    atributo y compara cuántos valores antes únicos pasan a compartirse."""
+    atributos = atributos or [c for c in ATRIBUTOS_FINGERPRINT if c in df.columns]
+    fingerprint_completo = df.apply(lambda r: build_dtd_event_fingerprint(r.to_dict()), axis=1)
+    n_unicos_completo = int(fingerprint_completo.nunique())
+
+    filas = []
+    for atributo_excluido in atributos:
+        atributos_restantes = [a for a in atributos if a != atributo_excluido]
+
+        def _hash_sin_atributo(row: dict[str, Any], _restantes: list[str] = atributos_restantes) -> str:
+            payload = "|".join(_valor_normalizado_para_hash(row, a) for a in _restantes)
+            return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+        fingerprint_sin = df.apply(lambda r: _hash_sin_atributo(r.to_dict()), axis=1)
+        n_unicos_sin = int(fingerprint_sin.nunique())
+        filas.append({
+            "atributo_excluido": atributo_excluido,
+            "n_unicos_con_atributo": n_unicos_completo,
+            "n_unicos_sin_atributo": n_unicos_sin,
+            "n_valores_que_colapsan": n_unicos_completo - n_unicos_sin,
+            "atributo_es_necesario_para_unicidad": n_unicos_sin < n_unicos_completo,
         })
     return pd.DataFrame(filas)

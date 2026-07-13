@@ -132,7 +132,10 @@ def build_dtd_2025_iv_complete_statistics() -> pd.DataFrame:
 
 
 def fetch_all_dtd_attributes(page_size: int = 2000) -> pd.DataFrame:
-    campos = "cod_dtd,anio,periodo,cod_mpio,nom_mpio,cod_depto,nucleo_tri,x,y"
+    # `fid` es el `objectIdField` real del servicio (Fase 2D.4, sección I) —
+    # se incluye explícitamente porque un `outFields` sin `fid` no lo trae
+    # por defecto cuando `returnGeometry=false`.
+    campos = "fid,cod_dtd,anio,periodo,cod_mpio,nom_mpio,cod_depto,nucleo_tri,x,y"
     count_data, _ = mod20.get_json(f"{mod20.DTD_URL}/query", {"where": "1=1", "returnCountOnly": "true", "f": "json"})
     n_total = (count_data or {}).get("count")
 

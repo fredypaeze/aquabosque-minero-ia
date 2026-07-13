@@ -521,3 +521,24 @@ deforestadas: `COMPLEMENTARY_PARTIAL_COVERAGE`. DTD: `POINT_COUNTS_PRESENCE_DIST
 Verificada con múltiples corridas completas consecutivas de
 `scripts/22_design_forest_national_acquisition.py`: las 8 tablas/archivos de referencia y
 auditoría son byte-idénticos (SHA-256) entre corridas.
+
+## Cierre de preadquisición Fase 2D.4
+
+Resolución de colormaps históricos y prueba final de adquisición forestal (no descargó la
+serie nacional). Inventario definitivo de 21 capas (17 MVP: 5 cortes de bosque + 12 cambios
+anuales; 4 cambios multianuales opcionales de histórico ampliado). Se construyó y validó con
+`identify()` un colormap propio por capa (nunca reutilizado entre años): **21/21 capas con 0%
+de RGB desconocido**. Hallazgo crítico: el negro `(0,0,0)` en las capas `UniqueValueRenderer`
+es NoData confirmado por el servicio, no la clase real "Sin Información" — corregido en el
+decodificador. Se cerró el hallazgo abierto de la Fase 2D.3 sobre el color naranja
+`(255,165,0)` (confirmado: código 3 = "Sin Información") y se confirmó el código 4 =
+"Regeneración". Se corrigió `download_tile_wcs` para forzar la resolución canónica vía
+`SCALESIZE` (el servicio no la forzaba antes). Mosaico 2x2 del producto de cambio
+(2023-2024) aprobado. Identidad DTD separada en `dtd_source_objectid` (OBJECTID real),
+`dtd_source_row_id` (referencia a la fuente) y `dtd_event_fingerprint` (auditoría, no llave
+primaria: 249.887 valores únicos sobre 249.895 filas). Estimaciones corregidas: MVP 17 capas /
+6.273 peticiones / 78,95 GB brutos / ~1,05-1,37 h; histórico ampliado 21 capas / 7.749
+peticiones / 97,53 GB. Política de concurrencia y estrategia de almacenamiento (COG + DEFLATE)
+diseñadas, no ejecutadas a escala. Ver
+`outputs/reports/forest_sources/forest_phase2d4_quality_closure.md` para el detalle completo.
+Idempotencia verificada (múltiples corridas byte-idénticas).

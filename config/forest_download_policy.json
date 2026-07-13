@@ -1,0 +1,22 @@
+{
+  "version_politica": "1.0",
+  "fecha_diseno": "2026-07-13",
+  "concurrencia_inicial": 1,
+  "concurrencia_maxima_configurable": 4,
+  "pausa_minima_entre_peticiones_s": 0.5,
+  "backoff_exponencial": {
+    "base_s": 1.0,
+    "factor": 2.0,
+    "maximo_s": 60.0
+  },
+  "respeta_retry_after_header": true,
+  "max_reintentos_por_tile": 5,
+  "circuit_breaker": {
+    "ventana_peticiones": 50,
+    "umbral_pct_error_4xx_5xx": 20,
+    "accion_al_superar_umbral": "detener_lote_completo_y_marcar_pendiente_en_manifest"
+  },
+  "reanudacion_desde_manifest": true,
+  "politica_reanudacion": "Un tile con estado='descargado_valido' y sha256/hash_colormap coincidentes con la grilla/colormap vigentes se omite; si grid_version o hash_colormap cambian, se invalida y se reintenta.",
+  "nota": "No se ejecutan todavía descargas concurrentes masivas en esta fase — solo se diseña y documenta la política."
+}
