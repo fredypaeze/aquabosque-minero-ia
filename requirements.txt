@@ -34,3 +34,9 @@ matplotlib
 
 # Utilidades
 requests
+
+# MVP: priorizacion territorial y aplicacion de demostracion
+scikit-learn  # IsolationForest (deteccion de patrones territoriales atipicos), MVP
+joblib        # serializar el modelo entrenado (models/isolation_forest_mvp.joblib), MVP
+streamlit     # aplicacion de demostracion (app.py), MVP
+plotly        # mapa nacional y graficos del ranking sin requerir token de Mapbox, MVP
