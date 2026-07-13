@@ -54,6 +54,7 @@ MUNICIPIOS_PATH = MVP_DIR / "aquabosque_municipios_mvp.csv"
 PRIORIZACION_PATH = MVP_DIR / "aquabosque_priorizacion_mvp.csv"
 TOP20_PATH = MVP_DIR / "aquabosque_top20_mvp.csv"
 DEMO_PATH = MVP_DIR / "municipios_demo.csv"
+GEOJSON_SIMPLIFICADO_PATH = MVP_DIR / "municipios_mvp_simplificado.geojson"
 MODEL_PATH = MODELS_DIR / "isolation_forest_mvp.joblib"
 
 COD_PUERTO_RICO_META = "50590"
@@ -421,6 +422,36 @@ def select_demo_municipios(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# Geometría simplificada SOLO para visualización (nunca para análisis)
+# ---------------------------------------------------------------------------
+
+
+def build_geojson_simplificado(df: pd.DataFrame) -> dict[str, Any]:
+    """Geometría simplificada (tolerancia ~0,01°, ≈1 km) para el mapa
+    Streamlit — reduce el peso del GeoJSON sin modificar la geometría
+    analítica canónica (`data/processed/territorio/...`), que nunca se toca."""
+    from shapely.geometry import mapping, shape
+
+    feats = mod20.load_mgn2025_geometries()
+    columnas_mapa = df.set_index("cod_dane_mpio")[[
+        "nombre_mpio", "nombre_dpto", "score_prioridad_evidencia", "nivel_prioridad",
+        "anomalia_ia_percentil", "es_perfil_atipico", "score_presion_minera", "score_senal_hidrica",
+        "n_registros_dtd", "disponible_agua", "cobertura_forestal_confirmada_mvp",
+    ]]
+
+    out_feats = []
+    for f in feats:
+        cod = f["properties"]["cod_dane_mpio"]
+        if cod not in columnas_mapa.index:
+            continue
+        geom_simple = shape(f["geometry"]).simplify(0.01, preserve_topology=True)
+        props = {"cod_dane_mpio": cod, **columnas_mapa.loc[cod].to_dict()}
+        out_feats.append({"type": "Feature", "geometry": mapping(geom_simple), "properties": props})
+
+    return {"type": "FeatureCollection", "features": out_feats}
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -482,6 +513,10 @@ def main() -> int:
 
     joblib.dump(modelo, MODEL_PATH)
     print(f"  {MODEL_PATH}")
+
+    geojson_simplificado = build_geojson_simplificado(df)
+    write_json(GEOJSON_SIMPLIFICADO_PATH, geojson_simplificado)
+    print(f"  {GEOJSON_SIMPLIFICADO_PATH.name}: {len(geojson_simplificado['features'])} features")
 
     for path, n_filas, desc in [
         (MUNICIPIOS_PATH, len(df), "Dataset integrado del MVP (minería, agua, DTD, bosque piloto) sobre las 1.122 unidades DIVIPOLA vigentes."),
