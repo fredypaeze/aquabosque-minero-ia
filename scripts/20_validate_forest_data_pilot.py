@@ -655,20 +655,34 @@ def dtd_semantic_audit(feats: list[dict]) -> tuple[pd.DataFrame, pd.DataFrame]:
     coords = [tuple(f["geometry"]["coordinates"]) for f in feats if f.get("geometry")]
     n_dup_id = len(ids) - len(set(ids))
     n_dup_coord = len(coords) - len(set(coords))
-    por_mpio = pd.Series([f["properties"].get("nom_mpio") for f in feats]).value_counts()
-    por_nucleo = pd.Series([f["properties"].get("nucleo_tri") for f in feats]).value_counts()
-    nulos = {c: sum(1 for f in feats if f["properties"].get(c) is None) for c in ("cod_dtd", "nom_mpio", "nucleo_tri", "cod_depto")}
+    serie_mpio = pd.Series([f["properties"].get("nom_mpio") for f in feats])
+    serie_depto = pd.Series([f["properties"].get("nom_depto") for f in feats])
+    serie_nucleo = pd.Series([f["properties"].get("nucleo_tri") for f in feats])
+    por_mpio = serie_mpio.value_counts()
+    por_nucleo = serie_nucleo.value_counts()
+    # Corrección Fase 2D.2 (sección A): `value_counts().nunique()` cuenta
+    # cuántas FRECUENCIAS distintas hay (p. ej. cuántos municipios comparten
+    # el mismo conteo de puntos), no cuántos municipios distintos hay. El
+    # conteo correcto de categorías distintas es `serie.nunique(dropna=True)`
+    # sobre la serie ORIGINAL (equivalente a `len(value_counts())`).
+    n_municipios_distintos = int(serie_mpio.nunique(dropna=True))
+    n_departamentos_distintos = int(serie_depto.nunique(dropna=True))
+    n_nucleos_distintos = int(serie_nucleo.nunique(dropna=True))
+    assert n_municipios_distintos == len(por_mpio), "serie.nunique() y len(value_counts()) deben coincidir"
+    nulos = {c: sum(1 for f in feats if f["properties"].get(c) is None) for c in ("cod_dtd", "nom_mpio", "nom_depto", "nucleo_tri", "cod_depto")}
 
     resumen = pd.DataFrame([
         {"metrica": "n_registros_muestra", "valor": len(feats)},
         {"metrica": "n_duplicados_por_cod_dtd", "valor": n_dup_id},
         {"metrica": "n_coordenadas_duplicadas", "valor": n_dup_coord},
-        {"metrica": "n_municipios_distintos", "valor": int(por_mpio.nunique()) if len(por_mpio) else 0},
-        {"metrica": "n_nucleos_distintos", "valor": int(por_nucleo.nunique()) if len(por_nucleo) else 0},
+        {"metrica": "n_municipios_distintos", "valor": n_municipios_distintos},
+        {"metrica": "n_departamentos_distintos", "valor": n_departamentos_distintos},
+        {"metrica": "n_nucleos_distintos", "valor": n_nucleos_distintos},
         {"metrica": "max_puntos_un_municipio", "valor": int(por_mpio.max()) if len(por_mpio) else 0},
         {"metrica": "max_puntos_un_nucleo", "valor": int(por_nucleo.max()) if len(por_nucleo) else 0},
         {"metrica": "nulos_cod_dtd", "valor": nulos["cod_dtd"]},
         {"metrica": "nulos_nom_mpio", "valor": nulos["nom_mpio"]},
+        {"metrica": "nulos_nom_depto", "valor": nulos["nom_depto"]},
         {"metrica": "nulos_nucleo_tri", "valor": nulos["nucleo_tri"]},
         {"metrica": "presencia_campo_area", "valor": "NO — no se convierte punto en hectáreas sin regla oficial"},
     ])

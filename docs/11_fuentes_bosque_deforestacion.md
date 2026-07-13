@@ -352,7 +352,7 @@ Correspondencia cualitativa razonable con el Boletín 45 (mismos departamentos d
 Estabilidad de `cod_dtd` entre descargas y posibilidad de revisión retroactiva: **no
 confirmadas, riesgos abiertos**. Ver `dtd_semantic_validation.md`.
 
-### Decisión de arquitectura
+### Decisión de arquitectura (superada parcialmente por la Fase 2D.2 — ver más abajo)
 
 - **Bosque**: `Superficie_Bosque` vía WCS + decodificación de colormap.
 - **Deforestación anual**: `zonas_deforestadas_2013_2024` (vector) como fuente principal;
@@ -364,3 +364,84 @@ confirmadas, riesgos abiertos**. Ver `dtd_semantic_validation.md`.
 
 Verificada con dos corridas completas consecutivas: las 4 tablas de auditoría y los 2
 recortes ráster descargados son byte-idénticos (SHA-256) entre ambas corridas.
+
+## Cierre técnico Fase 2D.2
+
+Generado por `scripts/21_forest_dtd_and_colormap_robustness.py`, reutilizando las funciones
+de `scripts/20_validate_forest_data_pilot.py`. No descargó todavía la serie forestal
+nacional. No calculó indicadores para los 1.122 territorios. No integró minería ni calidad
+hídrica. No construyó índice de riesgo.
+
+### A. Corrección del bug de conteo (sección A)
+
+`dtd_semantic_audit` usaba `serie.value_counts().nunique()` — cuenta frecuencias distintas,
+no categorías distintas. Corregido a `serie.nunique(dropna=True)`. Sobre la muestra de 2.000
+registros de 2025-IV: municipios distintos corregido a **24** (antes 21, valor incorrecto);
+departamentos distintos (nuevo): **5**. Prueba explícita:
+`tests/test_dtd_distinct_counts.py`.
+
+### B. Universo completo de 2025-IV (sección B)
+
+**21.044 registros reales** (no la muestra de 2.000): 242 municipios, 26 departamentos
+distintos. 7 de los 10 municipios reales con más detecciones no aparecían en el top-10 de la
+muestra de la Fase 2D.1 — confirma que la muestra no era representativa para rankings
+territoriales.
+
+### C. Estabilidad de `cod_dtd` — histórico completo 2017-I a 2025-IV (sección C)
+
+**249.895 registros** auditados vía paginación real completa. **Hallazgo crítico**:
+32.062 registros (12,8%) comparten un `cod_dtd` placeholder no único DENTRO de su propio
+trimestre (5 trimestres afectados: 2023-I con 13.593 registros bajo un solo código,
+2023-III con 8.150, 2024-III con 6.769, 2023-II con 2.408, 2024-IV con 1.120). **0 casos**
+de reaparición del mismo código entre trimestres distintos — estructuralmente imposible por
+el formato `{año}_trim_{periodo}_{secuencial}` del identificador.
+
+### D. Comparación correcta con el Boletín 45 (sección D)
+
+Usando el universo completo (no la primera página): mismos 4 departamentos dominantes
+(Meta, Caquetá, Guaviare, Putumayo) en ambas fuentes, pero **el orden relativo difiere**
+(29,74% Meta vs. 26,63% Caquetá por conteo de puntos; 26% vs. 44% por área según el
+boletín) — confirma que % de puntos y % de área no son la misma medida. Clasificación:
+`parcialmente_consistente`.
+
+### E. Auditoría exhaustiva del colormap (sección E)
+
+**0% de píxeles no decodificados** en el 100% de los píxeles de ambos productos piloto
+(no una muestra). 0 colores ambiguos. La única clase ausente en ambos productos fue "Sin
+Información" — el municipio piloto está completamente clasificado.
+
+### F. Estabilidad del WCS (sección F)
+
+El servidor **remuestrea dinámicamente según la extensión solicitada** — resolución y tamaño
+de salida varían levemente entre configuraciones de bbox distintas (mismos colores/códigos
+de clase en ambas). Recomendación: fijar bbox e interpolación `nearest` para reproducibilidad.
+
+### G. Comparación en 3 municipios y hallazgo crítico de cobertura del vector (sección G)
+
+Puerto Rico: correspondencia alta (0,30%). Miritı́-Paraná: no comparable (WCS falló, HTTP
+400, municipio de 1.681.437 ha excede el límite práctico del servidor). **Bolívar,
+Santander: el ráster detecta 143,11 ha de deforestación real que el vector no registra en
+absoluto** — evidencia directa de que `zonas_deforestadas_2013_2024` no tiene cobertura
+nacional completa.
+
+### H. Auditoría territorial del vector (sección H)
+
+El vector es internamente limpio (118 municipios, todos con código DIVIPOLA válido, 0
+nulos, 0 inconsistencias de nombre) pero **cubre solo 118 de los 1.122 municipios del
+país**. En Puerto Rico, 8/913 polígonos (0,9%) tienen desajuste geométrico real con MGN2025.
+
+### Decisiones actualizadas de arquitectura
+
+- **Bosque**: `aprobado_para_procesamiento_nacional` (0% de pérdida confirmado).
+- **Deforestación vectorial**: `candidato_principal_pendiente_validacion_nacional` — el
+  hallazgo de Bolívar impide su aprobación sin reservas como fuente principal nacional.
+- **Ráster de cambio**: `fuente_de_validacion_cruzada` — con evidencia de que puede cubrir
+  huecos geográficos reales del vector.
+- **DTD**: `aprobado_para_conteo_y_presencia`; se mantiene `no_aprobado_para_area`.
+
+### Idempotencia
+
+Verificada con dos corridas completas consecutivas de
+`scripts/21_forest_dtd_and_colormap_robustness.py`: las 6 tablas de auditoría son
+byte-idénticas (SHA-256) entre ambas corridas, incluida la paginación completa de 249.895
+registros históricos.
