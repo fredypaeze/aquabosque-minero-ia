@@ -1,0 +1,3 @@
+# Dependencias de desarrollo/pruebas (no se despliegan)
+-r requirements.txt
+pytest==8.4.2

@@ -1,51 +1,14 @@
-# Entorno virtual
+# Entorno / cachés / secretos (NO se versionan)
 venv/
-.venv/
-
-# Python
 __pycache__/
 *.pyc
-*.pyo
-*.egg-info/
-build/
-dist/
-
-# Datos (no versionar datos pesados o crudos)
-data/raw/*
-data/processed/*
-data/external/*
-data/interim/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-!data/external/.gitkeep
-!data/interim/.gitkeep
-
-# Caché espacial regenerable (Fase 4A): geometrías reproyectadas, no se versiona.
-# La carpeta debe des-ignorarse explícitamente (!.../) antes de poder des-ignorar
-# un archivo puntual dentro de ella (data/interim/* ya la excluye por completo y
-# git no recorre directorios podados solo por un patrón de archivo más específico).
-!data/interim/spatial_cache/
-data/interim/spatial_cache/*
-!data/interim/spatial_cache/.gitkeep
-
-# Salidas generadas
-outputs/figures/*
-outputs/reports/*
-!outputs/figures/.gitkeep
-!outputs/reports/.gitkeep
-
-# Notebooks checkpoints
-.ipynb_checkpoints/
-
-# Variables de entorno / credenciales
+.pytest_cache/
 .env
-*.env.local
+config/credentials.yaml
 
-# Editor / OS
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
+# Datos intermedios transitorios
+data/interim/*
+!data/**/.gitkeep
 
-# Claude
-.claude/settings.local.json
+# NOTA: data/raw, data/processed, models y outputs SÍ se versionan (repo
+# self-contained: clonar → correr el dashboard o reconstruir sin conexión).

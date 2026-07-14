@@ -1,0 +1,55 @@
+{
+ "generated_at": "2026-07-09T20:25:51.287649+00:00",
+ "descargadas": [
+  {
+   "fuente": "rucom",
+   "filas": 12914,
+   "estado": "OK",
+   "columnas_faltantes": [],
+   "archivo": "data/raw/mineria/rucom.csv",
+   "descripcion": "ANM RUCOM — explotadores mineros autorizados"
+  },
+  {
+   "fuente": "divipola",
+   "filas": 1122,
+   "estado": "OK",
+   "columnas_faltantes": [],
+   "archivo": "data/raw/territorio/divipola.csv",
+   "descripcion": "DANE DIVIPOLA — municipios con código y centroide"
+  },
+  {
+   "fuente": "anm_volumen",
+   "filas": 75888,
+   "estado": "OK",
+   "columnas_faltantes": [],
+   "archivo": "data/raw/mineria/anm_volumen.csv",
+   "descripcion": "ANM — volumen de explotación y regalías por municipio (producción real)"
+  },
+  {
+   "fuente": "pdet",
+   "filas": 170,
+   "estado": "OK",
+   "columnas_faltantes": [],
+   "archivo": "data/raw/territorio/pdet.csv",
+   "descripcion": "Municipios PDET (sensibilidad social/territorial)"
+  }
+ ],
+ "pendientes": [
+  {
+   "clave": "deforestacion",
+   "dim": "bosque",
+   "motivo": "datasets datos.gov.co no exponen tabla tabular vía SODA; usar IDEAM SMByC o capa geoespacial (Fase 4)"
+  },
+  {
+   "clave": "calidad_agua",
+   "dim": "agua",
+   "motivo": "capa geoespacial de puntos (GeoJSON); cruce espacial con municipios (Fase 4)"
+  },
+  {
+   "clave": "runap",
+   "dim": "sensibilidad",
+   "motivo": "servicio WFS/GeoJSON oficial de RUNAP; intersección espacial con municipios (Fase 4)"
+  }
+ ],
+ "fallas": []
+}

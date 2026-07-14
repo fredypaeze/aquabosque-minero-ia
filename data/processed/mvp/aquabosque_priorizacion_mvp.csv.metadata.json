@@ -1,5 +1,0 @@
-{
-  "fuente": "MVP - dataset integrado y priorizacion",
-  "n_filas": 1122,
-  "descripcion": "Priorización de evidencia + resultados IsolationForest, ordenado por score_prioridad_evidencia."
-}

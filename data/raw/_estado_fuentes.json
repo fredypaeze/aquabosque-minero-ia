@@ -1,0 +1,40 @@
+{
+ "fase": "2-A COMPLETA (5/5 dimensiones reales)",
+ "fecha": "2026-07-09",
+ "dimensiones": {
+  "mineria": {
+   "fuente": "ANM RUCOM (datos.gov.co 42ha-fhvj)",
+   "filas": 12914,
+   "estado": "REAL",
+   "clave_territorial": "codigo_dane (cruce 100% con DIVIPOLA)"
+  },
+  "territorio": {
+   "fuente": "DANE DIVIPOLA (datos.gov.co gdxc-w37w)",
+   "filas": 1122,
+   "estado": "REAL",
+   "clave_territorial": "cod_mpio + centroide lat/lon"
+  },
+  "bosque": {
+   "fuente": "Observatorio deforestación (ArcGIS FeatureServer)",
+   "filas": 353,
+   "cobertura": "75 municipios foco 2017-2021 (arco amazónico)",
+   "estado": "REAL",
+   "nota": "municipios sin registro = deforestación no significativa (documentado)"
+  },
+  "sensibilidad": {
+   "fuente": "RUNAP Portal30x30 (ArcGIS capa 59)",
+   "filas": 1882,
+   "estado": "REAL",
+   "clave_territorial": "centroide (cruce espacial en Fase 4)"
+  },
+  "agua": {
+   "fuente": "IDEAM DHIME · FQA/ICA (Índice de Calidad del Agua, servidor ArcGIS público)",
+   "filas": 167,
+   "estado": "REAL",
+   "clave_territorial": "coordenada lat/lon (cruce espacial estación->municipio en Fase 4)",
+   "nota": "índice ica5 oficial 0-1 (0 peor, 1 mejor); 167 estaciones georreferenciadas; 9 con ICA<0.5"
+  }
+ },
+ "cruce_validado": "codigo_dane RUCOM->DIVIPOLA 100% (12912/12914)",
+ "nota": "LAS 5 DIMENSIONES CON FUENTE REAL. El agua se resolvió con el ICA público del IDEAM (DHIME/FQA) — no requiere token, es barrera técnica superada."
+}

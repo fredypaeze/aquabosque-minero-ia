@@ -1,0 +1,8 @@
+# Rutas del proyecto (relativas a la raíz del repo). Regla: nunca rutas absolutas.
+data_raw: data/raw
+data_interim: data/interim
+data_processed: data/processed
+master_municipal: data/processed/master_municipal.csv
+models_trained: models/trained
+outputs: outputs
+app_port: 8510

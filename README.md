@@ -1,138 +1,114 @@
-# AquaBosque Minero IA
+# 🌿 AquaBosque Minero IA
 
-## Demo en vivo
-[Abrir AquaBosque Minero IA](https://aquabosque-minero-ia-9pkqgjgonyxufpyjvteqwq.streamlit.app/)
+**Sistema explicable de IA geoespacial para priorizar municipios colombianos con riesgo ambiental asociado a presión minera, deforestación y afectación hídrica, usando datos abiertos.**
 
-## Problema
+[![tests](https://img.shields.io/badge/tests-16%20passing-brightgreen)](tests/)
+[![demo](https://img.shields.io/badge/demo-en%20vivo-2e7d32)](https://streamlit.spartanit.pro/)
+[![python](https://img.shields.io/badge/python-3.12-blue)](requirements.txt)
+[![modelo](https://img.shields.io/badge/modelo-XGBoost%20%2B%20SHAP-orange)](docs/MODEL_CARD.md)
+[![license](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
-Colombia no cuenta con una vista territorial unificada que combine, para las 1.122 unidades
-DIVIPOLA vigentes, la presión minera formal registrada, señales estadísticas de calidad de
-agua, detecciones tempranas de posible deforestación y la cobertura forestal confirmada. Esa
-fragmentación dificulta priorizar dónde enfocar revisión técnica ambiental.
+> **🔗 Demo en vivo:** **https://streamlit.spartanit.pro/**
+> Categoría: Desarrollo Sostenible y Medio Ambiente · Grupo de Datos Estratégicos — Ministerio de Minas y Energía
 
-## Solución
+---
 
-**AquaBosque Minero IA** integra fuentes oficiales (ANM, IDEAM, DANE) en un dataset único de
-1.122 municipios, calcula un **score de prioridad por evidencia** transparente y explicable, y
-entrena un modelo no supervisado (**IsolationForest**) para señalar **patrones territoriales
-atípicos** — sin afirmar causalidad ambiental, sin detectar minería ilegal y sin clasificar
-legalmente la calidad del agua. Se presenta en una aplicación Streamlit con mapa nacional,
-ranking filtrable y detalle por municipio.
+## ⚠️ Uso responsable (principio rector)
 
-## Secciones de la aplicación
+AquaBosque Minero IA **no prueba causalidad, no acusa, no sanciona y no determina ilegalidad**. Integra datos abiertos e IA explicable para **priorizar** territorios donde confluyen señales de presión minera, deforestación y afectación hídrica, facilitando el monitoreo estratégico y la toma de decisiones públicas basada en evidencia.
 
-1. **Inicio** — KPIs nacionales y alcance del producto.
-2. **Mapa nacional** — coropletas por prioridad de evidencia o anomalía IA, filtro por departamento.
-3. **Ranking** — top nacional filtrable por departamento, nivel, agua y DTD, con descarga CSV.
-4. **Detalle territorial** — tarjetas por municipio (minería, agua, DTD, bosque, IA) con explicación textual.
-5. **Metodología y limitaciones** — fuentes, tratamiento de datos faltantes, alcance real del modelo.
+---
 
-## Fuentes de datos
+## Qué resuelve
 
-| Fuente | Origen | Identificador |
+Colombia carece de una vista integrada que cruce **actividad minera + deforestación + calidad del agua + sensibilidad ambiental** a nivel municipal. AquaBosque unifica fuentes oficiales en un dataset, calcula una **priorización transparente** y la explica con SHAP, para responder no solo *qué* municipios priorizar sino **por qué**.
+
+## Arquitectura
+
+```
+Fuentes abiertas oficiales → ingesta → integración municipal (centroides + haversine, sin GDAL)
+  → dataset maestro (1.122 municipios) → 4 índices 0-1 (minero, deforestación, hídrico, sensibilidad)
+  → etiqueta técnica por cuantiles → XGBoost multiclase + SHAP
+  → dashboard Streamlit (mapa, ranking, ficha, explicabilidad, datos abiertos, metodología)
+```
+
+## Resultados (verificados)
+
+| | |
+|---|---|
+| Municipios | **1.122** (DIVIPOLA 2025) |
+| Fuentes reales integradas | **5/5** — sin datos sintéticos |
+| Priorización | Bajo 672 · Medio 281 · Alto 112 · **Crítico 57** |
+| Modelo | XGBoost · accuracy **0.911** (línea base 0.598) · F1-macro **0.784** |
+| Explicabilidad | SHAP global + por municipio |
+| Pruebas | **16/16** (integridad, fórmula, modelo, SHAP, artefactos) |
+
+> **Honestidad declarada:** la etiqueta es una fórmula documentada, por lo que el modelo re-aprende parcialmente la regla; la accuracy **no** se vende como mérito predictivo. El valor es la **explicabilidad** y la trazabilidad total. Ver [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md).
+
+## Instalación y ejecución
+
+```bash
+python3 -m venv venv && source venv/bin/activate    # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# Arranque de un paso (reconstruye modelo desde el raw y abre el dashboard):
+./run_mvp.sh                                          # Windows: .\run_mvp.ps1
+```
+
+O por fases:
+
+```bash
+python scripts/01_download_data.py    # fuentes tabulares (Socrata datos.gov.co)
+python scripts/02_prepare_data.py     # fuentes geoespaciales (ArcGIS: deforestación, RUNAP)
+python scripts/03_build_features.py   # dataset maestro + 4 índices + etiqueta
+python scripts/04_train_model.py      # XGBoost + SHAP + métricas + predicciones
+python scripts/05_generate_outputs.py # verifica artefactos
+python scripts/06_run_app.py          # dashboard en http://localhost:8510
+```
+
+> El `data/raw/` viene incluido: se puede reconstruir el modelo **sin conexión** (fases 3-4). Las fases 1-2 son solo para re-descargar las fuentes.
+
+## Pruebas
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Validan integridad del dataset, que la fórmula de la etiqueta se reproduce, que **el modelo supera la línea base**, la completitud de SHAP y los artefactos del dashboard. CI en GitHub Actions (`.github/workflows/tests.yml`).
+
+## Fuentes de datos (5 dimensiones, 100% oficiales)
+
+| Dimensión | Fuente | Detalle |
 |---|---|---|
-| Calidad de agua histórica IDEAM | datos.gov.co (API Socrata) | [`62gv-3857`](https://www.datos.gov.co/resource/62gv-3857.json) |
-| Anotaciones de títulos mineros (RMN) | datos.gov.co (API Socrata) | [`si2v-pbq5`](https://www.datos.gov.co/resource/si2v-pbq5.json) |
-| Catastro Minero ANM (títulos vigentes) | geo.anm.gov.co (WFS) | `ANM/ServiciosANM/MapServer` |
-| Detecciones Tempranas de Deforestación (DTD) | IDEAM (ArcGIS FeatureServer) | `Hosted/DTD_Trimestral` |
-| Bosque y cambio de cobertura (ráster WCS) | IDEAM (ArcGIS MapServer/WCS) | `Superficie_Bosque`, `Dinamica_Cambio_Cobertura_Bosque` |
-| Unidades territoriales DIVIPOLA/MGN2025 | DANE | ver `docs/08_base_geometrica_nacional_mgn2025.md` |
+| Minera | **ANM — RUCOM** (datos.gov.co) | 12.914 registros de comercialización + volumen de explotación + regalías → **actividad minera real** |
+| Territorio | **DANE — DIVIPOLA** | 1.122 municipios, centroides |
+| Deforestación | **Observatorio/IDEAM** (ArcGIS FeatureServer) | hectáreas por municipio |
+| Hídrica | **IDEAM — DHIME** (ICA) | índice de calidad del agua por estación |
+| Sensibilidad | **RUNAP** (áreas protegidas) + **PDET** | valor ambiental y social a proteger |
 
-Todos los identificadores de esta tabla ya estaban registrados en `data/raw/*/*.metadata.json`
-al momento de construir el MVP — no se realizó ninguna búsqueda nueva.
+Detalle con estado de verificación y limitaciones en `config/data_sources.yaml` y [`docs/diccionario_datos.md`](docs/diccionario_datos.md).
 
-## IA utilizada
-
-`sklearn.ensemble.IsolationForest` (`random_state=42`, `contamination=0.10`, 200 árboles) sobre
-variables de minería, agua, DTD y disponibilidad de datos — exclusivamente como **detector no
-supervisado de patrones territoriales atípicos**. Ver `docs/MVP_METODOLOGIA.md` y
-`docs/MVP_LIMITACIONES.md` para el alcance exacto y lo que el modelo NO afirma.
-
-## Ejecución rápida para evaluación
-
-El repositorio incluye ya los artefactos de datos y el modelo entrenado — no es necesario
-descargar nada ni ejecutar el pipeline previo para ver la aplicación funcionando.
-
-```powershell
-<git clone https://github.com/fredypaeze/aquabosque-minero-ia.git>
-cd aquabosque-minero-ia
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m streamlit run app.py
-```
-
-## Instalación
-
-```powershell
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-## Ejecución
-
-```powershell
-# Opción 1: script de arranque (usa los artefactos ya incluidos; solo reconstruye si faltan)
-.\run_mvp.ps1
-
-# Opción 2: manual (los artefactos ya están versionados, este paso no es obligatorio)
-python -m streamlit run app.py
-```
-
-## Estructura relevante del MVP
+## Estructura
 
 ```
-app.py                                        # aplicación Streamlit (lee directamente los artefactos versionados)
-run_mvp.ps1                                   # arranque de un solo paso
-scripts/24_build_mvp_dataset.py               # script de reproducibilidad: reconstruye dataset + modelo desde cero
-models/isolation_forest_mvp.joblib            # modelo entrenado (versionado)
-data/processed/mvp/
-├── aquabosque_municipios_mvp.csv             # dataset integrado (1.122 municipios) — versionado
-├── aquabosque_priorizacion_mvp.csv           # priorización + resultados IA — versionado
-├── aquabosque_top20_mvp.csv                  # top 20 nacional — versionado
-├── municipios_demo.csv                       # 3 municipios de demo — versionado
-└── municipios_mvp_simplificado.geojson       # geometría simplificada para el mapa — versionado
-docs/MVP_METODOLOGIA.md                       # metodología detallada
-docs/MVP_LIMITACIONES.md                      # limitaciones explícitas
-docs/DEMO_GUION.md                            # guion de demo (máx. 4 minutos)
+app/         dashboard Streamlit (6 páginas)
+src/aquabosque/  data (Socrata/ArcGIS) · features (master + target) · models (train + SHAP)
+scripts/     pipeline ejecutable por fases (01-06) + arranque de un paso
+data/raw/    fuentes descargadas (incluidas para reconstrucción offline)
+models/      modelo entrenado · métricas · importancia SHAP
+docs/        MODEL_CARD, metodología, resultados, limitaciones, defensa, diccionario
+tests/       batería pytest (16)
+outputs/     PDF técnico · pitch PPTX · tablas
 ```
 
-Para la estructura completa del repositorio (fases forestales/hídricas/mineras previas), ver
-`docs/01` a `docs/11`.
+## Reproducibilidad y honestidad
 
-## Municipios demo
+- Cada fuente documenta origen, fecha y limitaciones; nada sintético.
+- La etiqueta de riesgo es **técnica y documentada**, no verdad oficial.
+- No se afirma causalidad ni ilegalidad; **lo que no se verifica se declara, no se inventa**.
+- Modelo determinista (`random_state=42`): la reconstrucción reproduce las mismas cifras.
 
-1. **Puerto Rico, Meta** — obligatorio: único municipio con bosque/deforestación confirmados con el piloto WCS IDEAM real (Fases 2D.1/2D.2).
-2. **Montelíbano, Córdoba** — prioridad "Muy alta" con minería y agua disponibles simultáneamente.
-3. **Marmato, Caldas** — anomalía IA alta (percentil 99) sin monitoreo hídrico disponible, perfil contrastante con el municipio 2.
+## Licencia
 
-Razón exacta de cada selección en `data/processed/mvp/municipios_demo.csv`.
-
-## Reproducibilidad
-
-Los artefactos versionados permiten evaluar el MVP sin reconstruir nada. Para regenerarlos
-desde las fuentes (por ejemplo, tras actualizar los datos de agua, minería o DTD):
-
-```powershell
-python scripts/24_build_mvp_dataset.py
-```
-
-Esto sobrescribe `data/processed/mvp/*` y `models/isolation_forest_mvp.joblib` de forma
-determinística (`random_state=42` en el modelo).
-
-## Siguiente fase (posterior al concurso)
-
-La arquitectura forestal nacional (grilla fija de 896 tiles, colormap propio validado por capa
-con 0 % de RGB desconocido, mosaico y política de concurrencia de descarga) ya quedó diseñada
-y validada en las Fases 2D.1-2D.4 (`docs/11_fuentes_bosque_deforestacion.md`). El siguiente
-paso natural, no implementado en este MVP, es ejecutar la adquisición nacional con esa
-arquitectura y extender la cobertura forestal confirmada de Puerto Rico (Meta) a las 1.122
-unidades territoriales.
-
-## Limitaciones (resumen — detalle en `docs/MVP_LIMITACIONES.md`)
-
-- No afirma causalidad ambiental entre minería, agua o bosque.
-- No detecta ni acusa minería ilegal (solo catastro minero formal vigente).
-- No clasifica legalmente la calidad del agua.
-- No confirma deforestación a nivel nacional — solo Puerto Rico (Meta) tiene piloto forestal validado.
-- No opera en tiempo real; cada fuente tiene su propio corte temporal.
+MIT — ver [`LICENSE`](LICENSE).

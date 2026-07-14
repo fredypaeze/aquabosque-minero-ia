@@ -1,42 +1,14 @@
-# Dependencias del proyecto AquaBosque Minero IA
-# Fase 0: paquetes base para estructura, configuración y análisis exploratorio.
-# Librerías geoespaciales, de descarga específica de fuentes y de modelado
-# se añadirán en fases posteriores, cuando se definan las fuentes de datos
-# y el alcance del modelado.
-
-# Manejo de datos
-pandas
-numpy
-openpyxl  # necesario para que pandas lea archivos .xlsx (DIVIPOLA), Fase 3A
-
-# Geoespacial (liviano)
-shapely  # validar geometrias (nulas/tipo/validez) del catastro minero ANM, Fase 3C.
-         # Se elige shapely en vez de geopandas: solo se necesita construir
-         # geometrias desde GeoJSON y chequear is_valid/tipo; geopandas exige
-         # ademas fiona/pyproj/GDAL (mucho mas pesado de instalar) para
-         # funcionalidad de I/O que aqui no hace falta, porque el GeoJSON ya
-         # se lee/escribe con json estandar.
-pyproj   # transformar/validar coordenadas entre CRS (EPSG:4326 <-> EPSG:9377
-         # MAGNA-SIRGAS 2018 / Origen-Nacional) para los limites municipales
-         # DANE, Fase 3D. Necesario porque shapely no incluye reproyeccion;
-         # pyproj es mucho mas liviano que agregar geopandas solo para esto.
-rasterio # leer/inspeccionar/reproyectar rasters (bosque/cambio de bosque IDEAM,
-         # formato GeoTIFF via WCS), Fase 2D.1. Trae su propio GDAL empaquetado
-         # en el wheel de Windows, no requiere instalacion de GDAL aparte.
-
-# Configuración y entorno
-python-dotenv
-pyyaml
-
-# Exploración y notebooks
-jupyter
-matplotlib
-
-# Utilidades
-requests
-
-# MVP: priorizacion territorial y aplicacion de demostracion
-scikit-learn  # IsolationForest (deteccion de patrones territoriales atipicos), MVP
-joblib        # serializar el modelo entrenado (models/isolation_forest_mvp.joblib), MVP
-streamlit     # aplicacion de demostracion (app.py), MVP
-plotly        # mapa nacional y graficos del ranking sin requerir token de Mapbox, MVP
+# AquaBosque Minero IA — runtime (CPU, sin GPU, sin dependencias geoespaciales pesadas)
+# El pipeline y el dashboard corren en cualquier PC: integración municipal por
+# centroides + haversine (no requiere geopandas/GDAL). Pinneado a las versiones
+# validadas en desarrollo para reproducibilidad exacta.
+pandas==3.0.3
+numpy==2.4.6
+scikit-learn==1.9.0
+xgboost==3.3.0
+shap==0.52.0
+plotly==6.9.0
+streamlit==1.59.1
+requests==2.34.2
+PyYAML==6.0.3
+joblib==1.5.3

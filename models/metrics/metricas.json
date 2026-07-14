@@ -1,0 +1,60 @@
+{
+ "n_train": 841,
+ "n_test": 281,
+ "accuracy": 0.911,
+ "baseline_clase_mayoritaria": 0.5979,
+ "f1_macro": 0.7842,
+ "por_clase": {
+  "Bajo": {
+   "precision": 0.976,
+   "recall": 0.982,
+   "f1": 0.979,
+   "n": 168
+  },
+  "Medio": {
+   "precision": 0.855,
+   "recall": 0.915,
+   "f1": 0.884,
+   "n": 71
+  },
+  "Alto": {
+   "precision": 0.69,
+   "recall": 0.714,
+   "f1": 0.702,
+   "n": 28
+  },
+  "Crítico": {
+   "precision": 0.857,
+   "recall": 0.429,
+   "f1": 0.571,
+   "n": 14
+  }
+ },
+ "matriz_confusion": [
+  [
+   165,
+   3,
+   0,
+   0
+  ],
+  [
+   4,
+   65,
+   2,
+   0
+  ],
+  [
+   0,
+   7,
+   20,
+   1
+  ],
+  [
+   0,
+   1,
+   7,
+   6
+  ]
+ ],
+ "nota_honestidad": "La etiqueta es una fórmula compuesta; el modelo re-aprende parcialmente la regla, por eso la accuracy es alta por construcción y NO se presenta como mérito predictivo. Se reporta la línea base (clase mayoritaria) para contexto. El valor del modelo es la EXPLICABILIDAD (SHAP) y su capacidad de generalizar la priorización, no la exactitud."
+}

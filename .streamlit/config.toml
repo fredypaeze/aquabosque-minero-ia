@@ -1,0 +1,14 @@
+# Tema institucional AquaBosque (verde bosque / azul agua) y ajustes de servidor.
+[theme]
+primaryColor = "#2e7d32"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#eef4ee"
+textColor = "#1b2a1b"
+font = "sans serif"
+
+[server]
+headless = true
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false
