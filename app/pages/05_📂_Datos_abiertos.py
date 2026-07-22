@@ -16,7 +16,14 @@ fuentes=pd.DataFrame([
  ["Municipios","DANE DIVIPOLA","datos.gov.co gdxc-w37w","1.122","cod_mpio+centroide","base territorial"],
  ["Sensibilidad social","Municipios PDET","datos.gov.co idrk-ba8y","170","cod_muni","posconflicto"],
 ], columns=["Dimensión","Entidad","Fuente/URL","Registros","Clave territorial","Limitación"])
-st.dataframe(fuentes, use_container_width=True, height=340)
+st.dataframe(fuentes, use_container_width=True, height=340, column_config={
+    "Dimensión": st.column_config.Column(help="Qué mide esta fuente (minería, deforestación, agua, áreas protegidas, etc.)."),
+    "Entidad": st.column_config.Column(help="La entidad oficial del Estado que produce y publica el dato."),
+    "Fuente/URL": st.column_config.Column(help="De dónde se descarga: el conjunto de datos en datos.gov.co o el portal oficial de la entidad."),
+    "Registros": st.column_config.Column(help="Cuántos registros trae la fuente (tamaño del dato usado)."),
+    "Clave territorial": st.column_config.Column(help="Cómo se conecta cada dato con su municipio: por código DANE, por coordenada o por centroide."),
+    "Limitación": st.column_config.Column(help="Lo que la fuente NO cubre. Se declara con honestidad para no sobreinterpretar el dato."),
+})
 st.caption("Barreras encontradas fueron técnicas (sin API tabular), no de permiso. El grupo de Datos "
            "Estratégicos es el ente regulador del sector; la información es pública y su misión es hacerla visible.")
 B.footer()
