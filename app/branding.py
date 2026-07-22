@@ -153,8 +153,7 @@ def source_badges(sources):
 
 def footer():
     st.markdown(
-        '<div class="ab-foot">AquaBosque Minero IA · Grupo de Datos Estratégicos — Ministerio de Minas y Energía · '
-        'IA explicable sobre datos abiertos oficiales · No prueba causalidad ni ilegalidad</div>',
+        '<div class="ab-foot">Ministerio de Minas y Energía</div>',
         unsafe_allow_html=True)
 
 
