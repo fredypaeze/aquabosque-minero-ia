@@ -6,6 +6,7 @@ import plotly.express as px
 import streamlit as st
 
 import branding as B
+from glosario import G, cc
 import importlib as _il
 if not hasattr(B, "sidebar_nav"): B = _il.reload(B)
 
@@ -63,12 +64,11 @@ prioridad_max = mix[(mix.riesgo_nivel.isin(["Alto", "Crítico"])) & (mix.focos_7
 nuevos = mix[(mix.frp_total > 200) & (mix.riesgo_nivel.isin(["Bajo", "Medio"]))]
 
 k = st.columns(4)
-k[0].metric("🔥 Focos (7 días)", f"{int(resumen.get('total_focos_colombia', fuego.focos_7d.sum())):,}".replace(",", "."))
-k[1].metric("Municipios con fuego", int((fuego.focos_7d > 0).sum()))
-k[2].metric("⚠️ Prioridad máxima", len(prioridad_max),
-            help="Municipios Alto/Crítico del modelo QUE ADEMÁS tienen fuego activo ahora.")
-k[3].metric("🆕 Actividad nueva", len(nuevos),
-            help="Fuego intenso (FRP>200) en municipios que el índice estático no priorizaba.")
+k[0].metric("🔥 Focos (7 días)", f"{int(resumen.get('total_focos_colombia', fuego.focos_7d.sum())):,}".replace(",", "."),
+            help=G["focos"])
+k[1].metric("Municipios con fuego", int((fuego.focos_7d > 0).sum()), help=G["municipios_fuego"])
+k[2].metric("⚠️ Prioridad máxima", len(prioridad_max), help=G["prioridad_max"])
+k[3].metric("🆕 Actividad nueva", len(nuevos), help=G["actividad_nueva"])
 
 # --- Mapa ---
 fuego_map = fuego[fuego.focos_7d > 0]
@@ -92,7 +92,8 @@ with col1:
         .head(12)[["municipio", "departamento", "riesgo_nivel", "focos_7d", "frp_total"]]
         .rename(columns={"municipio": "Municipio", "departamento": "Departamento",
                          "riesgo_nivel": "Nivel modelo", "focos_7d": "Focos 7d", "frp_total": "FRP"}),
-        hide_index=True, use_container_width=True)
+        hide_index=True, use_container_width=True,
+        column_config=cc({"Nivel modelo": "nivel", "Focos 7d": "focos", "FRP": "frp"}))
 with col2:
     st.markdown("#### 🆕 Actividad reciente no capturada por el índice estático")
     st.caption("Fuego intenso donde los datos históricos (2017-2021) no marcaban prioridad. "
@@ -102,7 +103,8 @@ with col2:
         .head(12)[["municipio", "departamento", "riesgo_nivel", "focos_7d", "frp_total"]]
         .rename(columns={"municipio": "Municipio", "departamento": "Departamento",
                          "riesgo_nivel": "Nivel modelo", "focos_7d": "Focos 7d", "frp_total": "FRP"}),
-        hide_index=True, use_container_width=True)
+        hide_index=True, use_container_width=True,
+        column_config=cc({"Nivel modelo": "nivel", "Focos 7d": "focos", "FRP": "frp"}))
 
 st.info("**Fuente:** NASA FIRMS (VIIRS SNPP + NOAA-20, MODIS C6.1) · datos abiertos · actualización diaria. "
         "**Honestidad:** señal satelital térmica NRT (proxy de deforestación/quema); la detección de deforestación "

@@ -6,6 +6,7 @@ import plotly.express as px
 import streamlit as st
 
 import branding as B
+from glosario import G, cc
 import importlib as _il
 if not hasattr(B, "sidebar_nav"): B = _il.reload(B)
 
@@ -51,10 +52,10 @@ if niv:
     d = d[d.riesgo_nivel.isin(niv)]
 
 k = st.columns(4)
-k[0].metric("Municipios en vista", f"{len(d):,}".replace(",", "."))
-k[1].metric("🔴 Crítico", int((d.riesgo_nivel == "Crítico").sum()))
-k[2].metric("🟠 Alto", int((d.riesgo_nivel == "Alto").sum()))
-k[3].metric("Score máx.", f"{d.riesgo_score.max():.3f}" if len(d) else "—")
+k[0].metric("Municipios en vista", f"{len(d):,}".replace(",", "."), help=G["municipios_vista"])
+k[1].metric("🔴 Crítico", int((d.riesgo_nivel == "Crítico").sum()), help=G["critico"])
+k[2].metric("🟠 Alto", int((d.riesgo_nivel == "Alto").sum()), help=G["alto"])
+k[3].metric("Score máx.", f"{d.riesgo_score.max():.3f}" if len(d) else "—", help=G["score"])
 
 centro = {"lat": 4.6, "lon": -73.8}
 comun = dict(color="riesgo_nivel", color_discrete_map=B.RIESGO,
@@ -88,5 +89,6 @@ if len(top):
         top[["municipio", "departamento", "riesgo_nivel", "riesgo_score"]]
         .rename(columns={"municipio": "Municipio", "departamento": "Departamento",
                          "riesgo_nivel": "Nivel", "riesgo_score": "Score"}),
-        hide_index=True, use_container_width=True)
+        hide_index=True, use_container_width=True,
+        column_config=cc({"Nivel": "nivel", "Score": "score"}))
 B.footer()

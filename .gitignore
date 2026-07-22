@@ -18,3 +18,6 @@ docs/AUDITORIA_CONCURSO_2026.md
 tmp/
 data/raw/satelital/
 outputs/*_entrega_completa.zip
+# Guion del expositor: interno, contiene la clave de demo — no versionar en público
+outputs/jurado_2026/GUION_EXPOSITOR.pptx
+scripts/guion_expositor.py

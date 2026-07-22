@@ -5,6 +5,7 @@ import plotly.express as px
 import streamlit as st
 
 import branding as B
+from glosario import G
 import importlib as _il
 if not hasattr(B, "sidebar_nav"): B = _il.reload(B)
 
@@ -39,7 +40,17 @@ t.index += 1
 st.dataframe(
     t.style.format({"riesgo_score": "{:.3f}", "idx_minero": "{:.2f}", "idx_deforestacion": "{:.2f}",
                     "idx_hidrico": "{:.2f}", "idx_sensibilidad": "{:.2f}"}),
-    use_container_width=True, height=460)
+    use_container_width=True, height=460,
+    column_config={
+        "municipio": st.column_config.Column("Municipio"),
+        "departamento": st.column_config.Column("Departamento"),
+        "riesgo_nivel": st.column_config.Column("Nivel", help=G["nivel"]),
+        "riesgo_score": st.column_config.Column("Score", help=G["score"]),
+        "idx_minero": st.column_config.Column("Minero", help=G["idx_minero"]),
+        "idx_deforestacion": st.column_config.Column("Deforest.", help=G["idx_deforestacion"]),
+        "idx_hidrico": st.column_config.Column("Hídrico", help=G["idx_hidrico"]),
+        "idx_sensibilidad": st.column_config.Column("Sensib.", help=G["idx_sensibilidad"]),
+    })
 st.download_button("⬇️ Descargar ranking completo (CSV)",
                    df[cols].to_csv(index=False).encode(), "ranking_aquabosque.csv")
 B.footer()

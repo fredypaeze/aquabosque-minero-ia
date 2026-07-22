@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 import branding as B
+from glosario import G
 import importlib as _il
 if not hasattr(B, "sidebar_nav"): B = _il.reload(B)
 
@@ -29,10 +30,10 @@ st.markdown(
     unsafe_allow_html=True)
 
 c = st.columns(4)
-c[0].metric("Nivel de riesgo", row.riesgo_nivel)
-c[1].metric("Score de priorización", f"{row.riesgo_score:.3f}")
-c[2].metric("Predicción del modelo", row.riesgo_pred)
-c[3].metric("Confianza", f"{row.confianza:.0%}")
+c[0].metric("Nivel de riesgo", row.riesgo_nivel, help=G["nivel"])
+c[1].metric("Score de priorización", f"{row.riesgo_score:.3f}", help=G["score"])
+c[2].metric("Predicción del modelo", row.riesgo_pred, help=G["prediccion"])
+c[3].metric("Confianza", f"{row.confianza:.0%}", help=G["confianza"])
 
 izq, der = st.columns([3, 2])
 dims = ["Minero", "Deforestación", "Hídrico", "Sensibilidad"]

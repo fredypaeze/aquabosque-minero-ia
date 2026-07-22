@@ -6,6 +6,7 @@ import plotly.express as px
 import streamlit as st
 
 import branding as B
+from glosario import G
 import importlib as _il
 if not hasattr(B, "sidebar_nav"): B = _il.reload(B)
 
@@ -37,9 +38,9 @@ st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 met = json.loads((ROOT / "models" / "metrics" / "metricas.json").read_text())
 c = st.columns(3)
-c[0].metric("Accuracy", f"{met['accuracy']:.1%}")
-c[1].metric("Línea base (clase mayoritaria)", f"{met['baseline_clase_mayoritaria']:.1%}")
-c[2].metric("F1-macro", f"{met['f1_macro']:.2f}")
+c[0].metric("Accuracy", f"{met['accuracy']:.1%}", help=G["accuracy"])
+c[1].metric("Línea base (clase mayoritaria)", f"{met['baseline_clase_mayoritaria']:.1%}", help=G["baseline"])
+c[2].metric("F1-macro", f"{met['f1_macro']:.2f}", help=G["f1"])
 
 B.note("<b>Honestidad metodológica.</b> " + met["nota_honestidad"])
 B.footer()
