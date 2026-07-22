@@ -81,7 +81,16 @@
 - Posibles preguntas:
   - ¿Ya usa deep learning o solo índices? → El resultado mostrado es detección de cambio NDVI sobre imagen real, corriendo en el host de las L40S. El segmentador U-Net (deep learning en GPU) es el siguiente paso de la misma capa, ya con el pipeline montado.
 
-## Diapositiva 10. La Aplicación Funcional
+## Diapositiva 10. IA Generativa Soberana · Asistente
+- Objetivo: Mostrar la capa de IA generativa soberana como diferenciador: frontera tecnológica sin exponer el dato del Estado.
+- Duración máxima: 1:30
+- Texto sugerido: Aquí está el diferenciador de frontera: un asistente de IA generativa que corre en NUESTRA infraestructura de GPU, no en una nube externa. Cualquier funcionario o ciudadano puede preguntarle al sistema y recibe una respuesta aterrizada en la evidencia, con soberanía total del dato. Es exactamente el tipo de IA que el concurso premia, hecha de forma responsable para lo público.
+- Mensaje para el jurado: Tenemos IA generativa de frontera corriendo en infraestructura pública propia, con soberanía del dato.
+- Transición: Con las tres capas de IA mostradas, paso a la aplicación funcional donde todo se consulta.
+- Posibles preguntas:
+  - ¿Usan ChatGPT / una nube externa? → No. Usamos modelos abiertos (Llama, Qwen) alojados en las L40S del Ministerio. El dato nunca sale de la infraestructura del Estado — un requisito clave en lo público.
+
+## Diapositiva 11. La Aplicación Funcional
 - Objetivo: Dejar evidencia visual de que la app existe y está navegable.
 - Duración máxima: 1:00
 - Texto sugerido: Esta diapositiva ayuda a cerrar cualquier duda de implementación: no estamos hablando de wireframes, sino de páginas activas que muestran resultados, explicación y fuente de datos.
@@ -90,7 +99,7 @@
 - Posibles preguntas:
   - ¿Se puede mostrar en vivo? → Sí, pero además dejamos respaldo offline por si falla la conexión.
 
-## Diapositiva 11. Demostración Del Producto
+## Diapositiva 12. Demostración Del Producto
 - Objetivo: Preparar una demo robusta y corta para la exposición.
 - Duración máxima: 1:00
 - Texto sugerido: La idea no es navegar todo el sistema, sino mostrar valor rápido: cobertura nacional, lectura territorial, explicación del modelo y salida exportable. Todo eso cabe en menos de dos minutos.
@@ -99,7 +108,7 @@
 - Posibles preguntas:
   - ¿Qué pasa si el mapa en vivo tarda? → Se usa el respaldo offline del paquete y se mantiene la secuencia narrativa.
 
-## Diapositiva 12. Caso De Uso Institucional
+## Diapositiva 13. Caso De Uso Institucional
 - Objetivo: Conectar el MVP con una decisión pública concreta.
 - Duración máxima: 1:30
 - Texto sugerido: La pregunta institucional no es si el modelo sentencia algo, sino si ayuda a usar mejor el tiempo técnico. Un municipio crítico como Barrancabermeja sirve para ordenar revisión hídrica, cruce con actividad minera y sensibilidad territorial.
@@ -108,7 +117,7 @@
 - Posibles preguntas:
   - ¿Qué haría una autoridad después de ver este caso? → Cruzar con inspección, seguimiento hídrico, expedientes y otras bases sectoriales antes de concluir.
 
-## Diapositiva 13. Qué Valida El MVP
+## Diapositiva 14. Qué Valida El MVP
 - Objetivo: Sintetizar la evidencia técnica sin convertirla en checklist de concurso.
 - Duración máxima: 1:00
 - Texto sugerido: Lo que el MVP ya valida es suficiente para una defensa seria: integración de fuentes reales, priorización interpretable, app funcional y capacidad de regenerar evidencias. Lo que no valida todavía se declara sin maquillaje.
@@ -117,7 +126,7 @@
 - Posibles preguntas:
   - ¿Por qué esa honestidad importa? → Porque evita sobreprometer y hace más confiable el producto frente a un jurado técnico.
 
-## Diapositiva 14. Escalamiento
+## Diapositiva 15. Escalamiento
 - Objetivo: Mostrar una ruta de crecimiento sensata, no inflada.
 - Duración máxima: 1:30
 - Texto sugerido: Si el proyecto gana, el salto lógico no es rehacerlo todo, sino automatizar lo que ya funciona, ampliar cobertura y llevar la priorización a un uso operativo más estable con instituciones.
@@ -126,7 +135,7 @@
 - Posibles preguntas:
   - ¿Por qué no prometen cobertura total inmediata? → Porque el producto todavía depende de coberturas y periodicidades reales de cada fuente, y eso es mejor decirlo explícitamente.
 
-## Diapositiva 15. Impacto Potencial
+## Diapositiva 16. Impacto Potencial
 - Objetivo: Traducir la solución en valor público sin inventar cifras de impacto.
 - Duración máxima: 1:00
 - Texto sugerido: El impacto potencial aquí es cualitativo pero concreto: ordenar mejor la revisión institucional, aprovechar datos públicos dispersos y crear una base escalable para ecosistemas estratégicos sin esperar a una plataforma perfecta desde el día uno.
@@ -135,7 +144,7 @@
 - Posibles preguntas:
   - ¿Qué diferencia esto de un tablero tradicional? → Que no solo exhibe fuentes: las integra, prioriza y explica la lectura territorial resultante.
 
-## Diapositiva 16. Cierre
+## Diapositiva 17. Cierre
 - Objetivo: Cerrar con una tesis simple y con accesos directos a demo y repo.
 - Duración máxima: 0:30
 - Texto sugerido: AquaBosque Minero IA ya demuestra que datos ambientales dispersos pueden convertirse en señales territoriales interpretables. El siguiente paso no es inventar más narrativa, sino escalar esta capacidad validada hacia un uso operacional más robusto.

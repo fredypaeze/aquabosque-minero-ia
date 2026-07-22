@@ -1219,6 +1219,23 @@ def slide_specs(assets: dict[str, Path], data: dict) -> list[SlideSpec]:
         ),
         SlideSpec(
             10,
+            "IA Generativa Soberana · Asistente",
+            [
+                "Asistente que responde en lenguaje natural sobre la evidencia del sistema (RAG): priorización, satélite, metodología.",
+                "Corre sobre LLMs locales en las NVIDIA L40S del Ministerio — el dato ciudadano y ambiental no sale del Estado.",
+                "No inventa: recupera con bge-m3 y genera con un LLM local; si el dato no está, lo dice. Cita las fuentes.",
+            ],
+            assets.get("24_asistente_rag"),
+            "Fuente: asistente RAG (bge-m3 + LLM local) desplegado en la app; infraestructura GPU del Ministerio.",
+            "Mostrar la capa de IA generativa soberana como diferenciador: frontera tecnológica sin exponer el dato del Estado.",
+            "Aquí está el diferenciador de frontera: un asistente de IA generativa que corre en NUESTRA infraestructura de GPU, no en una nube externa. Cualquier funcionario o ciudadano puede preguntarle al sistema y recibe una respuesta aterrizada en la evidencia, con soberanía total del dato. Es exactamente el tipo de IA que el concurso premia, hecha de forma responsable para lo público.",
+            "1:30",
+            "Tenemos IA generativa de frontera corriendo en infraestructura pública propia, con soberanía del dato.",
+            "Con las tres capas de IA mostradas, paso a la aplicación funcional donde todo se consulta.",
+            [("¿Usan ChatGPT / una nube externa?", "No. Usamos modelos abiertos (Llama, Qwen) alojados en las L40S del Ministerio. El dato nunca sale de la infraestructura del Estado — un requisito clave en lo público.")],
+        ),
+        SlideSpec(
+            11,
             "La Aplicación Funcional",
             [
                 "La versión desplegada ya expone portada, ficha, explicabilidad y trazabilidad de fuentes.",
