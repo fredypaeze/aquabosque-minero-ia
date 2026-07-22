@@ -20,6 +20,18 @@ html, body, [class*="css"], .stApp, [data-testid="stMarkdownContainer"] {
 /* Ocultar cromo por defecto para look de producto */
 #MainMenu, footer, [data-testid="stToolbar"] { visibility: hidden; }
 [data-testid="stHeader"] { background: transparent; }
+
+/* FIX: mantener visible el botón para VOLVER A MOSTRAR el panel lateral tras ocultarlo
+   (el cromo oculto arriba se lo llevaba; un hijo puede re-mostrarse aunque el padre esté oculto) */
+[data-testid="stExpandSidebarButton"],
+[data-testid="stSidebarCollapseButton"] {
+  visibility: visible !important;
+  display: inline-flex !important;
+  opacity: 1 !important;
+  z-index: 1000001 !important;
+}
+[data-testid="stExpandSidebarButton"] svg { color:#12261a !important; fill:#12261a !important; }
+[data-testid="stExpandSidebarButton"] { background: rgba(255,255,255,.85) !important; border-radius:8px !important; }
 .block-container { padding-top: 1.4rem; max-width: 1180px; }
 
 /* Sidebar institucional */
