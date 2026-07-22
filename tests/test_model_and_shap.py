@@ -36,9 +36,10 @@ def test_shap_importancia_completa(root):
     imp = pd.read_csv(p)
     assert set(imp["feature"]) == set(FEATURES)      # todas las variables evaluadas
     assert (imp["importancia_shap"] >= 0).all()      # |SHAP| nunca negativo
-    # los 4 índices compuestos deben dominar la explicación (son el núcleo)
-    top4 = set(imp.nlargest(4, "importancia_shap")["feature"])
-    assert len({"idx_minero", "idx_deforestacion", "idx_hidrico", "idx_sensibilidad"} & top4) >= 3
+    # los índices compuestos (incl. fuego satelital) deben dominar la explicación (núcleo)
+    indices = {"idx_minero", "idx_deforestacion", "idx_fuego", "idx_hidrico", "idx_sensibilidad"}
+    top5 = set(imp.nlargest(5, "importancia_shap")["feature"])
+    assert len(indices & top5) >= 3
 
 
 def test_predicciones_para_dashboard(root):

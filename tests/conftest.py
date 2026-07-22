@@ -8,11 +8,12 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 NIVELES = ["Bajo", "Medio", "Alto", "Crítico"]
-PESOS = {"minero": 0.35, "deforestacion": 0.30, "hidrico": 0.25, "sensibilidad": 0.10}
-FEATURES = ["idx_minero", "idx_deforestacion", "idx_hidrico", "idx_sensibilidad",
+PESOS = {"minero": 0.30, "deforestacion": 0.25, "fuego": 0.15, "hidrico": 0.20, "sensibilidad": 0.10}
+FEATURES = ["idx_minero", "idx_deforestacion", "idx_fuego", "idx_hidrico", "idx_sensibilidad",
             "mineria_titulos", "mineria_minerales", "deforestacion_ha",
             "runap_areas", "runap_hectareas", "agua_estaciones",
-            "mineria_volumen", "mineria_regalias", "es_pdet"]
+            "mineria_volumen", "mineria_regalias", "es_pdet",
+            "focos_7d"]
 
 
 @pytest.fixture(scope="session")

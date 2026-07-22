@@ -19,7 +19,7 @@ def test_columnas_requeridas_presentes(etiqueta):
 
 
 def test_indices_en_rango_0_1(etiqueta):
-    for c in ["idx_minero", "idx_deforestacion", "idx_hidrico", "idx_sensibilidad", "riesgo_score"]:
+    for c in ["idx_minero", "idx_deforestacion", "idx_fuego", "idx_hidrico", "idx_sensibilidad", "riesgo_score"]:
         assert etiqueta[c].min() >= 0.0, f"{c} tiene valores < 0"
         assert etiqueta[c].max() <= 1.0, f"{c} tiene valores > 1"
 

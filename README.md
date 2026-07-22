@@ -6,10 +6,23 @@
 [![demo](https://img.shields.io/badge/demo-en%20vivo-2e7d32)](https://streamlit.spartanit.pro/)
 [![python](https://img.shields.io/badge/python-3.12-blue)](requirements.txt)
 [![modelo](https://img.shields.io/badge/modelo-XGBoost%20%2B%20SHAP-orange)](docs/MODEL_CARD.md)
+[![metodología](https://img.shields.io/badge/metodolog%C3%ADa-CRISP--ML-3949ab)](docs/CRISP_ML.md)
 [![license](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
 > **🔗 Demo en vivo:** **https://streamlit.spartanit.pro/**
 > Categoría: Desarrollo Sostenible y Medio Ambiente · Grupo de Datos Estratégicos — Ministerio de Minas y Energía
+
+### 🔗 Entregables y enlaces (Concurso Datos al Ecosistema 2026)
+
+| Recurso | Enlace |
+|---|---|
+| Demo en vivo (app Streamlit) | https://streamlit.spartanit.pro/ |
+| Repositorio (código + datos + docs) | https://github.com/fredypaeze/aquabosque-minero-ia |
+| Presentación para jurado (PDF) | [`outputs/jurado_2026/02_AquaBosque_Presentacion_Jurado.pdf`](outputs/jurado_2026/02_AquaBosque_Presentacion_Jurado.pdf) |
+| Metodología **CRISP-ML** | [`docs/CRISP_ML.md`](docs/CRISP_ML.md) |
+| Model card | [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) |
+| Diccionario de datos y fuentes | [`docs/diccionario_datos.md`](docs/diccionario_datos.md) |
+| Registrado en usos de datos abiertos | https://herramientas.datos.gov.co/usos |
 
 ---
 

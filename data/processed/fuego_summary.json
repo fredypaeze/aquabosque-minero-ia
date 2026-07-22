@@ -1,0 +1,70 @@
+{
+  "generado": "2026-07-22T19:11:47.307031+00:00",
+  "ventana": "7 días (NRT)",
+  "fuente": "NASA FIRMS · VIIRS (SNPP+NOAA-20) + MODIS · sin API key",
+  "total_focos_colombia": 3504,
+  "municipios_con_fuego": 296,
+  "top10": [
+    {
+      "municipio": "EL PEÑÓN",
+      "departamento": "BOLÍVAR",
+      "focos_7d": 107,
+      "frp_total": 1341.32
+    },
+    {
+      "municipio": "CHIRIGUANÁ",
+      "departamento": "CESAR",
+      "focos_7d": 131,
+      "frp_total": 1268.55
+    },
+    {
+      "municipio": "CHIMICHAGUA",
+      "departamento": "CESAR",
+      "focos_7d": 72,
+      "frp_total": 842.14
+    },
+    {
+      "municipio": "DIBULLA",
+      "departamento": "LA GUAJIRA",
+      "focos_7d": 25,
+      "frp_total": 797.89
+    },
+    {
+      "municipio": "RIOHACHA",
+      "departamento": "LA GUAJIRA",
+      "focos_7d": 56,
+      "frp_total": 712.54
+    },
+    {
+      "municipio": "PLATO",
+      "departamento": "MAGDALENA",
+      "focos_7d": 76,
+      "frp_total": 668.52
+    },
+    {
+      "municipio": "CUMARIBO",
+      "departamento": "VICHADA",
+      "focos_7d": 83,
+      "frp_total": 638.55
+    },
+    {
+      "municipio": "EL CARMEN",
+      "departamento": "NORTE DE SANTANDER",
+      "focos_7d": 22,
+      "frp_total": 625.28
+    },
+    {
+      "municipio": "LA PRIMAVERA",
+      "departamento": "VICHADA",
+      "focos_7d": 70,
+      "frp_total": 553.7
+    },
+    {
+      "municipio": "TIBÚ",
+      "departamento": "NORTE DE SANTANDER",
+      "focos_7d": 26,
+      "frp_total": 495.1
+    }
+  ],
+  "nota_honestidad": "Señal satelital térmica NRT (proxy de deforestación/quema), no clasificación de imagen cruda por red neuronal (esa es la capa 2, GPU)."
+}

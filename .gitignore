@@ -12,3 +12,9 @@ data/interim/*
 
 # NOTA: data/raw, data/processed, models y outputs SÍ se versionan (repo
 # self-contained: clonar → correr el dashboard o reconstruir sin conexión).
+
+# Interno / no versionar (agregado por integración capa satelital + IA)
+docs/AUDITORIA_CONCURSO_2026.md
+tmp/
+data/raw/satelital/
+outputs/*_entrega_completa.zip

@@ -7,9 +7,10 @@ def test_pesos_suman_uno():
 
 
 def test_score_reproduce_la_formula(etiqueta):
-    """riesgo_score == 0.35*minero + 0.30*defo + 0.25*hidrico + 0.10*sensibilidad."""
+    """riesgo_score == 0.30*minero + 0.25*defo + 0.15*fuego + 0.20*hidrico + 0.10*sensibilidad."""
     recomputado = (PESOS["minero"] * etiqueta["idx_minero"]
                    + PESOS["deforestacion"] * etiqueta["idx_deforestacion"]
+                   + PESOS["fuego"] * etiqueta["idx_fuego"]
                    + PESOS["hidrico"] * etiqueta["idx_hidrico"]
                    + PESOS["sensibilidad"] * etiqueta["idx_sensibilidad"])
     dif = (recomputado - etiqueta["riesgo_score"]).abs()

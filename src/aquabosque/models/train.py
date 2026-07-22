@@ -26,10 +26,11 @@ import xgboost as xgb
 
 ROOT = Path(__file__).resolve().parents[3]
 DATA = ROOT / "data" / "processed" / "master_con_etiqueta.csv"
-FEATURES = ["idx_minero", "idx_deforestacion", "idx_hidrico", "idx_sensibilidad",
+FEATURES = ["idx_minero", "idx_deforestacion", "idx_fuego", "idx_hidrico", "idx_sensibilidad",
             "mineria_titulos", "mineria_minerales", "deforestacion_ha",
             "runap_areas", "runap_hectareas", "agua_estaciones",
-            "mineria_volumen", "mineria_regalias", "es_pdet"]
+            "mineria_volumen", "mineria_regalias", "es_pdet",
+            "focos_7d"]
 NIVELES = ["Bajo", "Medio", "Alto", "Crítico"]
 
 
