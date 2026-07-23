@@ -1,0 +1,1123 @@
+cod_mpio,municipio,nivel_predicho,conjunto_conformal,tamano_conjunto,certeza_calibrada
+5001,MEDELLÍN,Medio,Medio,1,Alta
+5002,ABEJORRAL,Medio,Medio,1,Alta
+5004,ABRIAQUÍ,Medio,Medio,1,Alta
+5021,ALEJANDRÍA,Bajo,Bajo,1,Alta
+5030,AMAGÁ,Medio,Medio,1,Alta
+5031,AMALFI,Alto,Alto,1,Alta
+5034,ANDES,Medio,Medio,1,Alta
+5036,ANGELÓPOLIS,Medio,Medio,1,Alta
+5038,ANGOSTURA,Bajo,Bajo,1,Alta
+5040,ANORÍ,Alto,Alto,1,Alta
+5042,SANTA FÉ DE ANTIOQUIA,Medio,Medio,1,Alta
+5044,ANZÁ,Medio,Medio,1,Alta
+5045,APARTADÓ,Medio,Medio,1,Alta
+5051,ARBOLETES,Bajo,Bajo,1,Alta
+5055,ARGELIA,Medio,Medio,1,Alta
+5059,ARMENIA,Bajo,Bajo,1,Alta
+5079,BARBOSA,Medio,Medio,1,Alta
+5086,BELMIRA,Alto,Alto,1,Alta
+5088,BELLO,Medio,Medio,1,Alta
+5091,BETANIA,Bajo,Bajo,1,Alta
+5093,BETULIA,Medio,Medio,1,Alta
+5101,CIUDAD BOLÍVAR,Bajo,Bajo,1,Alta
+5107,BRICEÑO,Medio,Medio,1,Alta
+5113,BURITICÁ,Bajo,Bajo,1,Alta
+5120,CÁCERES,Medio,Medio,1,Alta
+5125,CAICEDO,Bajo,Bajo,1,Alta
+5129,CALDAS,Bajo,Bajo,1,Alta
+5134,CAMPAMENTO,Bajo,Bajo,1,Alta
+5138,CAÑASGORDAS,Bajo,Bajo,1,Alta
+5142,CARACOLÍ,Medio,Medio,1,Alta
+5145,CARAMANTA,Bajo,Bajo,1,Alta
+5147,CAREPA,Medio,Medio,1,Alta
+5148,EL CARMEN DE VIBORAL,Bajo,Bajo,1,Alta
+5150,CAROLINA,Bajo,Bajo,1,Alta
+5154,CAUCASIA,Alto,Alto,1,Alta
+5172,CHIGORODÓ,Bajo,Bajo,1,Alta
+5190,CISNEROS,Medio,Medio,1,Alta
+5197,COCORNÁ,Bajo,Bajo,1,Alta
+5206,CONCEPCIÓN,Bajo,Bajo,1,Alta
+5209,CONCORDIA,Bajo,Bajo,1,Alta
+5212,COPACABANA,Medio,Medio,1,Alta
+5234,DABEIBA,Bajo,Bajo,1,Alta
+5237,DONMATÍAS,Bajo,Bajo,1,Alta
+5240,EBÉJICO,Bajo,Bajo,1,Alta
+5250,EL BAGRE,Medio,Medio,1,Alta
+5264,ENTRERRÍOS,Medio,Medio,1,Alta
+5266,ENVIGADO,Bajo,Bajo,1,Alta
+5282,FREDONIA,Medio,Medio,1,Alta
+5284,FRONTINO,Medio,Medio,1,Alta
+5306,GIRALDO,Bajo,Bajo,1,Alta
+5308,GIRARDOTA,Medio,Medio,1,Alta
+5310,GÓMEZ PLATA,Medio,Medio,1,Alta
+5313,GRANADA,Bajo,Bajo,1,Alta
+5315,GUADALUPE,Bajo,Bajo,1,Alta
+5318,GUARNE,Bajo,Bajo,1,Alta
+5321,GUATAPÉ,Bajo,Bajo,1,Alta
+5347,HELICONIA,Bajo,Bajo,1,Alta
+5353,HISPANIA,Bajo,Bajo,1,Alta
+5360,ITAGÜÍ,Bajo,Bajo,1,Alta
+5361,ITUANGO,Bajo,Bajo,1,Alta
+5364,JARDÍN,Bajo,Bajo,1,Alta
+5368,JERICÓ,Bajo,Bajo,1,Alta
+5376,LA CEJA,Bajo,Bajo,1,Alta
+5380,LA ESTRELLA,Bajo,Bajo,1,Alta
+5390,LA PINTADA,Medio,Medio,1,Alta
+5400,LA UNIÓN,Medio,Medio,1,Alta
+5411,LIBORINA,Bajo,Bajo,1,Alta
+5425,MACEO,Medio,Medio,1,Alta
+5440,MARINILLA,Bajo,Bajo,1,Alta
+5467,MONTEBELLO,Bajo,Bajo,1,Alta
+5475,MURINDÓ,Bajo,Bajo,1,Alta
+5480,MUTATÁ,Alto,Alto,1,Alta
+5483,NARIÑO,Medio,Medio,1,Alta
+5490,NECOCLÍ,Bajo,Bajo,1,Alta
+5495,NECHÍ,Crítico,Crítico,1,Alta
+5501,OLAYA,Bajo,Bajo,1,Alta
+5541,PEÑOL,Bajo,Bajo,1,Alta
+5543,PEQUE,Bajo,Bajo,1,Alta
+5576,PUEBLORRICO,Bajo,Bajo,1,Alta
+5579,PUERTO BERRÍO,Alto,Alto,1,Alta
+5585,PUERTO NARE,Medio,Medio,1,Alta
+5591,PUERTO TRIUNFO,Alto,Alto,1,Alta
+5604,REMEDIOS,Alto,Alto,1,Alta
+5607,RETIRO,Medio,Medio,1,Alta
+5615,RIONEGRO,Medio,Medio,1,Alta
+5628,SABANALARGA,Bajo,Bajo,1,Alta
+5631,SABANETA,Bajo,Bajo,1,Alta
+5642,SALGAR,Bajo,Bajo,1,Alta
+5647,SAN ANDRÉS DE CUERQUÍA,Bajo,Bajo,1,Alta
+5649,SAN CARLOS,Medio,Medio,1,Alta
+5652,SAN FRANCISCO,Bajo,Bajo,1,Alta
+5656,SAN JERÓNIMO,Bajo,Bajo,1,Alta
+5658,SAN JOSÉ DE LA MONTAÑA,Bajo,Bajo,1,Alta
+5659,SAN JUAN DE URABÁ,Bajo,Bajo,1,Alta
+5660,SAN LUIS,Medio,Medio,1,Alta
+5664,SAN PEDRO DE LOS MILAGROS,Bajo,Bajo,1,Alta
+5665,SAN PEDRO DE URABÁ,Bajo,Bajo,1,Alta
+5667,SAN RAFAEL,Medio,Medio,1,Alta
+5670,SAN ROQUE,Medio,Medio,1,Alta
+5674,SAN VICENTE FERRER,Bajo,Bajo,1,Alta
+5679,SANTA BÁRBARA,Bajo,Bajo,1,Alta
+5686,SANTA ROSA DE OSOS,Medio,Medio / Alto,2,Media
+5690,SANTO DOMINGO,Medio,Medio,1,Alta
+5697,EL SANTUARIO,Bajo,Bajo,1,Alta
+5736,SEGOVIA,Alto,Alto,1,Alta
+5756,SONSÓN,Medio,Medio,1,Alta
+5761,SOPETRÁN,Medio,Medio,1,Alta
+5789,TÁMESIS,Bajo,Bajo,1,Alta
+5790,TARAZÁ,Medio,Medio,1,Alta
+5792,TARSO,Medio,Medio,1,Alta
+5809,TITIRIBÍ,Medio,Medio,1,Alta
+5819,TOLEDO,Bajo,Bajo,1,Alta
+5837,TURBO,Bajo,Bajo,1,Alta
+5842,URAMITA,Bajo,Bajo,1,Alta
+5847,URRAO,Bajo,Bajo,1,Alta
+5854,VALDIVIA,Alto,Alto,1,Alta
+5856,VALPARAÍSO,Bajo,Bajo,1,Alta
+5858,VEGACHÍ,Medio,Medio,1,Alta
+5861,VENECIA,Bajo,Bajo,1,Alta
+5873,VIGÍA DEL FUERTE,Bajo,Bajo,1,Alta
+5885,YALÍ,Medio,Medio,1,Alta
+5887,YARUMAL,Medio,Medio,1,Alta
+5890,YOLOMBÓ,Medio,Medio,1,Alta
+5893,YONDÓ,Bajo,Bajo,1,Alta
+5895,ZARAGOZA,Alto,Alto,1,Alta
+8001,BARRANQUILLA,Medio,Medio,1,Alta
+8078,BARANOA,Bajo,Bajo,1,Alta
+8137,CAMPO DE LA CRUZ,Bajo,Bajo,1,Alta
+8141,CANDELARIA,Bajo,Bajo,1,Alta
+8296,GALAPA,Bajo,Bajo,1,Alta
+8372,JUAN DE ACOSTA,Bajo,Bajo,1,Alta
+8421,LURUACO,Alto,Alto,1,Alta
+8433,MALAMBO,Bajo,Bajo,1,Alta
+8436,MANATÍ,Bajo,Bajo,1,Alta
+8520,PALMAR DE VARELA,Bajo,Bajo,1,Alta
+8549,PIOJÓ,Bajo,Bajo,1,Alta
+8558,POLONUEVO,Bajo,Bajo,1,Alta
+8560,PONEDERA,Bajo,Bajo,1,Alta
+8573,PUERTO COLOMBIA,Medio,Medio,1,Alta
+8606,REPELÓN,Alto,Medio / Alto,2,Media
+8634,SABANAGRANDE,Bajo,Bajo,1,Alta
+8638,SABANALARGA,Bajo,Bajo,1,Alta
+8675,SANTA LUCÍA,Bajo,Bajo,1,Alta
+8685,SANTO TOMÁS,Bajo,Bajo,1,Alta
+8758,SOLEDAD,Bajo,Bajo,1,Alta
+8770,SUAN,Bajo,Bajo,1,Alta
+8832,TUBARÁ,Bajo,Bajo,1,Alta
+8849,USIACURÍ,Bajo,Bajo,1,Alta
+11001,"BOGOTÁ, D.C.",Alto,Alto,1,Alta
+13001,CARTAGENA DE INDIAS,Alto,Alto,1,Alta
+13006,ACHÍ,Bajo,Bajo,1,Alta
+13030,ALTOS DEL ROSARIO,Medio,Medio,1,Alta
+13042,ARENAL,Medio,Medio,1,Alta
+13052,ARJONA,Bajo,Bajo,1,Alta
+13062,ARROYOHONDO,Medio,Medio,1,Alta
+13074,BARRANCO DE LOBA,Alto,Alto,1,Alta
+13140,CALAMAR,Bajo,Bajo,1,Alta
+13160,CANTAGALLO,Bajo,Bajo,1,Alta
+13188,CICUCO,Bajo,Bajo,1,Alta
+13212,CÓRDOBA,Medio,Medio,1,Alta
+13222,CLEMENCIA,Bajo,Bajo,1,Alta
+13244,EL CARMEN DE BOLÍVAR,Bajo,Bajo,1,Alta
+13248,EL GUAMO,Bajo,Bajo,1,Alta
+13268,EL PEÑÓN,Bajo,Bajo,1,Alta
+13300,HATILLO DE LOBA,Medio,Medio,1,Alta
+13430,MAGANGUÉ,Alto,Alto,1,Alta
+13433,MAHATES,Bajo,Bajo,1,Alta
+13440,MARGARITA,Bajo,Bajo,1,Alta
+13442,MARÍA LA BAJA,Medio,Medio,1,Alta
+13458,MONTECRISTO,Alto,Alto,1,Alta
+13468,SANTA CRUZ DE MOMPOX,Bajo,Bajo,1,Alta
+13473,MORALES,Crítico,Crítico,1,Alta
+13490,NOROSÍ,Medio,Medio,1,Alta
+13549,PINILLOS,Bajo,Bajo,1,Alta
+13580,REGIDOR,Bajo,Bajo,1,Alta
+13600,RÍO VIEJO,Alto,Alto,1,Alta
+13620,SAN CRISTÓBAL,Bajo,Bajo,1,Alta
+13647,SAN ESTANISLAO,Bajo,Bajo,1,Alta
+13650,SAN FERNANDO,Bajo,Bajo,1,Alta
+13654,SAN JACINTO,Bajo,Bajo,1,Alta
+13655,SAN JACINTO DEL CAUCA,Bajo,Bajo,1,Alta
+13657,SAN JUAN NEPOMUCENO,Alto,Alto,1,Alta
+13667,SAN MARTÍN DE LOBA,Crítico,Crítico,1,Alta
+13670,SAN PABLO,Bajo,Bajo,1,Alta
+13673,SANTA CATALINA,Alto,Alto,1,Alta
+13683,SANTA ROSA,Medio,Medio,1,Alta
+13688,SANTA ROSA DEL SUR,Crítico,Crítico,1,Alta
+13744,SIMITÍ,Medio,Medio,1,Alta
+13760,SOPLAVIENTO,Bajo,Bajo,1,Alta
+13780,TALAIGUA NUEVO,Bajo,Bajo,1,Alta
+13810,TIQUISIO,Alto,Alto,1,Alta
+13836,TURBACO,Alto,Alto,1,Alta
+13838,TURBANÁ,Bajo,Bajo,1,Alta
+13873,VILLANUEVA,Bajo,Bajo,1,Alta
+13894,ZAMBRANO,Bajo,Bajo,1,Alta
+15001,TUNJA,Medio,Medio,1,Alta
+15022,ALMEIDA,Bajo,Bajo,1,Alta
+15047,AQUITANIA,Bajo,Bajo,1,Alta
+15051,ARCABUCO,Medio,Medio,1,Alta
+15087,BELÉN,Bajo,Bajo,1,Alta
+15090,BERBEO,Bajo,Bajo,1,Alta
+15092,BETÉITIVA,Bajo,Bajo,1,Alta
+15097,BOAVITA,Medio,Medio,1,Alta
+15104,BOYACÁ,Bajo,Bajo,1,Alta
+15106,BRICEÑO,Bajo,Bajo,1,Alta
+15109,BUENAVISTA,Bajo,Bajo,1,Alta
+15114,BUSBANZÁ,Bajo,Bajo,1,Alta
+15131,CALDAS,Bajo,Bajo,1,Alta
+15135,CAMPOHERMOSO,Bajo,Bajo,1,Alta
+15162,CERINZA,Bajo,Bajo,1,Alta
+15172,CHINAVITA,Bajo,Bajo,1,Alta
+15176,CHIQUINQUIRÁ,Bajo,Bajo,1,Alta
+15180,CHISCAS,Bajo,Bajo,1,Alta
+15183,CHITA,Bajo,Bajo,1,Alta
+15185,CHITARAQUE,Bajo,Bajo,1,Alta
+15187,CHIVATÁ,Medio,Medio,1,Alta
+15189,CIÉNEGA,Bajo,Bajo,1,Alta
+15204,CÓMBITA,Medio,Medio,1,Alta
+15212,COPER,Bajo,Bajo,1,Alta
+15215,CORRALES,Alto,Alto,1,Alta
+15218,COVARACHÍA,Bajo,Bajo,1,Alta
+15223,CUBARÁ,Bajo,Bajo,1,Alta
+15224,CUCAITA,Medio,Medio,1,Alta
+15226,CUÍTIVA,Bajo,Bajo,1,Alta
+15232,CHÍQUIZA,Medio,Medio,1,Alta
+15236,CHIVOR,Medio,Medio,1,Alta
+15238,DUITAMA,Bajo,Bajo,1,Alta
+15244,EL COCUY,Bajo,Bajo,1,Alta
+15248,EL ESPINO,Bajo,Bajo,1,Alta
+15272,FIRAVITOBA,Medio,Medio,1,Alta
+15276,FLORESTA,Bajo,Bajo,1,Alta
+15293,GACHANTIVÁ,Medio,Medio,1,Alta
+15296,GÁMEZA,Medio,Medio,1,Alta
+15299,GARAGOA,Bajo,Bajo,1,Alta
+15317,GUACAMAYAS,Bajo,Bajo,1,Alta
+15322,GUATEQUE,Bajo,Bajo,1,Alta
+15325,GUAYATÁ,Medio,Medio,1,Alta
+15332,GÜICÁN DE LA SIERRA,Bajo,Bajo,1,Alta
+15362,IZA,Medio,Medio,1,Alta
+15367,JENESANO,Bajo,Bajo,1,Alta
+15368,JERICÓ,Medio,Medio,1,Alta
+15377,LABRANZAGRANDE,Bajo,Bajo,1,Alta
+15380,LA CAPILLA,Bajo,Bajo,1,Alta
+15401,LA VICTORIA,Bajo,Bajo,1,Alta
+15403,LA UVITA,Bajo,Bajo,1,Alta
+15407,VILLA DE LEYVA,Medio,Medio,1,Alta
+15425,MACANAL,Medio,Medio,1,Alta
+15442,MARIPÍ,Medio,Medio,1,Alta
+15455,MIRAFLORES,Medio,Medio,1,Alta
+15464,MONGUA,Medio,Medio,1,Alta
+15466,MONGUÍ,Medio,Medio,1,Alta
+15469,MONIQUIRÁ,Bajo,Bajo,1,Alta
+15476,MOTAVITA,Medio,Medio,1,Alta
+15480,MUZO,Medio,Medio,1,Alta
+15491,NOBSA,Medio,Medio,1,Alta
+15494,NUEVO COLÓN,Bajo,Bajo,1,Alta
+15500,OICATÁ,Bajo,Bajo,1,Alta
+15507,OTANCHE,Medio,Medio,1,Alta
+15511,PACHAVITA,Bajo,Bajo,1,Alta
+15514,PÁEZ,Bajo,Bajo,1,Alta
+15516,PAIPA,Alto,Alto,1,Alta
+15518,PAJARITO,Bajo,Bajo,1,Alta
+15522,PANQUEBA,Bajo,Bajo,1,Alta
+15531,PAUNA,Bajo,Bajo,1,Alta
+15533,PAYA,Bajo,Bajo,1,Alta
+15537,PAZ DE RÍO,Medio,Medio,1,Alta
+15542,PESCA,Medio,Medio,1,Alta
+15550,PISBA,Bajo,Bajo,1,Alta
+15572,PUERTO BOYACÁ,Crítico,Crítico,1,Alta
+15580,QUÍPAMA,Medio,Medio,1,Alta
+15599,RAMIRIQUÍ,Bajo,Bajo,1,Alta
+15600,RÁQUIRA,Medio,Medio,1,Alta
+15621,RONDÓN,Medio,Medio,1,Alta
+15632,SABOYÁ,Bajo,Bajo,1,Alta
+15638,SÁCHICA,Bajo,Bajo,1,Alta
+15646,SAMACÁ,Alto,Alto,1,Alta
+15660,SAN EDUARDO,Bajo,Bajo,1,Alta
+15664,SAN JOSÉ DE PARE,Bajo,Bajo,1,Alta
+15667,SAN LUIS DE GACENO,Bajo,Bajo,1,Alta
+15673,SAN MATEO,Bajo,Bajo,1,Alta
+15676,SAN MIGUEL DE SEMA,Bajo,Bajo,1,Alta
+15681,SAN PABLO DE BORBUR,Medio,Medio,1,Alta
+15686,SANTANA,Bajo,Bajo,1,Alta
+15690,SANTA MARÍA,Medio,Medio,1,Alta
+15693,SANTA ROSA DE VITERBO,Bajo,Bajo,1,Alta
+15696,SANTA SOFÍA,Bajo,Bajo,1,Alta
+15720,SATIVANORTE,Medio,Medio,1,Alta
+15723,SATIVASUR,Medio,Medio,1,Alta
+15740,SIACHOQUE,Bajo,Bajo,1,Alta
+15753,SOATÁ,Bajo,Bajo,1,Alta
+15755,SOCOTÁ,Medio,Medio,1,Alta
+15757,SOCHA,Alto,Alto,1,Alta
+15759,SOGAMOSO,Alto,Alto,1,Alta
+15761,SOMONDOCO,Medio,Medio,1,Alta
+15762,SORA,Bajo,Bajo,1,Alta
+15763,SOTAQUIRÁ,Bajo,Bajo,1,Alta
+15764,SORACÁ,Bajo,Bajo,1,Alta
+15774,SUSACÓN,Bajo,Bajo,1,Alta
+15776,SUTAMARCHÁN,Bajo,Bajo,1,Alta
+15778,SUTATENZA,Medio,Medio,1,Alta
+15790,TASCO,Medio,Medio,1,Alta
+15798,TENZA,Bajo,Bajo,1,Alta
+15804,TIBANÁ,Bajo,Bajo,1,Alta
+15806,TIBASOSA,Bajo,Bajo,1,Alta
+15808,TINJACÁ,Bajo,Bajo,1,Alta
+15810,TIPACOQUE,Bajo,Bajo,1,Alta
+15814,TOCA,Bajo,Bajo,1,Alta
+15816,TOGÜÍ,Bajo,Bajo,1,Alta
+15820,TÓPAGA,Alto,Alto,1,Alta
+15822,TOTA,Bajo,Bajo,1,Alta
+15832,TUNUNGUÁ,Bajo,Bajo,1,Alta
+15835,TURMEQUÉ,Bajo,Bajo,1,Alta
+15837,TUTA,Medio,Medio,1,Alta
+15839,TUTAZÁ,Bajo,Bajo,1,Alta
+15842,ÚMBITA,Medio,Medio,1,Alta
+15861,VENTAQUEMADA,Alto,Alto,1,Alta
+15879,VIRACACHÁ,Bajo,Bajo,1,Alta
+15897,ZETAQUIRA,Bajo,Bajo,1,Alta
+17001,MANIZALES,Crítico,Crítico,1,Alta
+17013,AGUADAS,Medio,Medio,1,Alta
+17042,ANSERMA,Medio,Medio,1,Alta
+17050,ARANZAZU,Bajo,Bajo,1,Alta
+17088,BELALCÁZAR,Bajo,Bajo,1,Alta
+17174,CHINCHINÁ,Medio,Medio,1,Alta
+17272,FILADELFIA,Bajo,Bajo,1,Alta
+17380,LA DORADA,Medio,Medio / Alto,2,Media
+17388,LA MERCED,Medio,Medio,1,Alta
+17433,MANZANARES,Bajo,Bajo,1,Alta
+17442,MARMATO,Medio,Medio,1,Alta
+17444,MARQUETALIA,Bajo,Bajo,1,Alta
+17446,MARULANDA,Bajo,Bajo,1,Alta
+17486,NEIRA,Medio,Medio,1,Alta
+17495,NORCASIA,Medio,Medio,1,Alta
+17513,PÁCORA,Bajo,Bajo,1,Alta
+17524,PALESTINA,Medio,Medio,1,Alta
+17541,PENSILVANIA,Bajo,Bajo,1,Alta
+17614,RIOSUCIO,Bajo,Bajo,1,Alta
+17616,RISARALDA,Bajo,Bajo,1,Alta
+17653,SALAMINA,Bajo,Bajo,1,Alta
+17662,SAMANÁ,Bajo,Bajo,1,Alta
+17665,SAN JOSÉ,Bajo,Bajo,1,Alta
+17777,SUPÍA,Medio,Medio,1,Alta
+17867,VICTORIA,Medio,Medio,1,Alta
+17873,VILLAMARÍA,Alto,Alto,1,Alta
+17877,VITERBO,Medio,Medio,1,Alta
+18001,FLORENCIA,Alto,Alto,1,Alta
+18029,ALBANIA,Medio,Medio,1,Alta
+18094,BELÉN DE LOS ANDAQUÍES,Crítico,Crítico,1,Alta
+18150,CARTAGENA DEL CHAIRÁ,Medio,Medio,1,Alta
+18205,CURILLO,Bajo,Bajo,1,Alta
+18247,EL DONCELLO,Alto,Alto,1,Alta
+18256,EL PAUJÍL,Crítico,Crítico,1,Alta
+18410,LA MONTAÑITA,Alto,Alto,1,Alta
+18460,MILÁN,Bajo,Bajo,1,Alta
+18479,MORELIA,Alto,Alto,1,Alta
+18592,PUERTO RICO,Medio,Medio,1,Alta
+18610,SAN JOSÉ DEL FRAGUA,Alto,Alto,1,Alta
+18753,SAN VICENTE DEL CAGUÁN,Crítico,Crítico,1,Alta
+18756,SOLANO,Crítico,Crítico,1,Alta
+18785,SOLITA,Bajo,Bajo,1,Alta
+18860,VALPARAÍSO,Medio,Medio,1,Alta
+19001,POPAYÁN,Crítico,Crítico,1,Alta
+19022,ALMAGUER,Bajo,Bajo,1,Alta
+19050,ARGELIA,Bajo,Bajo,1,Alta
+19075,BALBOA,Bajo,Bajo,1,Alta
+19100,BOLÍVAR,Medio,Medio,1,Alta
+19110,BUENOS AIRES,Alto,Alto,1,Alta
+19130,CAJIBÍO,Alto,Alto,1,Alta
+19137,CALDONO,Medio,Medio,1,Alta
+19142,CALOTO,Alto,Alto,1,Alta
+19212,CORINTO,Medio,Medio,1,Alta
+19256,EL TAMBO,Crítico,Crítico,1,Alta
+19290,FLORENCIA,Bajo,Bajo,1,Alta
+19300,GUACHENÉ,Medio,Medio,1,Alta
+19318,GUAPI,Medio,Medio,1,Alta
+19355,INZÁ,Bajo,Bajo,1,Alta
+19364,JAMBALÓ,Bajo,Bajo,1,Alta
+19392,LA SIERRA,Bajo,Bajo,1,Alta
+19397,LA VEGA,Bajo,Bajo,1,Alta
+19418,LÓPEZ DE MICAY,Medio,Medio,1,Alta
+19450,MERCADERES,Alto,Alto,1,Alta
+19455,MIRANDA,Bajo,Bajo,1,Alta
+19473,MORALES,Medio,Medio,1,Alta
+19513,PADILLA,Bajo,Bajo,1,Alta
+19517,PÁEZ,Alto,Alto,1,Alta
+19532,PATÍA,Medio,Medio,1,Alta
+19533,PIAMONTE,Crítico,Crítico,1,Alta
+19548,PIENDAMÓ - TUNÍA,Bajo,Bajo,1,Alta
+19573,PUERTO TEJADA,Alto,Alto,1,Alta
+19585,PURACÉ,Bajo,Bajo,1,Alta
+19622,ROSAS,Bajo,Bajo,1,Alta
+19693,SAN SEBASTIÁN,Bajo,Bajo,1,Alta
+19698,SANTANDER DE QUILICHAO,Medio,Medio,1,Alta
+19701,SANTA ROSA,Crítico,Crítico,1,Alta
+19743,SILVIA,Bajo,Bajo,1,Alta
+19760,SOTARÁ - PAISPAMBA,Medio,Medio,1,Alta
+19780,SUÁREZ,Medio,Medio,1,Alta
+19785,SUCRE,Bajo,Bajo,1,Alta
+19807,TIMBÍO,Bajo,Bajo,1,Alta
+19809,TIMBIQUÍ,Crítico,Crítico,1,Alta
+19821,TORIBÍO,Medio,Medio,1,Alta
+19824,TOTORÓ,Bajo,Bajo,1,Alta
+19845,VILLA RICA,Medio,Medio,1,Alta
+20001,VALLEDUPAR,Crítico,Crítico,1,Alta
+20011,AGUACHICA,Medio,Medio,1,Alta
+20013,AGUSTÍN CODAZZI,Medio,Medio,1,Alta
+20032,ASTREA,Medio,Medio,1,Alta
+20045,BECERRIL,Alto,Alto,1,Alta
+20060,BOSCONIA,Alto,Alto,1,Alta
+20175,CHIMICHAGUA,Crítico,Crítico,1,Alta
+20178,CHIRIGUANÁ,Crítico,Crítico,1,Alta
+20228,CURUMANÍ,Crítico,Crítico,1,Alta
+20238,EL COPEY,Alto,Alto,1,Alta
+20250,EL PASO,Alto,Alto,1,Alta
+20295,GAMARRA,Medio,Medio,1,Alta
+20310,GONZÁLEZ,Bajo,Bajo,1,Alta
+20383,LA GLORIA,Medio,Medio,1,Alta
+20400,LA JAGUA DE IBIRICO,Alto,Alto,1,Alta
+20443,MANAURE BALCÓN DEL CESAR,Alto,Alto,1,Alta
+20517,PAILITAS,Medio,Medio,1,Alta
+20550,PELAYA,Alto,Alto,1,Alta
+20570,PUEBLO BELLO,Alto,Alto,1,Alta
+20614,RÍO DE ORO,Bajo,Bajo,1,Alta
+20621,LA PAZ,Crítico,Crítico,1,Alta
+20710,SAN ALBERTO,Medio,Medio,1,Alta
+20750,SAN DIEGO,Medio,Medio,1,Alta
+20770,SAN MARTÍN,Medio,Medio,1,Alta
+20787,TAMALAMEQUE,Medio,Medio,1,Alta
+23001,MONTERÍA,Alto,Alto,1,Alta
+23068,AYAPEL,Alto,Alto,1,Alta
+23079,BUENAVISTA,Bajo,Bajo,1,Alta
+23090,CANALETE,Bajo,Bajo,1,Alta
+23162,CERETÉ,Bajo,Bajo,1,Alta
+23168,CHIMÁ,Bajo,Bajo,1,Alta
+23182,CHINÚ,Bajo,Bajo,1,Alta
+23189,CIÉNAGA DE ORO,Bajo,Bajo,1,Alta
+23300,COTORRA,Bajo,Bajo,1,Alta
+23350,LA APARTADA,Bajo,Bajo,1,Alta
+23417,LORICA,Bajo,Bajo,1,Alta
+23419,LOS CÓRDOBAS,Bajo,Bajo,1,Alta
+23464,MOMIL,Bajo,Bajo,1,Alta
+23466,MONTELÍBANO,Crítico,Crítico,1,Alta
+23500,MOÑITOS,Bajo,Bajo,1,Alta
+23555,PLANETA RICA,Medio,Medio,1,Alta
+23570,PUEBLO NUEVO,Bajo,Bajo,1,Alta
+23574,PUERTO ESCONDIDO,Bajo,Bajo,1,Alta
+23580,PUERTO LIBERTADOR,Medio,Medio,1,Alta
+23586,PURÍSIMA DE LA CONCEPCIÓN,Bajo,Bajo,1,Alta
+23660,SAHAGÚN,Bajo,Bajo,1,Alta
+23670,SAN ANDRÉS DE SOTAVENTO,Bajo,Bajo,1,Alta
+23672,SAN ANTERO,Bajo,Bajo,1,Alta
+23675,SAN BERNARDO DEL VIENTO,Bajo,Bajo,1,Alta
+23678,SAN CARLOS,Bajo,Bajo,1,Alta
+23682,SAN JOSÉ DE URÉ,Bajo,Bajo,1,Alta
+23686,SAN PELAYO,Bajo,Bajo,1,Alta
+23807,TIERRALTA,Bajo,Bajo,1,Alta
+23815,TUCHÍN,Bajo,Bajo,1,Alta
+23855,VALENCIA,Bajo,Bajo,1,Alta
+25001,AGUA DE DIOS,Bajo,Bajo,1,Alta
+25019,ALBÁN,Bajo,Bajo,1,Alta
+25035,ANAPOIMA,Bajo,Bajo,1,Alta
+25040,ANOLAIMA,Bajo,Bajo,1,Alta
+25053,ARBELÁEZ,Bajo,Bajo,1,Alta
+25086,BELTRÁN,Bajo,Bajo,1,Alta
+25095,BITUIMA,Bajo,Bajo,1,Alta
+25099,BOJACÁ,Medio,Medio,1,Alta
+25120,CABRERA,Bajo,Bajo,1,Alta
+25123,CACHIPAY,Bajo,Bajo,1,Alta
+25126,CAJICÁ,Bajo,Bajo,1,Alta
+25148,CAPARRAPÍ,Bajo,Bajo,1,Alta
+25151,CÁQUEZA,Bajo,Bajo,1,Alta
+25154,CARMEN DE CARUPA,Medio,Medio,1,Alta
+25168,CHAGUANÍ,Bajo,Bajo,1,Alta
+25175,CHÍA,Bajo,Bajo,1,Alta
+25178,CHIPAQUE,Bajo,Bajo,1,Alta
+25181,CHOACHÍ,Medio,Medio,1,Alta
+25183,CHOCONTÁ,Bajo,Bajo,1,Alta
+25200,COGUA,Alto,Alto,1,Alta
+25214,COTA,Bajo,Bajo,1,Alta
+25224,CUCUNUBÁ,Alto,Alto,1,Alta
+25245,EL COLEGIO,Bajo,Bajo,1,Alta
+25258,EL PEÑÓN,Bajo,Bajo,1,Alta
+25260,EL ROSAL,Medio,Medio,1,Alta
+25269,FACATATIVÁ,Bajo,Bajo,1,Alta
+25279,FÓMEQUE,Bajo,Bajo,1,Alta
+25281,FOSCA,Bajo,Bajo,1,Alta
+25286,FUNZA,Bajo,Bajo,1,Alta
+25288,FÚQUENE,Bajo,Bajo,1,Alta
+25290,FUSAGASUGÁ,Bajo,Bajo,1,Alta
+25293,GACHALÁ,Alto,Alto,1,Alta
+25295,GACHANCIPÁ,Bajo,Bajo,1,Alta
+25297,GACHETÁ,Medio,Medio,1,Alta
+25299,GAMA,Bajo,Bajo,1,Alta
+25307,GIRARDOT,Bajo,Bajo,1,Alta
+25312,GRANADA,Bajo,Bajo,1,Alta
+25317,GUACHETÁ,Alto,Alto,1,Alta
+25320,GUADUAS,Alto,Alto,1,Alta
+25322,GUASCA,Medio,Medio,1,Alta
+25324,GUATAQUÍ,Bajo,Bajo,1,Alta
+25326,GUATAVITA,Medio,Medio,1,Alta
+25328,GUAYABAL DE SÍQUIMA,Bajo,Bajo,1,Alta
+25335,GUAYABETAL,Bajo,Bajo,1,Alta
+25339,GUTIÉRREZ,Bajo,Bajo,1,Alta
+25368,JERUSALÉN,Medio,Medio,1,Alta
+25372,JUNÍN,Medio,Medio,1,Alta
+25377,LA CALERA,Bajo,Bajo,1,Alta
+25386,LA MESA,Bajo,Bajo,1,Alta
+25394,LA PALMA,Bajo,Bajo,1,Alta
+25398,LA PEÑA,Bajo,Bajo,1,Alta
+25402,LA VEGA,Bajo,Bajo,1,Alta
+25407,LENGUAZAQUE,Alto,Alto,1,Alta
+25426,MACHETÁ,Medio,Medio,1,Alta
+25430,MADRID,Medio,Medio,1,Alta
+25436,MANTA,Bajo,Bajo,1,Alta
+25438,MEDINA,Medio,Medio,1,Alta
+25473,MOSQUERA,Bajo,Bajo,1,Alta
+25483,NARIÑO,Bajo,Bajo,1,Alta
+25486,NEMOCÓN,Medio,Medio,1,Alta
+25488,NILO,Medio,Medio,1,Alta
+25489,NIMAIMA,Bajo,Bajo,1,Alta
+25491,NOCAIMA,Bajo,Bajo,1,Alta
+25506,VENECIA,Bajo,Bajo,1,Alta
+25513,PACHO,Medio,Medio,1,Alta
+25518,PAIME,Bajo,Bajo,1,Alta
+25524,PANDI,Bajo,Bajo,1,Alta
+25530,PARATEBUENO,Medio,Medio,1,Alta
+25535,PASCA,Bajo,Bajo,1,Alta
+25572,PUERTO SALGAR,Bajo,Bajo,1,Alta
+25580,PULÍ,Bajo,Bajo,1,Alta
+25592,QUEBRADANEGRA,Bajo,Bajo,1,Alta
+25594,QUETAME,Bajo,Bajo,1,Alta
+25596,QUIPILE,Bajo,Bajo,1,Alta
+25599,APULO,Bajo,Bajo,1,Alta
+25612,RICAURTE,Bajo,Bajo,1,Alta
+25645,SAN ANTONIO DEL TEQUENDAMA,Bajo,Bajo,1,Alta
+25649,SAN BERNARDO,Bajo,Bajo,1,Alta
+25653,SAN CAYETANO,Bajo,Bajo,1,Alta
+25658,SAN FRANCISCO,Bajo,Bajo,1,Alta
+25662,SAN JUAN DE RIOSECO,Bajo,Bajo,1,Alta
+25718,SASAIMA,Bajo,Bajo,1,Alta
+25736,SESQUILÉ,Bajo,Bajo,1,Alta
+25740,SIBATÉ,Medio,Medio,1,Alta
+25743,SILVANIA,Bajo,Bajo,1,Alta
+25745,SIMIJACA,Bajo,Bajo,1,Alta
+25754,SOACHA,Alto,Alto,1,Alta
+25758,SOPÓ,Bajo,Bajo,1,Alta
+25769,SUBACHOQUE,Bajo,Bajo,1,Alta
+25772,SUESCA,Bajo,Bajo,1,Alta
+25777,SUPATÁ,Bajo,Bajo,1,Alta
+25779,SUSA,Bajo,Bajo,1,Alta
+25781,SUTATAUSA,Medio,Medio,1,Alta
+25785,TABIO,Bajo,Bajo,1,Alta
+25793,TAUSA,Alto,Alto,1,Alta
+25797,TENA,Bajo,Bajo,1,Alta
+25799,TENJO,Bajo,Bajo,1,Alta
+25805,TIBACUY,Bajo,Bajo,1,Alta
+25807,TIBIRITA,Bajo,Bajo,1,Alta
+25815,TOCAIMA,Bajo,Bajo,1,Alta
+25817,TOCANCIPÁ,Medio,Medio,1,Alta
+25823,TOPAIPÍ,Bajo,Bajo,1,Alta
+25839,UBALÁ,Alto,Alto,1,Alta
+25841,UBAQUE,Bajo,Bajo,1,Alta
+25843,VILLA DE SAN DIEGO DE UBATÉ,Bajo,Bajo,1,Alta
+25845,UNE,Bajo,Bajo,1,Alta
+25851,ÚTICA,Medio,Medio,1,Alta
+25862,VERGARA,Bajo,Bajo,1,Alta
+25867,VIANÍ,Bajo,Bajo,1,Alta
+25871,VILLAGÓMEZ,Bajo,Bajo,1,Alta
+25873,VILLAPINZÓN,Alto,Alto,1,Alta
+25875,VILLETA,Bajo,Bajo,1,Alta
+25878,VIOTÁ,Bajo,Bajo,1,Alta
+25885,YACOPÍ,Bajo,Bajo,1,Alta
+25898,ZIPACÓN,Bajo,Bajo,1,Alta
+25899,ZIPAQUIRÁ,Medio,Medio,1,Alta
+27001,QUIBDÓ,Medio,Medio / Alto,2,Media
+27006,ACANDÍ,Medio,Medio,1,Alta
+27025,ALTO BAUDÓ,Bajo,Bajo,1,Alta
+27050,ATRATO,Medio,Medio,1,Alta
+27073,BAGADÓ,Bajo,Bajo,1,Alta
+27075,BAHÍA SOLANO,Bajo,Bajo,1,Alta
+27077,BAJO BAUDÓ,Bajo,Bajo,1,Alta
+27099,BOJAYÁ,Bajo,Bajo,1,Alta
+27135,EL CANTÓN DEL SAN PABLO,Bajo,Bajo,1,Alta
+27150,CARMEN DEL DARIÉN,Bajo,Bajo,1,Alta
+27160,CÉRTEGUI,Medio,Medio,1,Alta
+27205,CONDOTO,Medio,Medio,1,Alta
+27245,EL CARMEN DE ATRATO,Bajo,Bajo,1,Alta
+27250,EL LITORAL DEL SAN JUAN,Bajo,Bajo,1,Alta
+27361,ISTMINA,Medio,Medio,1,Alta
+27372,JURADÓ,Bajo,Bajo,1,Alta
+27413,LLORÓ,Medio,Medio,1,Alta
+27425,MEDIO ATRATO,Medio,Medio,1,Alta
+27430,MEDIO BAUDÓ,Bajo,Bajo,1,Alta
+27450,MEDIO SAN JUAN,Medio,Medio,1,Alta
+27491,NÓVITA,Medio,Medio,1,Alta
+27493,NUEVO BELÉN DE BAJIRÁ,Bajo,Bajo,1,Alta
+27495,NUQUÍ,Bajo,Bajo,1,Alta
+27580,RÍO IRÓ,Medio,Medio,1,Alta
+27600,RÍO QUITO,Medio,Medio,1,Alta
+27615,RIOSUCIO,Bajo,Bajo,1,Alta
+27660,SAN JOSÉ DEL PALMAR,Bajo,Bajo,1,Alta
+27745,SIPÍ,Medio,Medio,1,Alta
+27787,TADÓ,Medio,Medio,1,Alta
+27800,UNGUÍA,Medio,Medio,1,Alta
+27810,UNIÓN PANAMERICANA,Medio,Medio,1,Alta
+41001,NEIVA,Alto,Alto,1,Alta
+41006,ACEVEDO,Bajo,Bajo,1,Alta
+41013,AGRADO,Bajo,Bajo,1,Alta
+41016,AIPE,Alto,Alto,1,Alta
+41020,ALGECIRAS,Bajo,Bajo,1,Alta
+41026,ALTAMIRA,Bajo,Bajo,1,Alta
+41078,BARAYA,Bajo,Bajo,1,Alta
+41132,CAMPOALEGRE,Medio,Medio,1,Alta
+41206,COLOMBIA,Bajo,Bajo,1,Alta
+41244,ELÍAS,Bajo,Bajo,1,Alta
+41298,GARZÓN,Medio,Medio,1,Alta
+41306,GIGANTE,Bajo,Bajo,1,Alta
+41319,GUADALUPE,Bajo,Bajo,1,Alta
+41349,HOBO,Bajo,Bajo,1,Alta
+41357,ÍQUIRA,Medio,Medio,1,Alta
+41359,ISNOS,Bajo,Bajo,1,Alta
+41378,LA ARGENTINA,Bajo,Bajo,1,Alta
+41396,LA PLATA,Bajo,Bajo,1,Alta
+41483,NÁTAGA,Bajo,Bajo,1,Alta
+41503,OPORAPA,Bajo,Bajo,1,Alta
+41518,PAICOL,Medio,Medio,1,Alta
+41524,PALERMO,Alto,Alto,1,Alta
+41530,PALESTINA,Bajo,Bajo,1,Alta
+41548,PITAL,Bajo,Bajo,1,Alta
+41551,PITALITO,Alto,Alto,1,Alta
+41615,RIVERA,Medio,Medio,1,Alta
+41660,SALADOBLANCO,Bajo,Bajo,1,Alta
+41668,SAN AGUSTÍN,Medio,Medio,1,Alta
+41676,SANTA MARÍA,Medio,Medio,1,Alta
+41770,SUAZA,Bajo,Bajo,1,Alta
+41791,TARQUI,Bajo,Bajo,1,Alta
+41797,TESALIA,Medio,Medio,1,Alta
+41799,TELLO,Bajo,Bajo,1,Alta
+41801,TERUEL,Medio,Medio,1,Alta
+41807,TIMANÁ,Bajo,Bajo,1,Alta
+41872,VILLAVIEJA,Medio,Medio,1,Alta
+41885,YAGUARÁ,Medio,Medio,1,Alta
+44001,RIOHACHA,Crítico,Crítico,1,Alta
+44035,ALBANIA,Alto,Alto,1,Alta
+44078,BARRANCAS,Alto,Alto,1,Alta
+44090,DIBULLA,Alto,Alto,1,Alta
+44098,DISTRACCIÓN,Bajo,Bajo,1,Alta
+44110,EL MOLINO,Bajo,Bajo,1,Alta
+44279,FONSECA,Bajo,Bajo,1,Alta
+44378,HATONUEVO,Alto,Alto,1,Alta
+44420,LA JAGUA DEL PILAR,Bajo,Bajo,1,Alta
+44430,MAICAO,Bajo,Bajo,1,Alta
+44560,MANAURE,Bajo,Bajo,1,Alta
+44650,SAN JUAN DEL CESAR,Medio,Medio,1,Alta
+44847,URIBIA,Bajo,Bajo,1,Alta
+44855,URUMITA,Medio,Medio,1,Alta
+44874,VILLANUEVA,Bajo,Bajo,1,Alta
+47001,SANTA MARTA,Alto,Alto,1,Alta
+47030,ALGARROBO,Medio,Medio,1,Alta
+47053,ARACATACA,Bajo,Bajo,1,Alta
+47058,ARIGUANÍ,Bajo,Bajo,1,Alta
+47161,CERRO DE SAN ANTONIO,Bajo,Bajo,1,Alta
+47170,CHIVOLO,Bajo,Bajo,1,Alta
+47189,CIÉNAGA,Medio,Medio,1,Alta
+47205,CONCORDIA,Bajo,Bajo,1,Alta
+47245,EL BANCO,Medio,Medio,1,Alta
+47258,EL PIÑÓN,Bajo,Bajo,1,Alta
+47268,EL RETÉN,Bajo,Bajo,1,Alta
+47288,FUNDACIÓN,Medio,Medio,1,Alta
+47318,GUAMAL,Bajo,Bajo,1,Alta
+47460,NUEVA GRANADA,Bajo,Bajo,1,Alta
+47541,PEDRAZA,Bajo,Bajo,1,Alta
+47545,PIJIÑO DEL CARMEN,Bajo,Bajo,1,Alta
+47551,PIVIJAY,Bajo,Bajo,1,Alta
+47555,PLATO,Medio,Medio,1,Alta
+47570,PUEBLOVIEJO,Bajo,Bajo,1,Alta
+47605,REMOLINO,Bajo,Bajo,1,Alta
+47660,SABANAS DE SAN ÁNGEL,Bajo,Bajo,1,Alta
+47675,SALAMINA,Bajo,Bajo,1,Alta
+47692,SAN SEBASTIÁN DE BUENAVISTA,Bajo,Bajo,1,Alta
+47703,SAN ZENÓN,Bajo,Bajo,1,Alta
+47707,SANTA ANA,Bajo,Bajo,1,Alta
+47720,SANTA BÁRBARA DE PINTO,Bajo,Bajo,1,Alta
+47745,SITIONUEVO,Bajo,Bajo,1,Alta
+47798,TENERIFE,Bajo,Bajo,1,Alta
+47960,ZAPAYÁN,Bajo,Bajo,1,Alta
+47980,ZONA BANANERA,Medio,Medio,1,Alta
+50001,VILLAVICENCIO,Alto,Alto,1,Alta
+50006,ACACÍAS,Crítico,Crítico,1,Alta
+50110,BARRANCA DE UPÍA,Bajo,Bajo,1,Alta
+50124,CABUYARO,Medio,Medio,1,Alta
+50150,CASTILLA LA NUEVA,Bajo,Bajo,1,Alta
+50223,CUBARRAL,Bajo,Bajo,1,Alta
+50226,CUMARAL,Medio,Medio,1,Alta
+50245,EL CALVARIO,Bajo,Bajo,1,Alta
+50251,EL CASTILLO,Bajo,Bajo,1,Alta
+50270,EL DORADO,Bajo,Bajo,1,Alta
+50287,FUENTE DE ORO,Bajo,Bajo,1,Alta
+50313,GRANADA,Medio,Medio,1,Alta
+50318,GUAMAL,Bajo,Bajo,1,Alta
+50325,MAPIRIPÁN,Crítico,Crítico,1,Alta
+50330,MESETAS,Alto,Alto,1,Alta
+50350,LA MACARENA,Crítico,Crítico,1,Alta
+50370,URIBE,Crítico,Crítico,1,Alta
+50400,LEJANÍAS,Bajo,Bajo,1,Alta
+50450,PUERTO CONCORDIA,Crítico,Crítico,1,Alta
+50568,PUERTO GAITÁN,Crítico,Crítico,1,Alta
+50573,PUERTO LÓPEZ,Alto,Alto,1,Alta
+50577,PUERTO LLERAS,Bajo,Bajo,1,Alta
+50590,PUERTO RICO,Crítico,Crítico,1,Alta
+50606,RESTREPO,Medio,Medio,1,Alta
+50680,SAN CARLOS DE GUAROA,Medio,Medio,1,Alta
+50683,SAN JUAN DE ARAMA,Alto,Alto,1,Alta
+50686,SAN JUANITO,Bajo,Bajo,1,Alta
+50689,SAN MARTÍN,Crítico,Crítico,1,Alta
+50711,VISTAHERMOSA,Crítico,Crítico,1,Alta
+52001,PASTO,Crítico,Crítico,1,Alta
+52019,ALBÁN,Bajo,Bajo,1,Alta
+52022,ALDANA,Bajo,Bajo,1,Alta
+52036,ANCUYA,Bajo,Bajo,1,Alta
+52051,ARBOLEDA,Bajo,Bajo,1,Alta
+52079,BARBACOAS,Medio,Medio,1,Alta
+52083,BELÉN,Bajo,Bajo,1,Alta
+52110,BUESACO,Bajo,Bajo,1,Alta
+52203,COLÓN,Bajo,Bajo,1,Alta
+52207,CONSACÁ,Bajo,Bajo,1,Alta
+52210,CONTADERO,Bajo,Bajo,1,Alta
+52215,CÓRDOBA,Bajo,Bajo,1,Alta
+52224,CUASPUD CARLOSAMA,Bajo,Bajo,1,Alta
+52227,CUMBAL,Bajo,Bajo,1,Alta
+52233,CUMBITARA,Medio,Medio,1,Alta
+52240,CHACHAGÜÍ,Bajo,Bajo,1,Alta
+52250,EL CHARCO,Medio,Medio,1,Alta
+52254,EL PEÑOL,Bajo,Bajo,1,Alta
+52256,EL ROSARIO,Bajo,Bajo,1,Alta
+52258,EL TABLÓN DE GÓMEZ,Bajo,Bajo,1,Alta
+52260,EL TAMBO,Bajo,Bajo,1,Alta
+52287,FUNES,Bajo,Bajo,1,Alta
+52317,GUACHUCAL,Bajo,Bajo,1,Alta
+52320,GUAITARILLA,Bajo,Bajo,1,Alta
+52323,GUALMATÁN,Bajo,Bajo,1,Alta
+52352,ILES,Bajo,Bajo,1,Alta
+52354,IMUÉS,Bajo,Bajo,1,Alta
+52356,IPIALES,Alto,Alto,1,Alta
+52378,LA CRUZ,Bajo,Bajo,1,Alta
+52381,LA FLORIDA,Bajo,Bajo,1,Alta
+52385,LA LLANADA,Bajo,Bajo,1,Alta
+52390,LA TOLA,Bajo,Bajo,1,Alta
+52399,LA UNIÓN,Bajo,Bajo,1,Alta
+52405,LEIVA,Bajo,Bajo,1,Alta
+52411,LINARES,Bajo,Bajo,1,Alta
+52418,LOS ANDES,Medio,Medio,1,Alta
+52427,MAGÜÍ,Bajo,Bajo,1,Alta
+52435,MALLAMA,Bajo,Bajo,1,Alta
+52473,MOSQUERA,Bajo,Bajo,1,Alta
+52480,NARIÑO,Bajo,Bajo,1,Alta
+52490,OLAYA HERRERA,Bajo,Bajo,1,Alta
+52506,OSPINA,Bajo,Bajo,1,Alta
+52520,FRANCISCO PIZARRO,Bajo,Bajo,1,Alta
+52540,POLICARPA,Bajo,Bajo,1,Alta
+52560,POTOSÍ,Medio,Medio,1,Alta
+52565,PROVIDENCIA,Bajo,Bajo,1,Alta
+52573,PUERRES,Alto,Alto,1,Alta
+52585,PUPIALES,Bajo,Bajo,1,Alta
+52612,RICAURTE,Bajo,Bajo,1,Alta
+52621,ROBERTO PAYÁN,Medio,Medio,1,Alta
+52678,SAMANIEGO,Bajo,Bajo,1,Alta
+52683,SANDONÁ,Bajo,Bajo,1,Alta
+52685,SAN BERNARDO,Bajo,Bajo,1,Alta
+52687,SAN LORENZO,Bajo,Bajo,1,Alta
+52693,SAN PABLO,Bajo,Bajo,1,Alta
+52694,SAN PEDRO DE CARTAGO,Bajo,Bajo,1,Alta
+52696,SANTA BÁRBARA,Bajo,Bajo,1,Alta
+52699,SANTACRUZ,Bajo,Bajo,1,Alta
+52720,SAPUYES,Bajo,Bajo,1,Alta
+52786,TAMINANGO,Bajo,Bajo,1,Alta
+52788,TANGUA,Bajo,Bajo,1,Alta
+52835,SAN ANDRÉS DE TUMACO,Alto,Alto,1,Alta
+52838,TÚQUERRES,Bajo,Bajo,1,Alta
+52885,YACUANQUER,Bajo,Bajo,1,Alta
+54001,SAN JOSÉ DE CÚCUTA,Crítico,Crítico,1,Alta
+54003,ÁBREGO,Alto,Alto,1,Alta
+54051,ARBOLEDAS,Bajo,Bajo,1,Alta
+54099,BOCHALEMA,Medio,Medio,1,Alta
+54109,BUCARASICA,Bajo,Bajo,1,Alta
+54125,CÁCOTA,Bajo,Bajo,1,Alta
+54128,CÁCHIRA,Bajo,Bajo,1,Alta
+54172,CHINÁCOTA,Medio,Medio,1,Alta
+54174,CHITAGÁ,Bajo,Bajo,1,Alta
+54206,CONVENCIÓN,Bajo,Bajo,1,Alta
+54223,CUCUTILLA,Bajo,Bajo,1,Alta
+54239,DURANIA,Bajo,Bajo,1,Alta
+54245,EL CARMEN,Medio,Medio,1,Alta
+54250,EL TARRA,Bajo,Bajo,1,Alta
+54261,EL ZULIA,Crítico,Crítico,1,Alta
+54313,GRAMALOTE,Bajo,Bajo,1,Alta
+54344,HACARÍ,Bajo,Bajo,1,Alta
+54347,HERRÁN,Medio,Medio,1,Alta
+54377,LABATECA,Medio,Medio,1,Alta
+54385,LA ESPERANZA,Medio,Medio,1,Alta
+54398,LA PLAYA,Bajo,Bajo,1,Alta
+54405,LOS PATIOS,Medio,Medio,1,Alta
+54418,LOURDES,Bajo,Bajo,1,Alta
+54480,MUTISCUA,Bajo,Bajo,1,Alta
+54498,OCAÑA,Medio,Medio,1,Alta
+54518,PAMPLONA,Medio,Medio,1,Alta
+54520,PAMPLONITA,Medio,Medio,1,Alta
+54553,PUERTO SANTANDER,Bajo,Bajo,1,Alta
+54599,RAGONVALIA,Bajo,Bajo,1,Alta
+54660,SALAZAR,Medio,Medio,1,Alta
+54670,SAN CALIXTO,Bajo,Bajo,1,Alta
+54673,SAN CAYETANO,Crítico,Crítico,1,Alta
+54680,SANTIAGO,Medio,Medio,1,Alta
+54720,SARDINATA,Crítico,Crítico,1,Alta
+54743,SILOS,Bajo,Bajo,1,Alta
+54800,TEORAMA,Bajo,Bajo,1,Alta
+54810,TIBÚ,Crítico,Crítico,1,Alta
+54820,TOLEDO,Medio,Medio,1,Alta
+54871,VILLA CARO,Bajo,Bajo,1,Alta
+54874,VILLA DEL ROSARIO,Medio,Medio,1,Alta
+63001,ARMENIA,Bajo,Bajo,1,Alta
+63111,BUENAVISTA,Bajo,Bajo,1,Alta
+63130,CALARCÁ,Medio,Medio,1,Alta
+63190,CIRCASIA,Bajo,Bajo,1,Alta
+63212,CÓRDOBA,Bajo,Bajo,1,Alta
+63272,FILANDIA,Bajo,Bajo,1,Alta
+63302,GÉNOVA,Bajo,Bajo,1,Alta
+63401,LA TEBAIDA,Bajo,Bajo,1,Alta
+63470,MONTENEGRO,Bajo,Bajo,1,Alta
+63548,PIJAO,Medio,Medio,1,Alta
+63594,QUIMBAYA,Bajo,Bajo,1,Alta
+63690,SALENTO,Bajo,Bajo,1,Alta
+66001,PEREIRA,Bajo,Bajo,1,Alta
+66045,APÍA,Medio,Medio,1,Alta
+66075,BALBOA,Medio,Medio,1,Alta
+66088,BELÉN DE UMBRÍA,Bajo,Bajo,1,Alta
+66170,DOSQUEBRADAS,Bajo,Bajo,1,Alta
+66318,GUÁTICA,Bajo,Bajo,1,Alta
+66383,LA CELIA,Bajo,Bajo,1,Alta
+66400,LA VIRGINIA,Bajo,Bajo,1,Alta
+66440,MARSELLA,Bajo,Bajo,1,Alta
+66456,MISTRATÓ,Medio,Medio,1,Alta
+66572,PUEBLO RICO,Bajo,Bajo,1,Alta
+66594,QUINCHÍA,Alto,Alto,1,Alta
+66682,SANTA ROSA DE CABAL,Alto,Alto,1,Alta
+66687,SANTUARIO,Medio,Medio,1,Alta
+68001,BUCARAMANGA,Medio,Medio,1,Alta
+68013,AGUADA,Bajo,Bajo,1,Alta
+68020,ALBANIA,Medio,Medio,1,Alta
+68051,ARATOCA,Bajo,Bajo,1,Alta
+68077,BARBOSA,Bajo,Bajo,1,Alta
+68079,BARICHARA,Bajo,Bajo,1,Alta
+68081,BARRANCABERMEJA,Crítico,Crítico,1,Alta
+68092,BETULIA,Alto,Alto,1,Alta
+68101,BOLÍVAR,Medio,Medio,1,Alta
+68121,CABRERA,Bajo,Bajo,1,Alta
+68132,CALIFORNIA,Alto,Alto,1,Alta
+68147,CAPITANEJO,Bajo,Bajo,1,Alta
+68152,CARCASÍ,Bajo,Bajo,1,Alta
+68160,CEPITÁ,Medio,Medio,1,Alta
+68162,CERRITO,Bajo,Bajo,1,Alta
+68167,CHARALÁ,Medio,Medio,1,Alta
+68169,CHARTA,Bajo,Bajo,1,Alta
+68176,CHIMA,Bajo,Bajo,1,Alta
+68179,CHIPATÁ,Bajo,Bajo,1,Alta
+68190,CIMITARRA,Alto,Alto,1,Alta
+68207,CONCEPCIÓN,Bajo,Bajo,1,Alta
+68209,CONFINES,Bajo,Bajo,1,Alta
+68211,CONTRATACIÓN,Bajo,Bajo,1,Alta
+68217,COROMORO,Bajo,Bajo,1,Alta
+68229,CURITÍ,Bajo,Bajo,1,Alta
+68235,EL CARMEN DE CHUCURÍ,Medio,Medio,1,Alta
+68245,EL GUACAMAYO,Bajo,Bajo,1,Alta
+68250,EL PEÑÓN,Bajo,Bajo,1,Alta
+68255,EL PLAYÓN,Bajo,Bajo,1,Alta
+68264,ENCINO,Bajo,Bajo,1,Alta
+68266,ENCISO,Bajo,Bajo,1,Alta
+68271,FLORIÁN,Bajo,Bajo,1,Alta
+68276,FLORIDABLANCA,Medio,Medio,1,Alta
+68296,GALÁN,Bajo,Bajo,1,Alta
+68298,GÁMBITA,Bajo,Bajo,1,Alta
+68307,GIRÓN,Crítico,Crítico,1,Alta
+68318,GUACA,Bajo,Bajo,1,Alta
+68320,GUADALUPE,Bajo,Bajo,1,Alta
+68322,GUAPOTÁ,Bajo,Bajo,1,Alta
+68324,GUAVATÁ,Bajo,Bajo,1,Alta
+68327,GÜEPSA,Bajo,Bajo,1,Alta
+68344,HATO,Bajo,Bajo,1,Alta
+68368,JESÚS MARÍA,Bajo,Bajo,1,Alta
+68370,JORDÁN,Bajo,Bajo,1,Alta
+68377,LA BELLEZA,Bajo,Bajo,1,Alta
+68385,LANDÁZURI,Bajo,Bajo,1,Alta
+68397,LA PAZ,Medio,Medio,1,Alta
+68406,LEBRIJA,Bajo,Bajo,1,Alta
+68418,LOS SANTOS,Medio,Medio,1,Alta
+68425,MACARAVITA,Bajo,Bajo,1,Alta
+68432,MÁLAGA,Bajo,Bajo,1,Alta
+68444,MATANZA,Bajo,Bajo,1,Alta
+68464,MOGOTES,Medio,Medio,1,Alta
+68468,MOLAGAVITA,Bajo,Bajo,1,Alta
+68498,OCAMONTE,Bajo,Bajo,1,Alta
+68500,OIBA,Bajo,Bajo / Medio,2,Media
+68502,ONZAGA,Bajo,Bajo,1,Alta
+68522,PALMAR,Bajo,Bajo,1,Alta
+68524,PALMAS DEL SOCORRO,Bajo,Bajo,1,Alta
+68533,PÁRAMO,Bajo,Bajo,1,Alta
+68547,PIEDECUESTA,Medio,Medio,1,Alta
+68549,PINCHOTE,Bajo,Bajo,1,Alta
+68572,PUENTE NACIONAL,Bajo,Bajo,1,Alta
+68573,PUERTO PARRA,Bajo,Bajo,1,Alta
+68575,PUERTO WILCHES,Alto,Alto,1,Alta
+68615,RIONEGRO,Alto,Alto,1,Alta
+68655,SABANA DE TORRES,Alto,Alto,1,Alta
+68669,SAN ANDRÉS,Bajo,Bajo,1,Alta
+68673,SAN BENITO,Bajo,Bajo,1,Alta
+68679,SAN GIL,Medio,Medio,1,Alta
+68682,SAN JOAQUÍN,Bajo,Bajo,1,Alta
+68684,SAN JOSÉ DE MIRANDA,Bajo,Bajo,1,Alta
+68686,SAN MIGUEL,Bajo,Bajo,1,Alta
+68689,SAN VICENTE DE CHUCURÍ,Alto,Alto,1,Alta
+68705,SANTA BÁRBARA,Bajo,Bajo,1,Alta
+68720,SANTA HELENA DEL OPÓN,Bajo,Bajo,1,Alta
+68745,SIMACOTA,Bajo,Bajo,1,Alta
+68755,SOCORRO,Bajo,Bajo,1,Alta
+68770,SUAITA,Bajo,Bajo,1,Alta
+68773,SUCRE,Bajo,Bajo,1,Alta
+68780,SURATÁ,Bajo,Bajo,1,Alta
+68820,TONA,Bajo,Bajo,1,Alta
+68855,VALLE DE SAN JOSÉ,Bajo,Bajo,1,Alta
+68861,VÉLEZ,Medio,Medio,1,Alta
+68867,VETAS,Medio,Medio,1,Alta
+68872,VILLANUEVA,Bajo,Bajo,1,Alta
+68895,ZAPATOCA,Bajo,Bajo,1,Alta
+70001,SINCELEJO,Medio,Medio,1,Alta
+70110,BUENAVISTA,Bajo,Bajo,1,Alta
+70124,CAIMITO,Bajo,Bajo,1,Alta
+70204,COLOSÓ,Medio,Medio,1,Alta
+70215,COROZAL,Bajo,Bajo,1,Alta
+70221,COVEÑAS,Bajo,Bajo,1,Alta
+70230,CHALÁN,Bajo,Bajo,1,Alta
+70233,EL ROBLE,Bajo,Bajo,1,Alta
+70235,GALERAS,Bajo,Bajo,1,Alta
+70265,GUARANDA,Bajo,Bajo,1,Alta
+70400,LA UNIÓN,Bajo,Bajo,1,Alta
+70418,LOS PALMITOS,Bajo,Bajo,1,Alta
+70429,MAJAGUAL,Bajo,Bajo,1,Alta
+70473,MORROA,Bajo,Bajo,1,Alta
+70508,OVEJAS,Bajo,Bajo,1,Alta
+70523,PALMITO,Bajo,Bajo,1,Alta
+70670,SAMPUÉS,Bajo,Bajo,1,Alta
+70678,SAN BENITO ABAD,Bajo,Bajo,1,Alta
+70702,SAN JUAN DE BETULIA,Bajo,Bajo,1,Alta
+70708,SAN MARCOS,Bajo,Bajo,1,Alta
+70713,SAN ONOFRE,Bajo,Bajo,1,Alta
+70717,SAN PEDRO,Bajo,Bajo,1,Alta
+70742,SAN LUIS DE SINCÉ,Bajo,Bajo,1,Alta
+70771,SUCRE,Bajo,Bajo,1,Alta
+70820,SANTIAGO DE TOLÚ,Bajo,Bajo,1,Alta
+70823,SAN JOSÉ DE TOLUVIEJO,Alto,Alto,1,Alta
+73001,IBAGUÉ,Crítico,Crítico,1,Alta
+73024,ALPUJARRA,Bajo,Bajo,1,Alta
+73026,ALVARADO,Medio,Medio,1,Alta
+73030,AMBALEMA,Bajo,Bajo,1,Alta
+73043,ANZOÁTEGUI,Bajo,Bajo,1,Alta
+73055,ARMERO,Alto,Alto,1,Alta
+73067,ATACO,Medio,Medio,1,Alta
+73124,CAJAMARCA,Bajo,Bajo,1,Alta
+73148,CARMEN DE APICALÁ,Medio,Medio,1,Alta
+73152,CASABIANCA,Bajo,Bajo,1,Alta
+73168,CHAPARRAL,Crítico,Crítico,1,Alta
+73200,COELLO,Crítico,Crítico,1,Alta
+73217,COYAIMA,Medio,Medio,1,Alta
+73226,CUNDAY,Bajo,Bajo,1,Alta
+73236,DOLORES,Bajo,Bajo,1,Alta
+73268,ESPINAL,Alto,Alto,1,Alta
+73270,FALAN,Medio,Medio,1,Alta
+73275,FLANDES,Crítico,Crítico,1,Alta
+73283,FRESNO,Bajo,Bajo,1,Alta
+73319,GUAMO,Alto,Alto,1,Alta
+73347,HERVEO,Bajo,Bajo,1,Alta
+73349,HONDA,Medio,Medio,1,Alta
+73352,ICONONZO,Bajo,Bajo,1,Alta
+73408,LÉRIDA,Bajo,Bajo,1,Alta
+73411,LÍBANO,Medio,Medio,1,Alta
+73443,SAN SEBASTIÁN DE MARIQUITA,Bajo,Bajo,1,Alta
+73449,MELGAR,Medio,Medio,1,Alta
+73461,MURILLO,Bajo,Bajo,1,Alta
+73483,NATAGAIMA,Bajo,Bajo,1,Alta
+73504,ORTEGA,Medio,Medio,1,Alta
+73520,PALOCABILDO,Bajo,Bajo,1,Alta
+73547,PIEDRAS,Bajo,Bajo,1,Alta
+73555,PLANADAS,Bajo,Bajo,1,Alta
+73563,PRADO,Bajo,Bajo,1,Alta
+73585,PURIFICACIÓN,Bajo,Bajo,1,Alta
+73616,RIOBLANCO,Bajo,Bajo,1,Alta
+73622,RONCESVALLES,Bajo,Bajo,1,Alta
+73624,ROVIRA,Medio,Medio,1,Alta
+73671,SALDAÑA,Medio,Medio,1,Alta
+73675,SAN ANTONIO,Bajo,Bajo,1,Alta
+73678,SAN LUIS,Alto,Alto,1,Alta
+73686,SANTA ISABEL,Bajo,Bajo,1,Alta
+73770,SUÁREZ,Medio,Medio,1,Alta
+73854,VALLE DE SAN JUAN,Medio,Medio,1,Alta
+73861,VENADILLO,Bajo,Bajo,1,Alta
+73870,VILLAHERMOSA,Bajo,Bajo,1,Alta
+73873,VILLARRICA,Bajo,Bajo,1,Alta
+76001,SANTIAGO DE CALI,Alto,Alto,1,Alta
+76020,ALCALÁ,Bajo,Bajo,1,Alta
+76036,ANDALUCÍA,Bajo,Bajo,1,Alta
+76041,ANSERMANUEVO,Medio,Medio,1,Alta
+76054,ARGELIA,Bajo,Bajo,1,Alta
+76100,BOLÍVAR,Bajo,Bajo,1,Alta
+76109,BUENAVENTURA,Alto,Alto,1,Alta
+76111,GUADALAJARA DE BUGA,Medio,Medio,1,Alta
+76113,BUGALAGRANDE,Bajo,Bajo,1,Alta
+76122,CAICEDONIA,Medio,Medio,1,Alta
+76126,CALIMA,Bajo,Bajo,1,Alta
+76130,CANDELARIA,Bajo,Bajo,1,Alta
+76147,CARTAGO,Medio,Medio,1,Alta
+76233,DAGUA,Bajo,Bajo,1,Alta
+76243,EL ÁGUILA,Bajo,Bajo,1,Alta
+76246,EL CAIRO,Bajo,Bajo,1,Alta
+76248,EL CERRITO,Medio,Medio,1,Alta
+76250,EL DOVIO,Bajo,Bajo,1,Alta
+76275,FLORIDA,Bajo,Bajo,1,Alta
+76306,GINEBRA,Medio,Medio,1,Alta
+76318,GUACARÍ,Bajo,Bajo,1,Alta
+76364,JAMUNDÍ,Crítico,Crítico,1,Alta
+76377,LA CUMBRE,Bajo,Bajo,1,Alta
+76400,LA UNIÓN,Bajo,Bajo,1,Alta
+76403,LA VICTORIA,Medio,Medio,1,Alta
+76497,OBANDO,Bajo,Bajo,1,Alta
+76520,PALMIRA,Medio,Medio,1,Alta
+76563,PRADERA,Bajo,Bajo,1,Alta
+76606,RESTREPO,Bajo,Bajo,1,Alta
+76616,RIOFRÍO,Medio,Medio,1,Alta
+76622,ROLDANILLO,Medio,Medio,1,Alta
+76670,SAN PEDRO,Bajo,Bajo,1,Alta
+76736,SEVILLA,Bajo,Bajo,1,Alta
+76823,TORO,Bajo,Bajo,1,Alta
+76828,TRUJILLO,Bajo,Bajo,1,Alta
+76834,TULUÁ,Medio,Medio,1,Alta
+76845,ULLOA,Bajo,Bajo,1,Alta
+76863,VERSALLES,Bajo,Bajo,1,Alta
+76869,VIJES,Medio,Medio,1,Alta
+76890,YOTOCO,Alto,Alto,1,Alta
+76892,YUMBO,Crítico,Crítico,1,Alta
+76895,ZARZAL,Bajo,Bajo,1,Alta
+81001,ARAUCA,Bajo,Bajo,1,Alta
+81065,ARAUQUITA,Bajo,Bajo,1,Alta
+81220,CRAVO NORTE,Medio,Medio,1,Alta
+81300,FORTUL,Bajo,Bajo,1,Alta
+81591,PUERTO RONDÓN,Bajo,Bajo,1,Alta
+81736,SARAVENA,Medio,Medio,1,Alta
+81794,TAME,Alto,Alto,1,Alta
+85001,YOPAL,Alto,Alto,1,Alta
+85010,AGUAZUL,Medio,Medio,1,Alta
+85015,CHÁMEZA,Bajo,Bajo,1,Alta
+85125,HATO COROZAL,Alto,Alto,1,Alta
+85136,LA SALINA,Bajo,Bajo,1,Alta
+85139,MANÍ,Crítico,Crítico,1,Alta
+85162,MONTERREY,Medio,Medio,1,Alta
+85225,NUNCHÍA,Medio,Medio,1,Alta
+85230,OROCUÉ,Medio,Medio,1,Alta
+85250,PAZ DE ARIPORO,Alto,Alto,1,Alta
+85263,PORE,Medio,Medio,1,Alta
+85279,RECETOR,Medio,Medio,1,Alta
+85300,SABANALARGA,Bajo,Bajo,1,Alta
+85315,SÁCAMA,Bajo,Bajo,1,Alta
+85325,SAN LUIS DE PALENQUE,Bajo,Bajo,1,Alta
+85400,TÁMARA,Bajo,Bajo,1,Alta
+85410,TAURAMENA,Medio,Medio,1,Alta
+85430,TRINIDAD,Bajo,Bajo,1,Alta
+85440,VILLANUEVA,Medio,Medio,1,Alta
+86001,MOCOA,Crítico,Crítico,1,Alta
+86219,COLÓN,Bajo,Bajo,1,Alta
+86320,ORITO,Crítico,Crítico,1,Alta
+86568,PUERTO ASÍS,Crítico,Crítico,1,Alta
+86569,PUERTO CAICEDO,Alto,Alto,1,Alta
+86571,PUERTO GUZMÁN,Crítico,Crítico,1,Alta
+86573,PUERTO LEGUÍZAMO,Crítico,Crítico,1,Alta
+86749,SIBUNDOY,Bajo,Bajo,1,Alta
+86755,SAN FRANCISCO,Alto,Alto,1,Alta
+86757,SAN MIGUEL,Alto,Alto,1,Alta
+86760,SANTIAGO,Bajo,Bajo,1,Alta
+86865,VALLE DEL GUAMUEZ,Alto,Alto,1,Alta
+86885,VILLAGARZÓN,Alto,Alto,1,Alta
+88001,SAN ANDRÉS,Bajo,Bajo,1,Alta
+88564,PROVIDENCIA,Bajo,Bajo,1,Alta
+91001,LETICIA,Bajo,Bajo,1,Alta
+91263,EL ENCANTO,Bajo,Bajo,1,Alta
+91405,LA CHORRERA,Bajo,Bajo,1,Alta
+91407,LA PEDRERA,Bajo,Bajo,1,Alta
+91430,LA VICTORIA,Bajo,Bajo,1,Alta
+91460,MIRITÍ - PARANÁ,Bajo,Bajo,1,Alta
+91530,PUERTO ALEGRÍA,Bajo,Bajo,1,Alta
+91536,PUERTO ARICA,Bajo,Bajo,1,Alta
+91540,PUERTO NARIÑO,Bajo,Bajo,1,Alta
+91669,PUERTO SANTANDER,Medio,Medio,1,Alta
+91798,TARAPACÁ,Bajo,Bajo,1,Alta
+94001,INÍRIDA,Crítico,Crítico,1,Alta
+94343,BARRANCOMINAS,Bajo,Bajo,1,Alta
+94883,SAN FELIPE,Bajo,Bajo,1,Alta
+94884,PUERTO COLOMBIA,Bajo,Bajo,1,Alta
+94885,LA GUADALUPE,Bajo,Bajo,1,Alta
+94886,CACAHUAL,Bajo,Bajo,1,Alta
+94887,PANA PANA,Bajo,Bajo,1,Alta
+94888,MORICHAL,Bajo,Bajo,1,Alta
+95001,SAN JOSÉ DEL GUAVIARE,Crítico,Crítico,1,Alta
+95015,CALAMAR,Alto,Alto,1,Alta
+95025,EL RETORNO,Alto,Alto,1,Alta
+95200,MIRAFLORES,Medio,Medio,1,Alta
+97001,MITÚ,Medio,Medio,1,Alta
+97161,CARURÚ,Bajo,Bajo,1,Alta
+97511,PACOA,Bajo,Bajo,1,Alta
+97666,TARAIRA,Bajo,Bajo,1,Alta
+97777,PAPUNAHUA,Bajo,Bajo,1,Alta
+97889,YAVARATÉ,Bajo,Bajo,1,Alta
+99001,PUERTO CARREÑO,Alto,Alto,1,Alta
+99524,LA PRIMAVERA,Medio,Medio,1,Alta
+99624,SANTA ROSALÍA,Bajo,Bajo,1,Alta
+99773,CUMARIBO,Medio,Medio,1,Alta

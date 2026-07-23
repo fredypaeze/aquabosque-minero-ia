@@ -1,0 +1,70 @@
+{
+  "metodo": "Isolation Forest (no supervisado) sobre los 5 índices",
+  "contaminacion": 0.05,
+  "n_anomalias": 57,
+  "anomalias_en_alto_critico": 43,
+  "anomalias_no_priorizadas_por_indice": 14,
+  "top10": [
+    {
+      "municipio": "LA MACARENA",
+      "departamento": "META",
+      "nivel": "Crítico",
+      "score": 1.0
+    },
+    {
+      "municipio": "MAPIRIPÁN",
+      "departamento": "META",
+      "nivel": "Crítico",
+      "score": 0.9363
+    },
+    {
+      "municipio": "CUMARIBO",
+      "departamento": "VICHADA",
+      "nivel": "Crítico",
+      "score": 0.9346
+    },
+    {
+      "municipio": "COELLO",
+      "departamento": "TOLIMA",
+      "nivel": "Crítico",
+      "score": 0.9142
+    },
+    {
+      "municipio": "BARRANCABERMEJA",
+      "departamento": "SANTANDER",
+      "nivel": "Crítico",
+      "score": 0.8959
+    },
+    {
+      "municipio": "SAN VICENTE DEL CAGUÁN",
+      "departamento": "CAQUETÁ",
+      "nivel": "Crítico",
+      "score": 0.8906
+    },
+    {
+      "municipio": "URIBE",
+      "departamento": "META",
+      "nivel": "Crítico",
+      "score": 0.8711
+    },
+    {
+      "municipio": "CARTAGENA DEL CHAIRÁ",
+      "departamento": "CAQUETÁ",
+      "nivel": "Crítico",
+      "score": 0.8671
+    },
+    {
+      "municipio": "PUERTO RICO",
+      "departamento": "META",
+      "nivel": "Crítico",
+      "score": 0.8623
+    },
+    {
+      "municipio": "CHIRIGUANÁ",
+      "departamento": "CESAR",
+      "nivel": "Crítico",
+      "score": 0.8414
+    }
+  ],
+  "valor": "Las anomalías confirman parte de la priorización y, sobre todo, revelan combinaciones atípicas de presión que el índice ponderado no destaca — un cruce independiente y sin etiquetas."
+}

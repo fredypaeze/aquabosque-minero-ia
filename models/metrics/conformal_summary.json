@@ -1,0 +1,16 @@
+{
+  "metodo": "Split Conformal Prediction (inductivo) sobre XGBoost multiclase",
+  "confianza_objetivo": 0.9,
+  "cobertura_empirica": 0.9136,
+  "qhat": 0.5453,
+  "umbral_probabilidad": 0.4547,
+  "tamano_conjunto_medio": 1.025,
+  "n_calibracion": 281,
+  "n_evaluacion": 141,
+  "distribucion_certeza": {
+    "Alta (1 nivel)": 1117,
+    "Media (2)": 5,
+    "Baja (3-4)": 0
+  },
+  "nota": "Garantía de cobertura: el nivel real cae dentro del conjunto con probabilidad ≥ 90% (validado empíricamente en evaluación: 91.4%)."
+}
