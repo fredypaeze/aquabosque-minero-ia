@@ -125,6 +125,39 @@ def construir_corpus() -> list[dict]:
                                     for _, r in gf.sort_values("focos_7d", ascending=False).head(6).iterrows()) + ".")
         corpus.append({"id": f"resumen-dep-{dep}", "tipo": "resumen", "municipio": "", "texto": " ".join(partes)})
 
+    # --- Conocimiento de metodología (para preguntas de defensa) ---
+    conocimiento = [
+        ("conoc-sensibilidad",
+         "El índice de sensibilidad (idx_sensibilidad) mide el valor ambiental y social que hay que proteger en el "
+         "territorio: se calcula con las hectáreas de áreas protegidas del RUNAP cercanas al municipio (normalizadas), "
+         "más un incremento de 0.25 si el municipio es PDET (posconflicto). Va de 0 a 1: 0 = poco valor a proteger, "
+         "1 = mucho valor ambiental o social en juego. No mide daño; mide la importancia de lo que está expuesto."),
+        ("conoc-fuego-fuente",
+         "La señal de fuego (idx_fuego, focos_7d, frp_total) proviene de NASA FIRMS: sensores satelitales VIIRS de "
+         "375 m (satélites Suomi-NPP y NOAA-20) y MODIS de 1 km (Terra/Aqua, colección C6.1). Detecta focos de calor "
+         "activos casi en tiempo real; se cuentan por municipio en los últimos 7 días (point-in-polygon) y se suma su "
+         "potencia radiativa FRP en megavatios. Es dato abierto y se actualiza a diario."),
+        ("conoc-lectura-indices",
+         "Cómo se leen los índices: todos van de 0 a 1, donde 1 = mayor alerta y prioridad de revisión, y 0 = sin señal. "
+         "NO es '0 malo, 1 bueno': es al revés, 1 es lo más urgente. idx_minero (presión minera), idx_deforestacion "
+         "(pérdida de bosque), idx_fuego (quema reciente), idx_hidrico (agua degradada = 1 − ICA) e idx_sensibilidad "
+         "(valor a proteger) apuntan todos en la misma dirección. En idx_hidrico, un 0 puede significar 'sin estación "
+         "de medición' (sin dato observado), no 'agua sana'."),
+        ("conoc-formula",
+         "El score de riesgo se calcula como: 0.30·minero + 0.25·deforestación + 0.15·fuego + 0.20·hídrico + "
+         "0.10·sensibilidad. El nivel se asigna por cuantiles del score: Crítico ≥ percentil 95, Alto ≥ p85, "
+         "Medio ≥ p60, Bajo el resto. Es una priorización relativa, no una medición absoluta de daño."),
+        ("conoc-arquitectura",
+         "Arquitectura y software: todo en Python de código abierto. Integración territorial sin GDAL (cruce por "
+         "código DANE exacto o por centroide con distancia haversine). Modelo XGBoost multiclase con explicabilidad "
+         "SHAP; capas de rigor con Conformal Prediction e Isolation Forest (scikit-learn). Satélite profundo: "
+         "Sentinel-2 vía STAC + rasterio y un U-Net en PyTorch sobre GPU NVIDIA L40S. Asistente con LLM local "
+         "(Llama 3.3 70B / Qwen 2.5) y embeddings bge-m3. Aplicación en Streamlit + Plotly. Todo corre en la "
+         "infraestructura del Ministerio: el dato no sale del Estado."),
+    ]
+    for cid, txt in conocimiento:
+        corpus.append({"id": cid, "tipo": "conocimiento", "municipio": "", "texto": txt})
+
     for doc in DOCS:
         if not doc.exists():
             continue
