@@ -109,4 +109,24 @@ with col2:
 st.info("**Fuente:** NASA FIRMS (VIIRS SNPP + NOAA-20, MODIS C6.1) · datos abiertos · actualización diaria. "
         "**Honestidad:** señal satelital térmica NRT (proxy de deforestación/quema); la detección de deforestación "
         "por clasificación de imagen Sentinel-2 con deep learning corre en la infraestructura GPU del Ministerio (capa 2).")
+
+# --- Capa 2: Sentinel-2 + U-Net (deep learning en GPU) ---
+st.divider()
+st.markdown("### 🌳 Deforestación con Sentinel-2 · deep learning (GPU L40S)")
+st.caption("Zoom satelital profundo: imágenes Sentinel-2 (10 m) descargadas y procesadas en la GPU del Ministerio. "
+           "Prueba de capacidad sobre un frente de deforestación en La Macarena (Meta).")
+mc = st.columns(2)
+mc[0].metric("Hectáreas de pérdida detectadas", "≈ 985 ha",
+             help="Detección de cambio NDVI 2023→2026 en la ventana analizada.")
+mc[1].metric("Precisión del segmentador (IoU)", "0.77",
+             help="U-Net bosque/no-bosque validado contra ESA WorldCover.")
+_S2 = ROOT / "outputs" / "jurado_2026" / "assets"
+if (_S2 / "22_sentinel2_lamacarena.png").exists():
+    st.image(str(_S2 / "22_sentinel2_lamacarena.png"), use_container_width=True,
+             caption="Sentinel-2: antes (feb 2023) vs después (mar 2026) y pérdida de cobertura detectada (NDVI-change, ~985 ha en rojo).")
+if (_S2 / "23_unet_bosque_lamacarena.png").exists():
+    st.image(str(_S2 / "23_unet_bosque_lamacarena.png"), use_container_width=True,
+             caption="Bosque segmentado por U-Net (deep learning) sobre la imagen Sentinel-2 (IoU 0.77).")
+st.caption("🔒 Soberanía: la imagen y el procesamiento no salen de la infraestructura del Estado. "
+           "Es prueba de capacidad sobre un AOI; un detector de producción requiere más zonas y validación externa (Hansen / alertas IDEAM).")
 B.footer()
