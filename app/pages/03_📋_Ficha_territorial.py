@@ -16,6 +16,9 @@ B.sidebar_nav()
 ROOT = Path(__file__).resolve().parents[2]
 df = pd.read_csv(ROOT / "outputs" / "tables" / "predicciones.csv")
 
+_CONF = ROOT / "data" / "processed" / "conformal_municipal.csv"
+conf = pd.read_csv(_CONF) if _CONF.exists() else None
+
 st.title("📋 Ficha territorial por municipio")
 m = st.selectbox("Municipio", sorted(df.municipio + " (" + df.departamento + ")"))
 row = df[(df.municipio + " (" + df.departamento + ")") == m].iloc[0]
@@ -34,6 +37,18 @@ c[0].metric("Nivel de riesgo", row.riesgo_nivel, help=G["nivel"])
 c[1].metric("Score de priorización", f"{row.riesgo_score:.3f}", help=G["score"])
 c[2].metric("Predicción del modelo", row.riesgo_pred, help=G["prediccion"])
 c[3].metric("Confianza", f"{row.confianza:.0%}", help=G["confianza"])
+
+# Certeza calibrada (conformal prediction): garantía estadística, no un softmax suelto
+if conf is not None:
+    cr = conf[conf.cod_mpio == int(row.cod_mpio)]
+    if len(cr):
+        cr = cr.iloc[0]
+        _ci = {"Alta": "🟢", "Media": "🟡", "Baja": "🔴"}.get(cr.certeza_calibrada, "⚪")
+        st.info(
+            f"🔬 **Certeza calibrada (conformal, 90%): {_ci} {cr.certeza_calibrada}** — "
+            f"con garantía estadística del 90%, el nivel real de este municipio está dentro de "
+            f"**{{{cr.conjunto_conformal}}}**. A diferencia de la 'Confianza' (probabilidad del modelo), "
+            f"esta cobertura está *validada empíricamente* (91.4%).")
 
 izq, der = st.columns([3, 2])
 dims = ["Minero", "Deforestación", "Hídrico", "Sensibilidad"]
