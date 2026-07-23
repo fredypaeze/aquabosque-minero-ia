@@ -1,9 +1,9 @@
 {
-  "generado": "2026-07-22T19:11:47.307031+00:00",
+  "generado": "2026-07-23T03:32:07.727212+00:00",
   "ventana": "7 días (NRT)",
   "fuente": "NASA FIRMS · VIIRS (SNPP+NOAA-20) + MODIS · sin API key",
-  "total_focos_colombia": 3504,
-  "municipios_con_fuego": 296,
+  "total_focos_colombia": 3787,
+  "municipios_con_fuego": 307,
   "top10": [
     {
       "municipio": "EL PEÑÓN",
@@ -18,28 +18,28 @@
       "frp_total": 1268.55
     },
     {
+      "municipio": "RIOHACHA",
+      "departamento": "LA GUAJIRA",
+      "focos_7d": 71,
+      "frp_total": 994.62
+    },
+    {
       "municipio": "CHIMICHAGUA",
       "departamento": "CESAR",
-      "focos_7d": 72,
-      "frp_total": 842.14
+      "focos_7d": 74,
+      "frp_total": 851.85
     },
     {
       "municipio": "DIBULLA",
       "departamento": "LA GUAJIRA",
-      "focos_7d": 25,
-      "frp_total": 797.89
-    },
-    {
-      "municipio": "RIOHACHA",
-      "departamento": "LA GUAJIRA",
-      "focos_7d": 56,
-      "frp_total": 712.54
+      "focos_7d": 26,
+      "frp_total": 804.84
     },
     {
       "municipio": "PLATO",
       "departamento": "MAGDALENA",
-      "focos_7d": 76,
-      "frp_total": 668.52
+      "focos_7d": 77,
+      "frp_total": 688.68
     },
     {
       "municipio": "CUMARIBO",

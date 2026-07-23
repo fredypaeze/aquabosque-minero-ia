@@ -53,6 +53,12 @@ try:
 except Exception:
     resumen = {}
 
+# Frescura del dato: cobertura NACIONAL + refresco automático diario
+_gen = str(resumen.get("generado", ""))[:10]
+st.success(f"🛰️ **Cobertura nacional · {int(resumen.get('municipios_con_fuego', 0))} municipios con fuego activo** "
+           f"· fuente NASA FIRMS (VIIRS + MODIS) · **última actualización: {_gen}** · "
+           f"refresco automático diario.")
+
 # --- Cruce con el modelo: prioridad combinada ---
 # predicciones.csv ya trae focos_7d/idx_fuego (features del modelo): se descartan
 # para tomar la señal fresca de fuego_municipal.csv sin colisión de columnas.
