@@ -95,22 +95,24 @@ with col1:
     st.caption("El modelo los prioriza **y** el satélite confirma fuego activo ahora.")
     st.dataframe(
         prioridad_max.sort_values("frp_total", ascending=False)
-        .head(12)[["municipio", "departamento", "riesgo_nivel", "focos_7d", "frp_total"]]
+        .head(12)[["municipio", "departamento", "riesgo_nivel", "focos_7d", "frp_total", "ultima_fecha"]]
         .rename(columns={"municipio": "Municipio", "departamento": "Departamento",
-                         "riesgo_nivel": "Nivel modelo", "focos_7d": "Focos 7d", "frp_total": "FRP"}),
+                         "riesgo_nivel": "Nivel modelo", "focos_7d": "Focos 7d", "frp_total": "FRP",
+                         "ultima_fecha": "Último foco"}),
         hide_index=True, use_container_width=True,
-        column_config=cc({"Nivel modelo": "nivel", "Focos 7d": "focos", "FRP": "frp"}))
+        column_config=cc({"Nivel modelo": "nivel", "Focos 7d": "focos", "FRP": "frp", "Último foco": "ultimo_foco"}))
 with col2:
     st.markdown("#### 🆕 Actividad reciente no capturada por el índice estático")
     st.caption("Fuego intenso donde los datos históricos (2017-2021) no marcaban prioridad. "
                "El valor de la capa NRT: ver lo que el modelo estático no ve.")
     st.dataframe(
         nuevos.sort_values("frp_total", ascending=False)
-        .head(12)[["municipio", "departamento", "riesgo_nivel", "focos_7d", "frp_total"]]
+        .head(12)[["municipio", "departamento", "riesgo_nivel", "focos_7d", "frp_total", "ultima_fecha"]]
         .rename(columns={"municipio": "Municipio", "departamento": "Departamento",
-                         "riesgo_nivel": "Nivel modelo", "focos_7d": "Focos 7d", "frp_total": "FRP"}),
+                         "riesgo_nivel": "Nivel modelo", "focos_7d": "Focos 7d", "frp_total": "FRP",
+                         "ultima_fecha": "Último foco"}),
         hide_index=True, use_container_width=True,
-        column_config=cc({"Nivel modelo": "nivel", "Focos 7d": "focos", "FRP": "frp"}))
+        column_config=cc({"Nivel modelo": "nivel", "Focos 7d": "focos", "FRP": "frp", "Último foco": "ultimo_foco"}))
 
 st.info("**Fuente:** NASA FIRMS (VIIRS SNPP + NOAA-20, MODIS C6.1) · datos abiertos · actualización diaria. "
         "**Honestidad:** señal satelital térmica NRT (proxy de deforestación/quema); la detección de deforestación "

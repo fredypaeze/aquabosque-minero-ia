@@ -21,6 +21,7 @@ G = {
     "idx_sensibilidad": "Valor ambiental del territorio: áreas protegidas y municipios PDET, en escala de 0 a 1.",
     "focos": "Focos de calor activos detectados por satélite (NASA FIRMS) en los últimos 7 días.",
     "frp": "Intensidad del fuego: potencia radiativa acumulada de los focos (a mayor valor, quema más fuerte).",
+    "ultimo_foco": "Fecha de la detección de fuego más reciente en el municipio (satélite NASA FIRMS). Confirma qué tan actual es la señal.",
     "prioridad_max": "Municipios que el modelo prioriza (Alto/Crítico) y que además tienen fuego activo hoy.",
     "actividad_nueva": ("Fuego intenso en municipios que el índice histórico no marcaba: lo que el dato viejo no veía."),
     "accuracy": ("Aciertos del modelo en la prueba. Es alto por construcción (la etiqueta es una fórmula); "
