@@ -59,6 +59,67 @@ st.success(f"🛰️ **Cobertura nacional · {int(resumen.get('municipios_con_fu
            f"· fuente NASA FIRMS (VIIRS + MODIS) · **última actualización: {_gen}** · "
            f"refresco automático diario.")
 
+# ============================================================
+# HERO: los ~30.000 focos REALES sobre imagen satelital NASA (GIBS)
+# ============================================================
+VIIRS_RAW = ROOT / "data" / "raw" / "satelital" / "firms_VIIRS_SNPP_7d.csv"
+MODIS_RAW = ROOT / "data" / "raw" / "satelital" / "firms_MODIS_7d.csv"
+if VIIRS_RAW.exists() or MODIS_RAW.exists():
+    st.markdown("### 🔥 Colombia en llamas — vista desde el espacio (últimos 7 días)")
+
+    @st.cache_data
+    def _focos(mt):
+        frames = []
+        for f, src in [(VIIRS_RAW, "VIIRS"), (MODIS_RAW, "MODIS")]:
+            if f.exists():
+                d = pd.read_csv(f)[["latitude", "longitude", "frp", "confidence", "acq_date", "daynight"]].copy()
+                d["sensor"] = src
+                frames.append(d)
+        p = pd.concat(frames, ignore_index=True)
+        t = (p["frp"].clip(0, 300) / 300)
+        p["color"] = [[255, int(255 * (1 - x)), 0, 170] for x in t]
+        p["radius"] = (250 + p["frp"].clip(0, 600) * 3).astype(int)
+        return p
+    pts = _focos(VIIRS_RAW.stat().st_mtime if VIIRS_RAW.exists() else 0)
+    fecha_sat = str(pts["acq_date"].max())
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("🔥 Focos activos", f"{len(pts):,}")
+    m2.metric("Potencia radiativa total", f"{pts['frp'].sum():,.0f} MW")
+    m3.metric("Foco más intenso", f"{pts['frp'].max():,.0f} MW")
+    m4.metric("Sensores NASA", "VIIRS 375 m + MODIS")
+
+    vista = st.radio("Vista del mapa", ["🔥 Puntos de fuego", "🌡️ Mapa de calor"],
+                     horizontal=True, label_visibility="collapsed")
+
+    # Imagen satelital REAL de la NASA (GIBS true-color) como capa raster — abierta, sin token
+    # VIIRS SNPP: barrido ancho (~3.060 km) → sin la franja sin-dato de MODIS, y coherente con los focos VIIRS
+    gibs_url = ("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/"
+                "VIIRS_SNPP_CorrectedReflectance_TrueColor/default/" + fecha_sat +
+                "/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg")
+    gibs_layer = {"below": "traces", "sourcetype": "raster",
+                  "sourceattribution": "NASA GIBS / EOSDIS", "source": [gibs_url]}
+    center = {"lat": 3.8, "lon": -73.5}
+    if "Puntos" in vista:
+        fig = px.scatter_mapbox(
+            pts, lat="latitude", lon="longitude", color="frp",
+            color_continuous_scale="YlOrRd", range_color=(0, float(pts["frp"].quantile(0.9))),
+            hover_data={"frp": ":.0f", "acq_date": True, "sensor": True, "latitude": False, "longitude": False},
+            zoom=4.4, center=center, height=580)
+        fig.update_traces(marker={"size": 4, "opacity": 0.8})
+    else:
+        fig = px.density_mapbox(
+            pts, lat="latitude", lon="longitude", z="frp", radius=7,
+            color_continuous_scale="YlOrRd", zoom=4.4, center=center, height=580)
+    fig.update_layout(mapbox_style="carto-darkmatter", mapbox_layers=[gibs_layer],
+                      margin=dict(l=0, r=0, t=0, b=0),
+                      coloraxis_colorbar=dict(title="FRP (MW)"))
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.caption(f"Base: **NASA GIBS · VIIRS SNPP true-color** ({fecha_sat}) — imagen satelital real, dato abierto sin token. "
+               f"Focos: **NASA FIRMS** (VIIRS+MODIS), cada punto es un fuego térmico real de los últimos 7 días; "
+               f"color y tamaño por potencia radiativa (FRP). Se ve la frontera de quema y deforestación en vivo.")
+    st.divider()
+
 # --- Cruce con el modelo: prioridad combinada ---
 # predicciones.csv ya trae focos_7d/idx_fuego (features del modelo): se descartan
 # para tomar la señal fresca de fuego_municipal.csv sin colisión de columnas.
