@@ -1,0 +1,149 @@
+{
+  "velocidad": {
+    "n_municipios": 70,
+    "acelerando": 6,
+    "top5_aceleracion": [
+      {
+        "municipio": "Mapiripan",
+        "departamento": "Meta",
+        "aceleracion_ha_ano": 4346.0,
+        "defo_ultimo_ano_ha": 10623.0
+      },
+      {
+        "municipio": "Puerto Santander",
+        "departamento": "Amazonas",
+        "aceleracion_ha_ano": 793.0,
+        "defo_ultimo_ano_ha": 59.0
+      },
+      {
+        "municipio": "Miraflores",
+        "departamento": "Guaviare",
+        "aceleracion_ha_ano": 688.0,
+        "defo_ultimo_ano_ha": 1857.0
+      },
+      {
+        "municipio": "Orito",
+        "departamento": "Putumayo",
+        "aceleracion_ha_ano": 612.0,
+        "defo_ultimo_ano_ha": 1050.0
+      },
+      {
+        "municipio": "Puerto Asis",
+        "departamento": "Putumayo",
+        "aceleracion_ha_ano": 366.0,
+        "defo_ultimo_ano_ha": 1571.0
+      }
+    ],
+    "nota": "Tendencia y aceleración de la deforestación 2017-2021. 'Acelerando' = +300 ha/año o más de aumento."
+  },
+  "mineria_ilegal": {
+    "n_alertas": 19,
+    "n_alta_presion": 284,
+    "top5": [
+      {
+        "municipio": "CUMARIBO",
+        "departamento": "VICHADA",
+        "presion_extractiva": 0.764,
+        "formalizacion": 0.252,
+        "brecha_formalizacion": 0.512,
+        "riesgo_nivel": "Crítico"
+      },
+      {
+        "municipio": "LA MACARENA",
+        "departamento": "META",
+        "presion_extractiva": 0.785,
+        "formalizacion": 0.286,
+        "brecha_formalizacion": 0.499,
+        "riesgo_nivel": "Crítico"
+      },
+      {
+        "municipio": "CARTAGENA DEL CHAIRÁ",
+        "departamento": "CAQUETÁ",
+        "presion_extractiva": 0.658,
+        "formalizacion": 0.171,
+        "brecha_formalizacion": 0.487,
+        "riesgo_nivel": "Crítico"
+      },
+      {
+        "municipio": "MAPIRIPÁN",
+        "departamento": "META",
+        "presion_extractiva": 0.699,
+        "formalizacion": 0.232,
+        "brecha_formalizacion": 0.467,
+        "riesgo_nivel": "Crítico"
+      },
+      {
+        "municipio": "VISTAHERMOSA",
+        "departamento": "META",
+        "presion_extractiva": 0.739,
+        "formalizacion": 0.315,
+        "brecha_formalizacion": 0.424,
+        "riesgo_nivel": "Crítico"
+      }
+    ],
+    "nota": "Brecha de formalización: presión extractiva alta (p75+) con formalización baja (p25-) en RUCOM/ANM/títulos → posible actividad informal/ilegal; prioridad de verificación en terreno."
+  },
+  "anomalias": {
+    "n_anomalias": 57,
+    "ocultas_para_indice": 14,
+    "top_ocultas": [
+      {
+        "municipio": "CRAVO NORTE",
+        "departamento": "ARAUCA",
+        "riesgo_nivel": "Medio",
+        "factor_dominante": "estrés hídrico",
+        "explicacion": "estrés hídrico (p96); focos de calor (p94)"
+      },
+      {
+        "municipio": "FUNZA",
+        "departamento": "CUNDINAMARCA",
+        "riesgo_nivel": "Bajo",
+        "factor_dominante": "estrés hídrico",
+        "explicacion": "estrés hídrico (p99)"
+      },
+      {
+        "municipio": "GIGANTE",
+        "departamento": "HUILA",
+        "riesgo_nivel": "Bajo",
+        "factor_dominante": "estrés hídrico",
+        "explicacion": "estrés hídrico (p99); sensibilidad ambiental (p90)"
+      },
+      {
+        "municipio": "ÚTICA",
+        "departamento": "CUNDINAMARCA",
+        "riesgo_nivel": "Medio",
+        "factor_dominante": "estrés hídrico",
+        "explicacion": "estrés hídrico (p100)"
+      },
+      {
+        "municipio": "GAMARRA",
+        "departamento": "CESAR",
+        "riesgo_nivel": "Medio",
+        "factor_dominante": "estrés hídrico",
+        "explicacion": "estrés hídrico (p98); focos de calor (p89)"
+      },
+      {
+        "municipio": "SIBATÉ",
+        "departamento": "CUNDINAMARCA",
+        "riesgo_nivel": "Medio",
+        "factor_dominante": "estrés hídrico",
+        "explicacion": "estrés hídrico (p99)"
+      },
+      {
+        "municipio": "EL BANCO",
+        "departamento": "MAGDALENA",
+        "riesgo_nivel": "Medio",
+        "factor_dominante": "estrés hídrico",
+        "explicacion": "estrés hídrico (p96); focos de calor (p96)"
+      },
+      {
+        "municipio": "MORALES",
+        "departamento": "CAUCA",
+        "riesgo_nivel": "Medio",
+        "factor_dominante": "estrés hídrico",
+        "explicacion": "estrés hídrico (p99)"
+      }
+    ],
+    "nota": "Anomalías que el índice de riesgo NO prioriza (nivel Bajo/Medio) pero el modelo no supervisado sí detecta, con su factor explicativo."
+  }
+}

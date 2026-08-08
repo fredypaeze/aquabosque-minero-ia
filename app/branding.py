@@ -166,6 +166,7 @@ PAGES = [
     ("pages/04_🔬_Explicabilidad.py", "Explicabilidad", "🔬"),
     ("pages/05_📂_Datos_abiertos.py", "Datos abiertos", "📂"),
     ("pages/07_🛰️_Monitoreo_satelital.py", "Monitoreo satelital", "🛰️"),
+    ("pages/09_🚀_Alertas_anticipatorias.py", "Alertas anticipatorias", "🚀"),
     ("pages/08_🤖_Asistente.py", "Asistente IA", "🤖"),
     ("pages/06_📖_Metodología.py", "Metodología", "📖"),
 ]
