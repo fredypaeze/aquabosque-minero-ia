@@ -1,13 +1,21 @@
-localidad,lat,lon,score_fuego_estructural,score_agua,score_remocion,score_operativo,indice_bogota_base,indice_bogota_dinamico,indice_presion_ecoterritorial_bogota,nivel,driver_principal,incidentes_7d,lluvia_72h_mm
-Usme,4.477,-74.114,0.92,0.48,0.76,0.68,0.74,0.68,0.72,Crítico,Incendio forestal y borde urbano-rural,4,62
-Ciudad Bolívar,4.506,-74.154,0.71,0.57,0.88,0.64,0.73,0.64,0.70,Crítico,Remoción en masa y ladera,5,58
-San Cristóbal,4.546,-74.084,0.74,0.46,0.84,0.61,0.71,0.61,0.68,Alto,Remoción e interfaz cerros-ciudad,3,54
-Santa Fe,4.598,-74.069,0.69,0.52,0.72,0.56,0.66,0.56,0.62,Alto,Cerros orientales y quebradas,2,49
-Usaquén,4.711,-74.031,0.58,0.44,0.63,0.47,0.57,0.47,0.54,Medio,Borde norte y presión sobre cerros,1,38
-Suba,4.743,-74.085,0.34,0.81,0.29,0.52,0.48,0.52,0.49,Medio,Humedales y anegamiento,2,57
-Bosa,4.624,-74.195,0.21,0.86,0.18,0.59,0.42,0.59,0.48,Medio,Río Bogotá y anegamiento,3,64
-Kennedy,4.627,-74.146,0.19,0.79,0.16,0.55,0.39,0.55,0.45,Medio,Corredor hídrico y drenaje urbano,2,61
-Engativá,4.701,-74.113,0.17,0.74,0.14,0.44,0.35,0.44,0.38,Bajo,Presión hídrica localizada,1,42
-Chapinero,4.648,-74.057,0.46,0.31,0.58,0.36,0.47,0.36,0.43,Bajo,Ladera y quebradas urbanas,1,33
-Rafael Uribe Uribe,4.565,-74.112,0.41,0.38,0.63,0.46,0.49,0.46,0.48,Medio,Ladera urbana y drenaje,2,45
-Sumapaz,4.317,-74.205,0.83,0.37,0.51,0.34,0.58,0.34,0.50,Medio,Cobertura natural y fuego rural,0,29
+codigo,localidad,score_fuego_estructural,score_agua,score_remocion,score_operativo,indice_bogota_base,indice_bogota_dinamico,indice_presion_ecoterritorial_bogota,nivel,driver_principal,corredor_estrategico,incidentes_7d,lluvia_72h_mm,resumen
+01,Usaquén,0.58,0.44,0.63,0.47,0.57,0.47,0.54,Medio,Borde norte y presión sobre cerros,Corredor Cerros Norte,1,38,"Transición entre expansión urbana y ladera con presión moderada sobre quebradas y borde ecológico."
+02,Chapinero,0.46,0.31,0.58,0.36,0.47,0.36,0.43,Bajo,Ladera y quebradas urbanas,Corredor Cerros Centro,1,33,"Localidad compacta con ladera urbana sensible y drenajes cortos que responden rápido a eventos intensos."
+03,Santa Fe,0.69,0.52,0.72,0.56,0.66,0.56,0.62,Alto,Cerros orientales y quebradas,Corredor Cerros Centro,2,49,"Combina proximidad a cerros, quebradas de montaña y exposición a eventos de ladera en interfaz centro-oriente."
+04,San Cristóbal,0.74,0.46,0.84,0.61,0.71,0.61,0.68,Alto,Remoción e interfaz cerros-ciudad,Corredor Cerros Surorientales,3,54,"Ladera urbana densa con historial operativo alto y sensibilidad marcada en taludes y drenajes."
+05,Usme,0.92,0.48,0.76,0.68,0.74,0.68,0.72,Crítico,Incendio forestal y borde urbano-rural,Corredor Borde Sur y Sumapaz,4,62,"Mayor presión combinada por borde rural, vegetación susceptible, eventos recientes y lluvia acumulada."
+06,Tunjuelito,0.28,0.66,0.34,0.53,0.41,0.53,0.45,Medio,Canalización y drenaje urbano,Corredor Tunjuelo,2,59,"Localidad altamente urbana con señal relevante en drenaje y conectividad al corredor del Tunjuelo."
+07,Bosa,0.21,0.86,0.18,0.59,0.42,0.59,0.48,Medio,Río Bogotá y anegamiento,Corredor Río Bogotá,3,64,"Predomina el componente hídrico por planicie aluvial, encharcamiento y afectación asociada a lluvias fuertes."
+08,Kennedy,0.19,0.79,0.16,0.55,0.39,0.55,0.45,Medio,Corredor hídrico y drenaje urbano,Corredor Fucha-Tintal,2,61,"Alta exposición operativa por drenaje urbano e infraestructura crítica sobre sectores de anegamiento."
+09,Fontibón,0.17,0.73,0.12,0.49,0.35,0.49,0.40,Bajo,Anegamiento y borde aeroportuario,Corredor Río Bogotá,1,51,"Señal dominada por agua superficial y corredores de drenaje con poca presión de ladera o fuego."
+10,Engativá,0.17,0.74,0.14,0.44,0.35,0.44,0.38,Bajo,Presión hídrica localizada,Corredor Salitre-Jaboque,1,42,"Zona predominantemente urbana donde resaltan humedales remanentes y episodios locales de anegamiento."
+11,Suba,0.34,0.81,0.29,0.52,0.48,0.52,0.49,Medio,Humedales y anegamiento,Corredor Humedales Noroccidente,2,57,"La cercanía a humedales y cauces hace que la presión hídrica pese más que fuego o remoción."
+12,Barrios Unidos,0.12,0.28,0.10,0.27,0.16,0.27,0.20,Bajo,Drenaje urbano puntual,Corredor Centro Occidente,0,26,"Localidad densa con señal estructural baja y afectación más asociada a drenaje urbano puntual."
+13,Teusaquillo,0.11,0.33,0.08,0.24,0.16,0.24,0.19,Bajo,Drenaje urbano y arbolado,Corredor Centro Occidente,0,24,"Exposición baja con sensibilidad dispersa en espacio público verde y drenajes secundarios."
+14,Los Mártires,0.08,0.21,0.07,0.23,0.12,0.23,0.16,Bajo,Entorno urbano consolidado,Corredor Centro Histórico,0,22,"Núcleo urbano consolidado con baja señal eco-territorial estructural en comparación con bordes y laderas."
+15,Antonio Nariño,0.09,0.26,0.09,0.25,0.14,0.25,0.18,Bajo,Drenaje y densidad urbana,Corredor Centro Sur,0,25,"Predomina un perfil urbano compacto con exposición localizada en lluvias intensas y drenaje."
+16,Puente Aranda,0.07,0.37,0.06,0.31,0.15,0.31,0.21,Bajo,Canales y drenaje industrial,Corredor Fucha Industrial,1,34,"La señal principal proviene de canales y superficie impermeable sobre un entorno altamente transformado."
+17,La Candelaria,0.26,0.24,0.42,0.28,0.31,0.28,0.30,Bajo,Ladera patrimonial,Corredor Centro Histórico,0,27,"Pequeña pero sensible por pie de monte, escorrentía y condicionantes geomorfológicos del centro histórico."
+18,Rafael Uribe Uribe,0.41,0.38,0.63,0.46,0.49,0.46,0.48,Medio,Ladera urbana y drenaje,Corredor Suroriente,2,45,"Conecta presión de ladera con lluvia reciente y drenajes que aceleran afectación en barrios de pendiente."
+19,Ciudad Bolívar,0.71,0.57,0.88,0.64,0.73,0.64,0.70,Crítico,Remoción en masa y ladera,Corredor Laderas del Sur,5,58,"El perfil más crítico junto con Usme por pendientes, informalidad de borde y recurrencia operativa alta."
+20,Sumapaz,0.83,0.37,0.51,0.34,0.58,0.34,0.50,Medio,Cobertura natural y fuego rural,Corredor Páramo y ruralidad,0,29,"Gran relevancia ecológica y alta sensibilidad al fuego rural, aunque con menor presión operativa urbana inmediata."
