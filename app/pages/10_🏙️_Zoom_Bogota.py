@@ -77,8 +77,10 @@ B.source_badges([
 if df["origen_dataset"].iloc[0] == "real":
     B.note(
         "<b>Estado actual.</b> Esta pantalla ya usa la <b>geometría oficial de localidades de Bogotá</b> "
-        "y una <b>primera capa real</b> para `Agua y anegamiento`, derivada de cuerpos de agua y "
-        "humedales oficiales. Los demás ejes siguen siendo demostrativos mientras se conectan más capas."
+        "y <b>tres capas reales</b>: `Agua y anegamiento` (cuerpos de agua + humedales), "
+        "`Cerros y fuego` (histórico de áreas afectadas por evento forestal) y "
+        "`Señal operativa` (pluviómetros SAB / IDIGER en vivo). "
+        "El eje de `Ladera y remoción` sigue demostrativo mientras se conecta la siguiente fuente oficial."
     )
 else:
     B.note(
@@ -93,12 +95,16 @@ medio = int((df.nivel == "Medio").sum())
 mm72 = int(df.lluvia_72h_mm.max())
 water_real = "score_agua_real" in df.columns
 top_water = int(df["water_feature_count"].sum()) if "water_feature_count" in df.columns else 0
+fire_real = "score_fuego_real" in df.columns
+fire_events = int(df["fire_feature_count"].sum()) if "fire_feature_count" in df.columns else 0
+sab_real = "score_operativo_real" in df.columns
+sab_stations = int(df["sab_estaciones_activas"].sum()) if "sab_estaciones_activas" in df.columns else 0
 
 B.kpis([
     {"lab": "Localidades oficiales", "val": f"{len(df)}", "foot": "cobertura Bogotá D.C.", "acc": B.AGUA},
     {"lab": "Criticas", "val": crit, "foot": "accion inmediata", "acc": B.RIESGO["Crítico"]},
-    {"lab": "Altas", "val": alto, "foot": "seguimiento reforzado", "acc": B.RIESGO["Alto"]},
-    {"lab": "Cuerpos de agua", "val": f"{top_water:,}".replace(",", "."), "foot": "capa real agregada" if water_real else "aun no integrado", "acc": B.AGUA2},
+    {"lab": "Eventos forestales", "val": f"{fire_events:,}".replace(",", "."), "foot": "capa real Bomberos" if fire_real else "aun no integrado", "acc": B.RIESGO["Alto"]},
+    {"lab": "Estaciones SAB", "val": sab_stations, "foot": "pluviómetros visibles" if sab_real else "aun no integrado", "acc": B.AGUA2},
 ])
 
 st.caption(f"Dataset activo: `{data_name}`")
@@ -186,6 +192,10 @@ with tab1:
             ]
         if "water_feature_count" in d.columns:
             rank_cols.extend(["water_feature_count", "humedal_feature_count"])
+        if "fire_feature_count" in d.columns:
+            rank_cols.append("fire_feature_count")
+        if "sab_lluvia_max_mm" in d.columns:
+            rank_cols.append("sab_lluvia_max_mm")
         st.dataframe(
             d[rank_cols].rename(columns={
                 "localidad": "Localidad",
@@ -197,6 +207,8 @@ with tab1:
                 "lluvia_72h_mm": "Lluvia 72h (mm)",
                 "water_feature_count": "Cuerpos de agua",
                 "humedal_feature_count": "Humedales",
+                "fire_feature_count": "Eventos forestales",
+                "sab_lluvia_max_mm": "SAB lluvia hoy (mm)",
             }),
             hide_index=True,
             use_container_width=True,
@@ -241,6 +253,12 @@ with tab2:
             w2.metric("Humedales", int(row.get("humedal_feature_count", 0)))
             w3.metric("Score agua real", f"{row['score_agua']:.2f}")
 
+        if "fire_feature_count" in row.index or "sab_estaciones_activas" in row.index:
+            z1, z2, z3 = st.columns(3)
+            z1.metric("Eventos forestales", int(row.get("fire_feature_count", 0)))
+            z2.metric("SAB lluvia hoy", f"{float(row.get('sab_lluvia_max_mm', 0)):.1f} mm")
+            z3.metric("Estaciones SAB", int(row.get("sab_estaciones_activas", 0)))
+
         bars = px.bar(
             pd.DataFrame({
                 "Eje": ["Cerros y fuego", "Agua y anegamiento", "Ladera y remocion", "Señal operativa"],
@@ -265,6 +283,10 @@ with tab2:
         st.write(row["resumen"])
         if "fuente_agua_real" in row.index:
             st.caption(f"Fuente activa en agua: {row['fuente_agua_real']}")
+        if "fuente_fuego_real" in row.index:
+            st.caption(f"Fuente activa en fuego: {row['fuente_fuego_real']}")
+        if "fuente_operativa_real" in row.index:
+            st.caption(f"Fuente activa en señal operativa: {row['fuente_operativa_real']}")
 
     with f2:
         radar = go.Figure()
@@ -343,10 +365,12 @@ with tab3:
     )
 
     if "score_agua_real" in df.columns:
-        st.markdown("### Primera capa real ya integrada")
+        st.markdown("### Capas reales ya integradas")
         st.write(
-            "El eje `Agua y anegamiento` ya no depende solo del demo. Se recalcula con datos oficiales de "
-            "cuerpos de agua y cobertura vegetal en humedales, agregados por localidad."
+            "El tablero ya no depende solo del demo. Hoy recalcula tres ejes con fuentes oficiales: "
+            "`Agua y anegamiento` con cuerpos de agua y humedales, "
+            "`Cerros y fuego` con histórico de áreas afectadas por evento forestal, y "
+            "`Señal operativa` con lluvia diaria en vivo del SAB / IDIGER."
         )
 
 B.footer()
