@@ -1,0 +1,13 @@
+localidad,lat,lon,score_fuego_estructural,score_agua,score_remocion,score_operativo,indice_bogota_base,indice_bogota_dinamico,indice_presion_ecoterritorial_bogota,nivel,driver_principal,incidentes_7d,lluvia_72h_mm
+Usme,4.477,-74.114,0.92,0.48,0.76,0.68,0.74,0.68,0.72,Crítico,Incendio forestal y borde urbano-rural,4,62
+Ciudad Bolívar,4.506,-74.154,0.71,0.57,0.88,0.64,0.73,0.64,0.70,Crítico,Remoción en masa y ladera,5,58
+San Cristóbal,4.546,-74.084,0.74,0.46,0.84,0.61,0.71,0.61,0.68,Alto,Remoción e interfaz cerros-ciudad,3,54
+Santa Fe,4.598,-74.069,0.69,0.52,0.72,0.56,0.66,0.56,0.62,Alto,Cerros orientales y quebradas,2,49
+Usaquén,4.711,-74.031,0.58,0.44,0.63,0.47,0.57,0.47,0.54,Medio,Borde norte y presión sobre cerros,1,38
+Suba,4.743,-74.085,0.34,0.81,0.29,0.52,0.48,0.52,0.49,Medio,Humedales y anegamiento,2,57
+Bosa,4.624,-74.195,0.21,0.86,0.18,0.59,0.42,0.59,0.48,Medio,Río Bogotá y anegamiento,3,64
+Kennedy,4.627,-74.146,0.19,0.79,0.16,0.55,0.39,0.55,0.45,Medio,Corredor hídrico y drenaje urbano,2,61
+Engativá,4.701,-74.113,0.17,0.74,0.14,0.44,0.35,0.44,0.38,Bajo,Presión hídrica localizada,1,42
+Chapinero,4.648,-74.057,0.46,0.31,0.58,0.36,0.47,0.36,0.43,Bajo,Ladera y quebradas urbanas,1,33
+Rafael Uribe Uribe,4.565,-74.112,0.41,0.38,0.63,0.46,0.49,0.46,0.48,Medio,Ladera urbana y drenaje,2,45
+Sumapaz,4.317,-74.205,0.83,0.37,0.51,0.34,0.58,0.34,0.50,Medio,Cobertura natural y fuego rural,0,29
