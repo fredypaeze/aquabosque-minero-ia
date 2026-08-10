@@ -16,7 +16,8 @@ B.inject_css()
 B.sidebar_nav()
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "data" / "processed" / "bogota_zoom_demo.csv"
+DATA_REAL = ROOT / "data" / "processed" / "bogota_zoom.csv"
+DATA_DEMO = ROOT / "data" / "processed" / "bogota_zoom_demo.csv"
 GEO = ROOT / "data" / "processed" / "bogota_localidades.geojson"
 ORDEN = ["Crítico", "Alto", "Medio", "Bajo"]
 EJES = {
@@ -40,8 +41,10 @@ CORREDORES = [
 
 @st.cache_data
 def cargar():
-    df = pd.read_csv(DATA, dtype={"codigo": str})
-    return df.sort_values("indice_presion_ecoterritorial_bogota", ascending=False)
+    path = DATA_REAL if DATA_REAL.exists() else DATA_DEMO
+    df = pd.read_csv(path, dtype={"codigo": str})
+    df["origen_dataset"] = "real" if path == DATA_REAL else "demo"
+    return df.sort_values("indice_presion_ecoterritorial_bogota", ascending=False), path.name
 
 
 @st.cache_data
@@ -50,7 +53,7 @@ def cargar_geojson(mtime):
         return json.load(f)
 
 
-df = cargar()
+df, data_name = cargar()
 geo = cargar_geojson(GEO.stat().st_mtime)
 
 B.hero(
@@ -64,28 +67,41 @@ B.hero(
 
 B.source_badges([
     "Datos Abiertos Bogotá · Localidades oficiales",
+    "Datos Abiertos Bogotá · Cuerpo de agua",
+    "Datos Abiertos Bogotá · Humedales",
     "SIRE / IDIGER",
     "SAB Bogotá",
     "AquaBosque · estructura de score",
 ])
 
-B.note(
-    "<b>Estado actual.</b> Esta pantalla ya usa la <b>geometría oficial de localidades de Bogotá</b>. "
-    "Los puntajes todavía son <b>ilustrativos</b> y muestran la experiencia objetivo; la siguiente fase "
-    "es sustituirlos por un dataset real validado contra SIRE, SAB e IDIGER."
-)
+if df["origen_dataset"].iloc[0] == "real":
+    B.note(
+        "<b>Estado actual.</b> Esta pantalla ya usa la <b>geometría oficial de localidades de Bogotá</b> "
+        "y una <b>primera capa real</b> para `Agua y anegamiento`, derivada de cuerpos de agua y "
+        "humedales oficiales. Los demás ejes siguen siendo demostrativos mientras se conectan más capas."
+    )
+else:
+    B.note(
+        "<b>Estado actual.</b> Esta pantalla ya usa la <b>geometría oficial de localidades de Bogotá</b>. "
+        "Los puntajes todavía son <b>ilustrativos</b> y muestran la experiencia objetivo; la siguiente fase "
+        "es sustituirlos por un dataset real validado contra SIRE, SAB e IDIGER."
+    )
 
 crit = int((df.nivel == "Crítico").sum())
 alto = int((df.nivel == "Alto").sum())
 medio = int((df.nivel == "Medio").sum())
 mm72 = int(df.lluvia_72h_mm.max())
+water_real = "score_agua_real" in df.columns
+top_water = int(df["water_feature_count"].sum()) if "water_feature_count" in df.columns else 0
 
 B.kpis([
     {"lab": "Localidades oficiales", "val": f"{len(df)}", "foot": "cobertura Bogotá D.C.", "acc": B.AGUA},
     {"lab": "Criticas", "val": crit, "foot": "accion inmediata", "acc": B.RIESGO["Crítico"]},
     {"lab": "Altas", "val": alto, "foot": "seguimiento reforzado", "acc": B.RIESGO["Alto"]},
-    {"lab": "Pico lluvia 72h", "val": f"{mm72} mm", "foot": "señal operativa demo", "acc": B.AGUA2},
+    {"lab": "Cuerpos de agua", "val": f"{top_water:,}".replace(",", "."), "foot": "capa real agregada" if water_real else "aun no integrado", "acc": B.AGUA2},
 ])
+
+st.caption(f"Dataset activo: `{data_name}`")
 
 tab1, tab2, tab3 = st.tabs(["Mapa estrategico", "Ficha territorial", "Integracion real"])
 
@@ -159,8 +175,7 @@ with tab1:
     i1, i2 = st.columns([1.1, 1])
     with i1:
         st.markdown("### Ranking ejecutivo")
-        st.dataframe(
-            d[[
+        rank_cols = [
                 "localidad",
                 "nivel",
                 "indice_presion_ecoterritorial_bogota",
@@ -168,8 +183,11 @@ with tab1:
                 "corredor_estrategico",
                 "incidentes_7d",
                 "lluvia_72h_mm",
-            ]]
-            .rename(columns={
+            ]
+        if "water_feature_count" in d.columns:
+            rank_cols.extend(["water_feature_count", "humedal_feature_count"])
+        st.dataframe(
+            d[rank_cols].rename(columns={
                 "localidad": "Localidad",
                 "nivel": "Nivel",
                 "indice_presion_ecoterritorial_bogota": "Indice total",
@@ -177,6 +195,8 @@ with tab1:
                 "corredor_estrategico": "Corredor",
                 "incidentes_7d": "Incidentes 7d",
                 "lluvia_72h_mm": "Lluvia 72h (mm)",
+                "water_feature_count": "Cuerpos de agua",
+                "humedal_feature_count": "Humedales",
             }),
             hide_index=True,
             use_container_width=True,
@@ -215,6 +235,12 @@ with tab2:
         m3.metric("Incidentes 7d", int(row["incidentes_7d"]))
         m4.metric("Lluvia 72h", f"{int(row['lluvia_72h_mm'])} mm")
 
+        if "water_feature_count" in row.index:
+            w1, w2, w3 = st.columns(3)
+            w1.metric("Cuerpos de agua", int(row["water_feature_count"]))
+            w2.metric("Humedales", int(row.get("humedal_feature_count", 0)))
+            w3.metric("Score agua real", f"{row['score_agua']:.2f}")
+
         bars = px.bar(
             pd.DataFrame({
                 "Eje": ["Cerros y fuego", "Agua y anegamiento", "Ladera y remocion", "Señal operativa"],
@@ -237,6 +263,8 @@ with tab2:
 
         st.markdown("### Resumen ejecutivo")
         st.write(row["resumen"])
+        if "fuente_agua_real" in row.index:
+            st.caption(f"Fuente activa en agua: {row['fuente_agua_real']}")
 
     with f2:
         radar = go.Figure()
@@ -313,5 +341,12 @@ with tab3:
         "A nivel nacional, AquaBosque prioriza municipios. En Bogota, el motor se adapta a escala intraurbana "
         "para leer presion eco-territorial con mejor resolucion, sin forzar una narrativa de mineria donde no aplica."
     )
+
+    if "score_agua_real" in df.columns:
+        st.markdown("### Primera capa real ya integrada")
+        st.write(
+            "El eje `Agua y anegamiento` ya no depende solo del demo. Se recalcula con datos oficiales de "
+            "cuerpos de agua y cobertura vegetal en humedales, agregados por localidad."
+        )
 
 B.footer()
