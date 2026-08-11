@@ -1,0 +1,10 @@
+{
+  "finding": "F3 CRS — método afín de bounding-box es inválido",
+  "layer": "amenaza_mm_urbano (POT) → localidad",
+  "affine_method": "normalización lineal por eje del bbox origen → bbox localidades (scripts/11_prepare_bogota_remocion.py)",
+  "true_crs_identified": "sistema local ciudad de Bogotá (tmerc, origen Observatorio); ~96.5% de centroides caen dentro de Bogotá al reproyectar con pyproj",
+  "affine_vs_crs_error_m": {"n": 1500, "median": 57496, "p90": 69540, "max": 75088},
+  "impact": "score_remocion (feature dominante y núcleo del índice territorial) asignada a localidades con ~57 km de error mediano → espacialmente inválida",
+  "status": "GEOSPATIAL_INTEGRITY = FAIL",
+  "remediation": "reconstruir score territorial con CRS correcto (refinar parámetros de origen a la definición autoritativa IDECA) o usar la geocodificación por localidad de la Bitácora IDIGER (autoritativa, sin CRS) para un índice descriptivo"
+}

@@ -24,3 +24,6 @@ scripts/guion_expositor.py
 
 # Bronze grande Bogotá (reproducible via scripts/_bogota_sources.py)
 data/raw/bogota/bitacora_emergencias.csv
+
+# POT bronze (grande; reproducible por URL+hash, ver source registry)
+data/raw/bogota/pot/
