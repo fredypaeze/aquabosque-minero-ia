@@ -1,0 +1,73 @@
+{
+  "product_version": "1.0.0-rc1",
+  "target": "evento remoción/inundación en [t+1,t+3] (estrictamente futuro)",
+  "n_gold": 24300,
+  "n_train": 14540,
+  "n_calib": 2380,
+  "n_test": 7260,
+  "prev_train": 0.0587,
+  "prev_calib": 0.0798,
+  "prev_test": 0.0627,
+  "pos_train": 853,
+  "pos_calib": 190,
+  "pos_test": 455,
+  "eventos_incluidos": 3929,
+  "estaciones_mapeadas": "44/70",
+  "fechas": {
+    "train": [
+      "2021-09-01",
+      "2023-08-28"
+    ],
+    "calib": [
+      "2023-09-01",
+      "2023-12-28"
+    ],
+    "test": [
+      "2024-01-01",
+      "2024-12-28"
+    ]
+  },
+  "modelo_primario_sin_monotonia": {
+    "roc_auc": 0.735,
+    "pr_auc": 0.163,
+    "pr_auc_baseline": 0.063,
+    "brier": 0.1144,
+    "brier_calibrado": 0.0567,
+    "brier_trivial_prevtrain": 0.0588,
+    "brier_skill_score": 0.035,
+    "roc_auc_ci": [
+      0.672,
+      0.78
+    ],
+    "pr_auc_ci": [
+      0.1,
+      0.185
+    ]
+  },
+  "thresholds_desde_calib": {
+    "prev_calib": 0.0798,
+    "p_naranja": 0.1996,
+    "p_rojo": 0.2794,
+    "op_naranja": {
+      "thr": 0.1996,
+      "precision": 0.244,
+      "recall": 0.174,
+      "specificity": 0.964,
+      "fp": 245,
+      "fn": 376,
+      "tp": 79,
+      "alertas": 324
+    },
+    "op_rojo": {
+      "thr": 0.2794,
+      "precision": 0.0,
+      "recall": 0.0,
+      "specificity": 1.0,
+      "fp": 0,
+      "fn": 455,
+      "tp": 0,
+      "alertas": 0
+    }
+  },
+  "seed": 42
+}

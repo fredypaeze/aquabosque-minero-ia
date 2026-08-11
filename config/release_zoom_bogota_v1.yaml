@@ -1,0 +1,120 @@
+# =============================================================================
+# CONTRATO Y CONFIGURACIÓN — Zoom Bogotá V1 (Release Candidate)
+# Autoridad: este archivo + el código + los datos. La documentación los describe.
+# Ninguna cifra de comportamiento va hardcodeada en el código: vive aquí.
+# =============================================================================
+
+contract:
+  PRODUCT_NAME: "AquaBosque · Zoom Bogotá — Alerta temprana por lluvia"
+  PRODUCT_VERSION: "1.0.0-rc1"
+  PROBLEM: >
+    Estimar la probabilidad de una emergencia asociada a lluvia (remoción en masa
+    o inundación) en una ventana ESTRICTAMENTE FUTURA, por localidad-día, usando
+    información meteorológica disponible hasta el cierre del día t y características
+    territoriales conocidas a priori.
+  INPUTS: "Lluvia SAB (acumulados/antecedente/intensidad ≤ t) + susceptibilidad territorial (POT/físico) + estacionalidad."
+  TARGET: "y=1 si ocurre ≥1 evento (remoción/inundación) en la localidad dentro de [t+1, t+3]."
+  PREDICTION_ORIGIN: "Cierre del día t (23:59, America/Bogota). Solo se usan datos con fecha <= t."
+  FORECAST_HORIZON: "72 h estrictamente futuras = días {t+1, t+2, t+3}. El día t NO cuenta como target."
+  STATISTICAL_UNIT: "localidad-día"
+  PREDICTION_RESOLUTION: "localidad (20). La probabilidad SOLO se reporta a resolución localidad."
+  TERRITORIAL_RESOLUTION: "localidad (modelo validado); UPZ (115) solo para PRIORIZACIÓN espacial, NO probabilidad calibrada."
+  OUTPUTS: "P(emergencia en [t+1,t+3]) por localidad + banda de alerta (verde/amarillo/naranja/rojo)."
+  INTENDED_USE: "Priorización operativa de vigilancia/alistamiento ante lluvia."
+  NON_INTENDED_USE: >
+    NO es predicción determinista de un evento puntual; NO sustituye el juicio de IDIGER;
+    la capa UPZ NO es una probabilidad calibrada; no usar fuera de Bogotá.
+  LIMITATIONS: "Evento raro; cobertura parcial de estaciones; validado a nivel localidad-día."
+  DEFINITIONS:
+    t: "Día calendario (America/Bogota)."
+    features_available_at: "<= t (cierre del día t)."
+    target_start: "t+1"
+    target_end: "t+3"
+    horizon_hours: 72
+
+data:
+  timezone: "America/Bogota"
+  bronze:
+    bitacora: "data/raw/bogota/bitacora_emergencias.csv"
+    sab_lluvia: "data/raw/bogota/sab_lluvia_diaria.csv"
+    sab_estaciones: "data/raw/bogota/sab_estaciones.csv"
+    susceptibilidad: "data/processed/bogota_zoom.csv"
+  overlap:
+    start: "2021-09-01"    # inicio de lluvia SAB
+    end: "2024-12-31"      # fin de lluvia SAB
+  rain_max_valid_mm: 400   # clip de outliers imposibles (mm/día)
+  wet_day_threshold_mm: 1  # umbral de "día húmedo" para wet7
+
+features:
+  # ventanas hacia atrás terminando en t (información disponible al corte)
+  rainfall:
+    p1:    {window_days: 1,  agg: "sum"}
+    p3:    {window_days: 3,  agg: "sum"}
+    p7:    {window_days: 7,  agg: "sum"}
+    p15:   {window_days: 15, agg: "sum"}
+    pmax3: {window_days: 3,  agg: "max"}
+    wet7:  {window_days: 7,  agg: "wet_days"}
+  susceptibility: ["score_remocion", "score_agua"]   # estáticas, conocidas a priori
+  seasonality: ["mes_sin", "mes_cos"]
+  list: ["p1","p3","p7","p15","pmax3","wet7","score_remocion","score_agua","mes_sin","mes_cos"]
+
+target:
+  event_types_included_regex: "emoci|eslizam|talud|ladera|nundaci|ncharca|negaci|venida|creciente"
+  window_days_ahead: [1, 3]   # [t+1, t+3] ESTRICTAMENTE FUTURO
+  positive_rule: "al menos un evento incluido en la ventana futura"
+
+splits:
+  # partición temporal con EMBARGO para impedir bleed de la ventana de target
+  embargo_days: 3            # = horizonte; se recorta el final de cada split
+  train:  {start: "2021-09-01", end: "2023-08-31"}
+  calib:  {start: "2023-09-01", end: "2023-12-31"}
+  test:   {start: "2024-01-01", end: "2024-12-31"}
+  random_split: false        # prohibido para evaluación temporal
+
+model:
+  algorithm: "xgboost"
+  seed: 42
+  n_jobs: 4
+  deterministic: true
+  params:
+    n_estimators: 500
+    max_depth: 4
+    learning_rate: 0.04
+    subsample: 0.85
+    colsample_bytree: 0.85
+    min_child_weight: 5
+    eval_metric: "aucpr"
+  # Monotonía: NO global por defecto (F4: inflaba y confundía los controles).
+  # Se evalúa en VALIDACIÓN si aporta; se documenta la decisión. Nunca se elige por TEST.
+  monotone_constraints: "none"
+  class_imbalance: "scale_pos_weight"   # calculado desde TRAIN
+
+calibration:
+  method: "isotonic"
+  fit_on: "calib"            # NUNCA test
+
+thresholds:
+  # Bandas derivadas de CALIB (nunca test). Multiplos del riesgo base de calib.
+  policy: "calib_prevalence_multiple"
+  naranja_x: 2.5
+  rojo_x: 3.5
+
+evaluation:
+  primary_metric: "pr_auc"
+  bootstrap:
+    method: "block_by_locality_day"    # respeta dependencia; bloques por localidad
+    n: 1000
+    ci: 0.95
+  report_metrics: ["roc_auc","pr_auc","pr_auc_baseline","lift","brier","brier_skill_score",
+                   "precision","recall","specificity","f1","fp","fn"]
+
+geospatial:
+  # CRS real (F3): prohibido usar normalización afín de bounding-box.
+  pot_layers_source: "scripts/11_prepare_bogota_remocion.py (URLs POT Bogotá)"
+  candidate_source_crs: ["EPSG:4326","EPSG:9377","EPSG:3116","EPSG:3857"]
+  target_crs: "EPSG:4326"
+  method: "pyproj Transformer (geodésico)"
+
+synthetic:
+  # Cualquier dato generado se marca SYNTHETIC=TRUE y no se mezcla con observado.
+  rain_scenario_label: "SYNTHETIC"     # el 'simulador' del tablero es escenario, no observación

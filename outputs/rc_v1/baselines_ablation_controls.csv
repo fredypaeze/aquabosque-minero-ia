@@ -1,0 +1,13 @@
+modelo,roc_auc,pr_auc,pr_auc_baseline,brier
+M0_prevalencia_train,0.5,0.063,0.063,0.0588
+M1_estacionalidad,0.576,0.095,0.063,0.2337
+M2_territorio(susc),0.74,0.14,0.063,0.2042
+M3_lluvia,0.601,0.096,0.063,0.1699
+M4_lluvia+estacion,0.632,0.111,0.063,0.1435
+M5_lluvia+territorio,0.745,0.198,0.063,0.1302
+M6_completo,0.735,0.163,0.063,0.1144
+M6_completo_monotono,0.793,0.335,0.063,0.1475
+LOCID_solo_localidad,0.741,0.14,0.063,0.2046
+CTRL_shuffle_sin_monotonia,0.458,0.064,0.063,0.1769
+CTRL_shuffle_con_monotonia,0.705,0.263,0.063,0.2043
+M6+random_feature,0.74,0.173,0.063,0.1126
