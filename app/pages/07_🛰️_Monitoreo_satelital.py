@@ -59,6 +59,67 @@ st.success(f"🛰️ **Cobertura nacional · {int(resumen.get('municipios_con_fu
            f"· fuente NASA FIRMS (VIIRS + MODIS) · **última actualización: {_gen}** · "
            f"refresco automático diario.")
 
+# ============================================================
+# HERO: los ~30.000 focos REALES sobre imagen satelital NASA (GIBS)
+# ============================================================
+VIIRS_RAW = ROOT / "data" / "raw" / "satelital" / "firms_VIIRS_SNPP_7d.csv"
+MODIS_RAW = ROOT / "data" / "raw" / "satelital" / "firms_MODIS_7d.csv"
+if VIIRS_RAW.exists() or MODIS_RAW.exists():
+    st.markdown("### 🔥 Colombia en llamas — vista desde el espacio (últimos 7 días)")
+
+    @st.cache_data
+    def _focos(mt):
+        frames = []
+        for f, src in [(VIIRS_RAW, "VIIRS"), (MODIS_RAW, "MODIS")]:
+            if f.exists():
+                d = pd.read_csv(f)[["latitude", "longitude", "frp", "confidence", "acq_date", "daynight"]].copy()
+                d["sensor"] = src
+                frames.append(d)
+        p = pd.concat(frames, ignore_index=True)
+        t = (p["frp"].clip(0, 300) / 300)
+        p["color"] = [[255, int(255 * (1 - x)), 0, 170] for x in t]
+        p["radius"] = (250 + p["frp"].clip(0, 600) * 3).astype(int)
+        return p
+    pts = _focos(VIIRS_RAW.stat().st_mtime if VIIRS_RAW.exists() else 0)
+    fecha_sat = str(pts["acq_date"].max())
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("🔥 Focos activos", f"{len(pts):,}")
+    m2.metric("Potencia radiativa total", f"{pts['frp'].sum():,.0f} MW")
+    m3.metric("Foco más intenso", f"{pts['frp'].max():,.0f} MW")
+    m4.metric("Sensores NASA", "VIIRS 375 m + MODIS")
+
+    vista = st.radio("Vista del mapa", ["🔥 Puntos de fuego", "🌡️ Mapa de calor"],
+                     horizontal=True, label_visibility="collapsed")
+
+    # Imagen satelital REAL de la NASA (GIBS true-color) como capa raster — abierta, sin token
+    # VIIRS SNPP: barrido ancho (~3.060 km) → sin la franja sin-dato de MODIS, y coherente con los focos VIIRS
+    gibs_url = ("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/"
+                "VIIRS_SNPP_CorrectedReflectance_TrueColor/default/" + fecha_sat +
+                "/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg")
+    gibs_layer = {"below": "traces", "sourcetype": "raster",
+                  "sourceattribution": "NASA GIBS / EOSDIS", "source": [gibs_url]}
+    center = {"lat": 3.8, "lon": -73.5}
+    if "Puntos" in vista:
+        fig = px.scatter_mapbox(
+            pts, lat="latitude", lon="longitude", color="frp",
+            color_continuous_scale="YlOrRd", range_color=(0, float(pts["frp"].quantile(0.9))),
+            hover_data={"frp": ":.0f", "acq_date": True, "sensor": True, "latitude": False, "longitude": False},
+            zoom=4.4, center=center, height=580)
+        fig.update_traces(marker={"size": 4, "opacity": 0.8})
+    else:
+        fig = px.density_mapbox(
+            pts, lat="latitude", lon="longitude", z="frp", radius=7,
+            color_continuous_scale="YlOrRd", zoom=4.4, center=center, height=580)
+    fig.update_layout(mapbox_style="carto-darkmatter", mapbox_layers=[gibs_layer],
+                      margin=dict(l=0, r=0, t=0, b=0),
+                      coloraxis_colorbar=dict(title="FRP (MW)"))
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.caption(f"Base: **NASA GIBS · VIIRS SNPP true-color** ({fecha_sat}) — imagen satelital real, dato abierto sin token. "
+               f"Focos: **NASA FIRMS** (VIIRS+MODIS), cada punto es un fuego térmico real de los últimos 7 días; "
+               f"color y tamaño por potencia radiativa (FRP). Se ve la frontera de quema y deforestación en vivo.")
+    st.divider()
+
 # --- Cruce con el modelo: prioridad combinada ---
 # predicciones.csv ya trae focos_7d/idx_fuego (features del modelo): se descartan
 # para tomar la señal fresca de fuego_municipal.csv sin colisión de columnas.
@@ -117,6 +178,73 @@ with col2:
 st.info("**Fuente:** NASA FIRMS (VIIRS SNPP + NOAA-20, MODIS C6.1) · datos abiertos · actualización diaria. "
         "**Honestidad:** señal satelital térmica NRT (proxy de deforestación/quema); la detección de deforestación "
         "por clasificación de imagen Sentinel-2 con deep learning corre en la infraestructura GPU del Ministerio (capa 2).")
+
+# ============================================================
+# EXPLORADOR SATELITAL DINÁMICO POR MUNICIPIO (los 1.122)
+# ============================================================
+try:
+    _recent = fecha_sat
+    _pts = pts
+except NameError:
+    _recent = str(fuego["ultima_fecha"].max())[:10] if "ultima_fecha" in fuego else "2026-08-07"
+    _pts = pd.DataFrame(columns=["latitude", "longitude", "frp", "acq_date", "sensor"])
+
+st.divider()
+st.markdown("### 🔭 Explorador satelital por municipio")
+st.caption("Elige **cualquiera de los 1.122 municipios** y obsérvalo desde el espacio (NASA GIBS) en distintas fechas, "
+           "con sus focos activos y su nivel de riesgo. Dinámico y para todo el país.")
+
+@st.cache_data
+def _extra(mt_v, mt_a):
+    vp = ROOT / "outputs" / "tables" / "velocidad_degradacion.csv"
+    ap = ROOT / "outputs" / "tables" / "anomalias_explicadas.csv"
+    vel = pd.read_csv(vp) if vp.exists() else pd.DataFrame()
+    ano = pd.read_csv(ap) if ap.exists() else pd.DataFrame()
+    return vel, ano
+_vp = ROOT / "outputs" / "tables" / "velocidad_degradacion.csv"
+_ap = ROOT / "outputs" / "tables" / "anomalias_explicadas.csv"
+vel_df, ano_df = _extra(_vp.stat().st_mtime if _vp.exists() else 0, _ap.stat().st_mtime if _ap.exists() else 0)
+
+deptos = sorted(pred["departamento"].dropna().unique())
+cA, cB, cC = st.columns([1.1, 1.5, 1.6])
+_di = deptos.index("META") if "META" in deptos else 0
+dep_sel = cA.selectbox("Departamento", deptos, index=_di)
+munis = sorted(pred[pred["departamento"] == dep_sel]["municipio"].dropna().unique())
+mun_sel = cB.selectbox("Municipio", munis)
+_fechas = ["2023-06-15", "2024-06-15", "2025-06-15", "2026-03-15", _recent]
+fecha_e = cC.select_slider("Fecha de la imagen satelital", options=_fechas, value=_recent)
+
+row = pred[(pred["departamento"] == dep_sel) & (pred["municipio"] == mun_sel)].iloc[0]
+lat, lon = float(row["lat"]), float(row["lon"])
+cod = int(float(row["cod_mpio"]))
+
+k1, k2, k3, k4 = st.columns(4)
+k1.metric("Nivel de riesgo", str(row.get("riesgo_nivel", "—")))
+k2.metric("Presión minera", f"{row.get('idx_minero', 0):.2f}")
+k3.metric("Deforestación", f"{row.get('idx_deforestacion', 0):.2f}")
+_vrow = vel_df[vel_df.get("cod_mpio").astype("Int64") == cod] if "cod_mpio" in getattr(vel_df, "columns", []) else pd.DataFrame()
+if len(_vrow):
+    k4.metric("Deforestación (dinámica)", str(_vrow.iloc[0]["dinamica"]),
+              delta=f"{_vrow.iloc[0]['aceleracion_ha_ano']:+.0f} ha/año")
+else:
+    k4.metric("Focos de calor", f"{row.get('idx_fuego', 0):.2f}")
+
+sub = _pts[(_pts["latitude"].between(lat - 0.45, lat + 0.45)) & (_pts["longitude"].between(lon - 0.45, lon + 0.45))]
+gibs_e = ("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/"
+          "VIIRS_SNPP_CorrectedReflectance_TrueColor/default/" + str(fecha_e) +
+          "/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg")
+figm = px.scatter_mapbox(sub if len(sub) else pd.DataFrame({"latitude": [lat], "longitude": [lon], "frp": [0]}),
+                         lat="latitude", lon="longitude", color="frp" if len(sub) else None,
+                         color_continuous_scale="YlOrRd", zoom=9.2, center={"lat": lat, "lon": lon}, height=520)
+figm.update_traces(marker={"size": 7 if len(sub) else 1, "opacity": 0.85})
+figm.update_layout(mapbox_style="carto-darkmatter",
+                   mapbox_layers=[{"below": "traces", "sourcetype": "raster",
+                                   "sourceattribution": "NASA GIBS / EOSDIS", "source": [gibs_e]}],
+                   margin=dict(l=0, r=0, t=0, b=0), coloraxis_colorbar=dict(title="FRP (MW)"))
+st.plotly_chart(figm, use_container_width=True, config={"displayModeBar": False})
+st.caption(f"**{mun_sel} ({dep_sel})** · imagen NASA GIBS VIIRS true-color del **{fecha_e}** · "
+           f"{len(sub)} focos de calor en el entorno (últimos 7 días). Mueve la fecha para ver el cambio en el tiempo. "
+           "Resolución satelital ~375 m (para detalle de 10 m con IA, ver la capa Sentinel-2 + U-Net abajo).")
 
 # --- Capa 2: Sentinel-2 + U-Net (deep learning en GPU) ---
 st.divider()

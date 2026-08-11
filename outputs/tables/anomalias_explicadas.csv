@@ -1,0 +1,58 @@
+cod_mpio,municipio,departamento,riesgo_nivel,score_anomalia,es_anomalia,factor_dominante,explicacion,prioriza_indice,oculta_para_indice
+50350,LA MACARENA,META,Crítico,1.0,True,deforestación,deforestación (p99); focos de calor (p97),True,False
+50325,MAPIRIPÁN,META,Crítico,0.936,True,deforestación,deforestación (p99); focos de calor (p97),True,False
+99773,CUMARIBO,VICHADA,Crítico,0.935,True,deforestación,deforestación (p99); focos de calor (p99),True,False
+73200,COELLO,TOLIMA,Crítico,0.914,True,estrés hídrico,estrés hídrico (p99); focos de calor (p93),True,False
+68081,BARRANCABERMEJA,SANTANDER,Crítico,0.896,True,estrés hídrico,estrés hídrico (p99); focos de calor (p90),True,False
+18753,SAN VICENTE DEL CAGUÁN,CAQUETÁ,Crítico,0.891,True,deforestación,deforestación (p100); focos de calor (p92),True,False
+50370,URIBE,META,Crítico,0.871,True,deforestación,deforestación (p99); sensibilidad ambiental (p100),True,False
+18150,CARTAGENA DEL CHAIRÁ,CAQUETÁ,Crítico,0.867,True,deforestación,deforestación (p99); sensibilidad ambiental (p81),True,False
+50590,PUERTO RICO,META,Crítico,0.862,True,deforestación,deforestación (p99); sensibilidad ambiental (p100),True,False
+20178,CHIRIGUANÁ,CESAR,Crítico,0.841,True,focos de calor,focos de calor (p99); estrés hídrico (p97),True,False
+85139,MANÍ,CASANARE,Crítico,0.833,True,estrés hídrico,estrés hídrico (p99); focos de calor (p94),True,False
+13430,MAGANGUÉ,BOLÍVAR,Alto,0.826,True,estrés hídrico,estrés hídrico (p98); focos de calor (p97),True,False
+73275,FLANDES,TOLIMA,Crítico,0.824,True,estrés hídrico,estrés hídrico (p99); presión minera (p93),True,False
+23466,MONTELÍBANO,CÓRDOBA,Crítico,0.823,True,estrés hídrico,estrés hídrico (p99); focos de calor (p89),True,False
+20621,LA PAZ,CESAR,Crítico,0.814,True,estrés hídrico,estrés hídrico (p98); focos de calor (p97),True,False
+81220,CRAVO NORTE,ARAUCA,Medio,0.806,True,estrés hídrico,estrés hídrico (p96); focos de calor (p94),False,True
+50006,ACACÍAS,META,Crítico,0.806,True,estrés hídrico,estrés hídrico (p99); presión minera (p97),True,False
+50568,PUERTO GAITÁN,META,Crítico,0.797,True,focos de calor,focos de calor (p98); deforestación (p95),True,False
+95025,EL RETORNO,GUAVIARE,Alto,0.797,True,deforestación,deforestación (p99); sensibilidad ambiental (p97),True,False
+25286,FUNZA,CUNDINAMARCA,Bajo,0.787,True,estrés hídrico,estrés hídrico (p99),False,True
+41306,GIGANTE,HUILA,Bajo,0.787,True,estrés hídrico,estrés hídrico (p99); sensibilidad ambiental (p90),False,True
+44650,SAN JUAN DEL CESAR,LA GUAJIRA,Alto,0.765,True,focos de calor,focos de calor (p97); estrés hídrico (p95),True,False
+86320,ORITO,PUTUMAYO,Crítico,0.75,True,deforestación,deforestación (p98); sensibilidad ambiental (p97),True,False
+50711,VISTAHERMOSA,META,Crítico,0.748,True,deforestación,deforestación (p98),True,False
+95001,SAN JOSÉ DEL GUAVIARE,GUAVIARE,Crítico,0.748,True,deforestación,deforestación (p99),True,False
+18610,SAN JOSÉ DEL FRAGUA,CAQUETÁ,Alto,0.745,True,deforestación,deforestación (p96); sensibilidad ambiental (p98),True,False
+25851,ÚTICA,CUNDINAMARCA,Medio,0.742,True,estrés hídrico,estrés hídrico (p100),False,True
+20295,GAMARRA,CESAR,Medio,0.737,True,estrés hídrico,estrés hídrico (p98); focos de calor (p89),False,True
+76892,YUMBO,VALLE DEL CAUCA,Crítico,0.734,True,estrés hídrico,estrés hídrico (p97); presión minera (p99),True,False
+25740,SIBATÉ,CUNDINAMARCA,Medio,0.725,True,estrés hídrico,estrés hídrico (p99),False,True
+19001,POPAYÁN,CAUCA,Crítico,0.713,True,estrés hídrico,estrés hídrico (p98); focos de calor (p87),True,False
+50450,PUERTO CONCORDIA,META,Crítico,0.713,True,deforestación,deforestación (p97); sensibilidad ambiental (p98),True,False
+20570,PUEBLO BELLO,CESAR,Alto,0.706,True,sensibilidad ambiental,sensibilidad ambiental (p100); focos de calor (p95),True,False
+86571,PUERTO GUZMÁN,PUTUMAYO,Crítico,0.703,True,deforestación,deforestación (p99),True,False
+18756,SOLANO,CAQUETÁ,Crítico,0.703,True,deforestación,deforestación (p99),True,False
+95015,CALAMAR,GUAVIARE,Alto,0.699,True,deforestación,deforestación (p99),True,False
+15572,PUERTO BOYACÁ,BOYACÁ,Crítico,0.696,True,estrés hídrico,estrés hídrico (p97); presión minera (p95),True,False
+44090,DIBULLA,LA GUAJIRA,Crítico,0.694,True,focos de calor,focos de calor (p99); sensibilidad ambiental (p97),True,False
+47245,EL BANCO,MAGDALENA,Medio,0.693,True,estrés hídrico,estrés hídrico (p96); focos de calor (p96),False,True
+05495,NECHÍ,ANTIOQUIA,Crítico,0.692,True,estrés hídrico,estrés hídrico (p96); sensibilidad ambiental (p98),True,False
+86573,PUERTO LEGUÍZAMO,PUTUMAYO,Crítico,0.682,True,deforestación,deforestación (p98),True,False
+20001,VALLEDUPAR,CESAR,Crítico,0.682,True,focos de calor,focos de calor (p96); sensibilidad ambiental (p96),True,False
+13473,MORALES,BOLÍVAR,Crítico,0.674,True,estrés hídrico,estrés hídrico (p97); focos de calor (p91),True,False
+85001,YOPAL,CASANARE,Crítico,0.671,True,estrés hídrico,estrés hídrico (p96); presión minera (p96),True,False
+19473,MORALES,CAUCA,Medio,0.671,True,estrés hídrico,estrés hídrico (p99),False,True
+20175,CHIMICHAGUA,CESAR,Crítico,0.669,True,focos de calor,focos de calor (p99); sensibilidad ambiental (p95),True,False
+94887,PANA PANA,GUAINÍA,Medio,0.666,True,deforestación,deforestación (p95); sensibilidad ambiental (p97),False,True
+99524,LA PRIMAVERA,VICHADA,Medio,0.662,True,focos de calor,focos de calor (p99); sensibilidad ambiental (p93),False,True
+13212,CÓRDOBA,BOLÍVAR,Medio,0.662,True,sensibilidad ambiental,sensibilidad ambiental (p98); focos de calor (p92),False,True
+11001,"BOGOTÁ, D.C.","BOGOTÁ, D.C.",Crítico,0.661,True,estrés hídrico,estrés hídrico (p95); presión minera (p95),True,False
+41206,COLOMBIA,HUILA,Bajo,0.657,True,estrés hídrico,estrés hídrico (p99),False,True
+54245,EL CARMEN,NORTE DE SANTANDER,Medio,0.652,True,focos de calor,focos de calor (p99); sensibilidad ambiental (p79),False,True
+05390,LA PINTADA,ANTIOQUIA,Alto,0.651,True,estrés hídrico,estrés hídrico (p98); presión minera (p88),True,False
+20228,CURUMANÍ,CESAR,Crítico,0.648,True,focos de calor,focos de calor (p98); sensibilidad ambiental (p95),True,False
+54518,PAMPLONA,NORTE DE SANTANDER,Medio,0.646,True,estrés hídrico,estrés hídrico (p99),False,True
+86568,PUERTO ASÍS,PUTUMAYO,Crítico,0.646,True,deforestación,deforestación (p98); sensibilidad ambiental (p83),True,False
+44378,HATONUEVO,LA GUAJIRA,Alto,0.644,True,estrés hídrico,estrés hídrico (p97); sensibilidad ambiental (p84),True,False

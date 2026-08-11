@@ -1,0 +1,21 @@
+cod,localidad,score_remocion,score_agua,umbral_naranja_mm72h,umbral_rojo_mm72h,p_max
+19,Ciudad Bolívar,0.973,0.676,2.0,10.0,0.5
+05,Usme,0.966,0.746,2.0,12.0,0.5
+01,Usaquén,0.882,0.654,2.0,20.0,0.241
+11,Suba,0.81,0.968,6.0,48.0,0.241
+02,Chapinero,0.829,0.527,8.0,34.0,0.241
+04,San Cristóbal,0.928,0.366,10.0,48.0,0.241
+03,Santa Fe,0.81,0.547,10.0,76.0,0.241
+18,Rafael Uribe Uribe,0.833,0.367,12.0,54.0,0.241
+10,Engativá,0.356,0.769,40.0,,0.157
+20,Sumapaz,0.739,0.638,54.0,,0.157
+07,Bosa,0.368,0.611,68.0,,0.157
+06,Tunjuelito,0.51,0.541,,,0.123
+08,Kennedy,0.341,0.685,,,0.123
+09,Fontibón,0.304,0.685,,,0.073
+17,La Candelaria,0.689,0.0,,,0.024
+12,Barrios Unidos,0.0,0.533,,,0.042
+16,Puente Aranda,0.0,0.479,,,0.042
+13,Teusaquillo,0.0,0.44,,,0.024
+15,Antonio Nariño,0.0,0.356,,,0.024
+14,Los Mártires,0.0,0.0,,,0.018

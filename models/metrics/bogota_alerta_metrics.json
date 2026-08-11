@@ -1,0 +1,26 @@
+{
+  "n_train": 14600,
+  "n_calib": 2440,
+  "n_test": 7320,
+  "pos_rate_test": 0.0623,
+  "roc_auc": 0.804,
+  "pr_auc": 0.352,
+  "pr_auc_baseline": 0.062,
+  "lift_pr_auc": 5.6,
+  "brier_uncal": 0.146,
+  "brier_cal": 0.0529,
+  "ventana": "evento remoción/inundación en 72 h",
+  "particion": "train <2023-09 · calib 2023-09..12 · test 2024",
+  "top_features": [
+    "score_remocion",
+    "score_agua",
+    "mes_cos",
+    "p15",
+    "mes_sin"
+  ],
+  "bandas": {
+    "base_rate": 0.062,
+    "p_naranja": 0.156,
+    "p_rojo": 0.218
+  }
+}
