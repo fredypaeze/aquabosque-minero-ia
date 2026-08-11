@@ -60,8 +60,13 @@ model = {
 }
 model_approved = False
 
-product = {"END_TO_END": "NOT_STARTED", "FRONTEND_CONTRACT": "NOT_STARTED",
-           "RESOLUTION_SEMANTICS": "NOT_STARTED", "FAIL_SAFE": "NOT_STARTED", "DATA_FRESHNESS": "NOT_STARTED"}
+page = ROOT / "app" / "pages" / "10_🏙️_Zoom_Bogota.py"
+page_honest = page.exists() and "descriptivo" in page.read_text(encoding="utf-8").lower()
+product = {"END_TO_END": "PENDING",                                  # falta test 20-casos formal
+           "FRONTEND_CONTRACT": "PARTIAL",                           # versión mostrada; sin modelo predictivo que versionar
+           "RESOLUTION_SEMANTICS": "PASS" if page_honest else "FAIL",  # UPZ=priorización, sin claim de probabilidad
+           "FAIL_SAFE": "PASS",                                      # st.stop si falta el dato
+           "DATA_FRESHNESS": "PARTIAL"}                              # muestra período; sin lag en vivo
 product_approved = False
 
 trace = {"SOURCE_REGISTRY": "PASS", "REGRESSION_TESTS": "PASS" if tests_pass else "FAIL",

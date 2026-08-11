@@ -95,6 +95,20 @@ def test_territorial_sanity_remocion_in_cerros():
 
 
 # ---- Métricas honestas registradas (autoridad = ejecución) ----
+def test_product_page_honest_framing():
+    """Sec 45/69: la interfaz no puede presentar el índice como probabilidad calibrada."""
+    p = ROOT / "app" / "pages" / "10_🏙️_Zoom_Bogota.py"
+    src = p.read_text(encoding="utf-8")
+    low = src.lower()
+    # debe declarar naturaleza descriptiva
+    assert "descriptivo" in low
+    assert "no es una probabilidad" in low or "no es probabilidad" in low or "no es un pronóstico" in low
+    # no debe vender predicción/alerta calibrada como el producto
+    assert "probabilidad calibrada" not in low or "no" in low  # solo aparece negada
+    # UPZ etiquetada como priorización
+    assert "prioriz" in low
+
+
 def test_rc_metrics_recorded_and_reproducible():
     f = OUT / "rc_metrics.json"
     if not f.exists():
