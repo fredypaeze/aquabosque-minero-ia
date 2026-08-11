@@ -246,23 +246,46 @@ st.caption(f"**{mun_sel} ({dep_sel})** · imagen NASA GIBS VIIRS true-color del 
            f"{len(sub)} focos de calor en el entorno (últimos 7 días). Mueve la fecha para ver el cambio en el tiempo. "
            "Resolución satelital ~375 m (para detalle de 10 m con IA, ver la capa Sentinel-2 + U-Net abajo).")
 
-# --- Capa 2: Sentinel-2 + U-Net (deep learning en GPU) ---
+# --- Capa 2: Deforestación REAL por municipio (Sentinel-2 · cambio NDVI) ---
 st.divider()
-st.markdown("### 🌳 Deforestación con Sentinel-2 · deep learning (GPU L40S)")
-st.caption("Zoom satelital profundo: imágenes Sentinel-2 (10 m) descargadas y procesadas en la GPU del Ministerio. "
-           "Prueba de capacidad sobre un frente de deforestación en La Macarena (Meta).")
-mc = st.columns(2)
-mc[0].metric("Hectáreas de pérdida detectadas", "≈ 985 ha",
-             help="Detección de cambio NDVI 2023→2026 en la ventana analizada.")
-mc[1].metric("Precisión del segmentador (IoU)", "0.77",
-             help="U-Net bosque/no-bosque validado contra ESA WorldCover.")
-_S2 = ROOT / "outputs" / "jurado_2026" / "assets"
-if (_S2 / "22_sentinel2_lamacarena.png").exists():
-    st.image(str(_S2 / "22_sentinel2_lamacarena.png"), use_container_width=True,
-             caption="Sentinel-2: antes (feb 2023) vs después (mar 2026) y pérdida de cobertura detectada (NDVI-change, ~985 ha en rojo).")
-if (_S2 / "23_unet_bosque_lamacarena.png").exists():
-    st.image(str(_S2 / "23_unet_bosque_lamacarena.png"), use_container_width=True,
-             caption="Bosque segmentado por U-Net (deep learning) sobre la imagen Sentinel-2 (IoU 0.77).")
-st.caption("🔒 Soberanía: la imagen y el procesamiento no salen de la infraestructura del Estado. "
-           "Es prueba de capacidad sobre un AOI; un detector de producción requiere más zonas y validación externa (Hansen / alertas IDEAM).")
+st.markdown("### 🌳 Deforestación con Sentinel-2 · cambio NDVI real (por municipio)")
+import json as _json
+_NDVI = ROOT / "outputs" / "satelital_ndvi"
+_res = sorted(_NDVI.glob("*/result.json")) if _NDVI.exists() else []
+if not _res:
+    st.info("Aún no hay municipios procesados. Ejecute "
+            "`./venv/bin/python src/aquabosque/satelital/ndvi_change_real.py --lista` "
+            "para generar los resultados reales de Sentinel-2.")
+else:
+    _items = {p.parent.name: _json.loads(p.read_text(encoding="utf-8")) for p in _res}
+    _opts = {f"{v['municipio']} (~{v['hectareas_perdida']:.0f} ha)": k for k, v in _items.items()}
+    _sel = st.selectbox("Municipio (frente de deforestación · precomputado)", list(_opts.keys()))
+    _r = _items[_opts[_sel]]
+    st.caption(f"Sentinel-2 (10 m) descargadas y procesadas localmente (Copernicus vía STAC Earth Search). "
+               f"Ventana ~{_r['ventana_km']:.0f}×{_r['ventana_km']:.0f} km · **cambio NDVI bi-temporal, sin GPU**.")
+    mc = st.columns(3)
+    mc[0].metric("Hectáreas de pérdida (calculadas)", f"{_r['hectareas_perdida']:.0f} ha",
+                 help="Cifra COMPUTADA en esta corrida (píxeles 'era bosque y perdió NDVI'), no estimada a mano.")
+    mc[1].metric("Cobertura válida (sin nube)", f"{_r['cobertura_valida_pct']:.0f}%", help="Máscara de nube SCL.")
+    mc[2].metric("Fechas", f"{_r['escena_antes']['fecha']} → {_r['escena_despues']['fecha']}")
+    _d = _NDVI / _opts[_sel]
+    ci = st.columns(3)
+    for col, img, cap in [
+        (ci[0], "antes.png", f"Antes · {_r['escena_antes']['fecha']} ({_r['escena_antes']['nube_pct']:.0f}% nube)"),
+        (ci[1], "despues.png", f"Después · {_r['escena_despues']['fecha']} ({_r['escena_despues']['nube_pct']:.0f}% nube)"),
+        (ci[2], "cambio.png", "Pérdida de cobertura detectada (en rojo)")]:
+        if (_d / img).exists():
+            col.image(str(_d / img), use_container_width=True, caption=cap)
+    with st.expander("Procedencia y método (trazable)"):
+        st.markdown(
+            f"- **Fuente:** {_r['fuente']}.\n"
+            f"- **Escena antes:** `{_r['escena_antes']['id']}` · **después:** `{_r['escena_despues']['id']}`.\n"
+            f"- **Método:** {_r['metodo']}. Umbrales: era-bosque NDVI>{_r['umbrales']['forest_ndvi']}, "
+            f"pérdida ΔNDVI<{_r['umbrales']['loss_dndvi']}.\n"
+            f"- **Naturaleza:** {_r['naturaleza']} · computado {_r['computado_en'][:10]}.\n"
+            f"- **Código reproducible:** `src/aquabosque/satelital/ndvi_change_real.py`."
+        )
+st.caption("🔒 Procesamiento local (no sale de la infraestructura del Estado). **Honestidad:** esto es "
+           "**cambio NDVI**, no segmentación U-Net. La U-Net bosque/no-bosque con IoU validado es un paso aparte "
+           "que requiere GPU (terramin) y validación contra Hansen/IDEAM — no se presenta como hecho hasta ejecutarse.")
 B.footer()

@@ -1,0 +1,31 @@
+{
+  "cod": "50325",
+  "municipio": "Mapiripan",
+  "ventana_km": 12.0,
+  "bbox": [
+    -71.9441,
+    2.9755,
+    -71.8358,
+    3.0836
+  ],
+  "hectareas_perdida": 420.1,
+  "escena_antes": {
+    "id": "S2A_18NZJ_20230321_0_L2A",
+    "fecha": "2023-03-21",
+    "nube_pct": 0.3
+  },
+  "escena_despues": {
+    "id": "S2B_18NZJ_20260228_0_L2A",
+    "fecha": "2026-02-28",
+    "nube_pct": 0.0
+  },
+  "umbrales": {
+    "forest_ndvi": 0.6,
+    "loss_dndvi": -0.25
+  },
+  "cobertura_valida_pct": 100.0,
+  "metodo": "NDVI-change bi-temporal (sin GPU); máscara de nube SCL",
+  "fuente": "Copernicus Sentinel-2 L2A vía Earth Search STAC",
+  "computado_en": "2026-08-11T14:52:14.433998Z",
+  "naturaleza": "OBSERVED_COMPUTED"
+}

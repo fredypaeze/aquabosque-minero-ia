@@ -1,0 +1,31 @@
+{
+  "cod": "50350",
+  "municipio": "La Macarena",
+  "ventana_km": 12.0,
+  "bbox": [
+    -74.1265,
+    2.2472,
+    -74.0183,
+    2.3554
+  ],
+  "hectareas_perdida": 475.7,
+  "escena_antes": {
+    "id": "S2B_18NWH_20230204_0_L2A",
+    "fecha": "2023-02-04",
+    "nube_pct": 0.0
+  },
+  "escena_despues": {
+    "id": "S2B_18NWH_20260320_0_L2A",
+    "fecha": "2026-03-20",
+    "nube_pct": 0.0
+  },
+  "umbrales": {
+    "forest_ndvi": 0.6,
+    "loss_dndvi": -0.25
+  },
+  "cobertura_valida_pct": 100.0,
+  "metodo": "NDVI-change bi-temporal (sin GPU); máscara de nube SCL",
+  "fuente": "Copernicus Sentinel-2 L2A vía Earth Search STAC",
+  "computado_en": "2026-08-11T14:51:43.657345Z",
+  "naturaleza": "OBSERVED_COMPUTED"
+}

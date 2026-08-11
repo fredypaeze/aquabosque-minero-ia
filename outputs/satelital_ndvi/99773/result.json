@@ -1,0 +1,31 @@
+{
+  "cod": "99773",
+  "municipio": "Cumaribo",
+  "ventana_km": 12.0,
+  "bbox": [
+    -69.3637,
+    3.8902,
+    -69.2553,
+    3.9983
+  ],
+  "hectareas_perdida": 1.7,
+  "escena_antes": {
+    "id": "S2B_19NDE_20230201_0_L2A",
+    "fecha": "2023-02-01",
+    "nube_pct": 2.3
+  },
+  "escena_despues": {
+    "id": "S2C_19NDE_20260322_0_L2A",
+    "fecha": "2026-03-22",
+    "nube_pct": 0.0
+  },
+  "umbrales": {
+    "forest_ndvi": 0.6,
+    "loss_dndvi": -0.25
+  },
+  "cobertura_valida_pct": 100.0,
+  "metodo": "NDVI-change bi-temporal (sin GPU); máscara de nube SCL",
+  "fuente": "Copernicus Sentinel-2 L2A vía Earth Search STAC",
+  "computado_en": "2026-08-11T14:53:53.025715Z",
+  "naturaleza": "OBSERVED_COMPUTED"
+}
