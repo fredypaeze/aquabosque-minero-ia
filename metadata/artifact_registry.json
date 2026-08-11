@@ -1,0 +1,61 @@
+{
+  "run_id": "20260811T142937Z_ace4dbe",
+  "artifacts": [
+    {
+      "artifact_id": "gold_localidad_dia",
+      "run_id": "20260811T142937Z_ace4dbe",
+      "path": "outputs/rc_v1/gold_localidad_dia.csv",
+      "hash": "sha256:2cc8b8db7121f68120c1cf6ffe59b0da0b20f57668fa9b5cc9c23dae3820c883",
+      "produced_by": "pipeline RC",
+      "status": "current"
+    },
+    {
+      "artifact_id": "rc_metrics",
+      "run_id": "20260811T142937Z_ace4dbe",
+      "path": "outputs/rc_v1/rc_metrics.json",
+      "hash": "sha256:67f42181acdc0700c6299e21efbf3c9468c1d590b0b7444f0597bf5706ad70b9",
+      "produced_by": "pipeline RC",
+      "status": "current"
+    },
+    {
+      "artifact_id": "territorial_localidad",
+      "run_id": "20260811T142937Z_ace4dbe",
+      "path": "data/processed/bogota_territorial_v1.csv",
+      "hash": "sha256:8be69600b92c109a9967c418856cad1ffaad14212f37db09a1f664b07e494bab",
+      "produced_by": "pipeline RC",
+      "status": "current"
+    },
+    {
+      "artifact_id": "territorial_upz",
+      "run_id": "20260811T142937Z_ace4dbe",
+      "path": "data/processed/bogota_upz_territorial_v1.csv",
+      "hash": "sha256:efb85daa5921df96dee70ac57c52d64754559c3a767606340c305232d25f5ab2",
+      "produced_by": "pipeline RC",
+      "status": "current"
+    },
+    {
+      "artifact_id": "validation_results",
+      "run_id": "20260811T142937Z_ace4dbe",
+      "path": "validation/validation_results.json",
+      "hash": "sha256:4a77ead76301ffca5c2bf874caa5ca27c33a19e8286a1a8d1db6d051b0fd1960",
+      "produced_by": "pipeline RC",
+      "status": "current"
+    },
+    {
+      "artifact_id": "source_registry",
+      "run_id": "20260811T142937Z_ace4dbe",
+      "path": "metadata/source_registry.json",
+      "hash": "sha256:cbafad34f22c0e871aae3a2984e1bbcf90f725117ecf128fbeead432c25c8ba4",
+      "produced_by": "pipeline RC",
+      "status": "current"
+    },
+    {
+      "artifact_id": "config",
+      "run_id": "20260811T142937Z_ace4dbe",
+      "path": "config/release_zoom_bogota_v1.yaml",
+      "hash": "sha256:e88723ca40053ae0ba54d31d6eb1c16fa07c588d0b07701deeb182fbf2a8ed7b",
+      "produced_by": "pipeline RC",
+      "status": "current"
+    }
+  ]
+}

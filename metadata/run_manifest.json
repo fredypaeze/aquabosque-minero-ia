@@ -1,0 +1,25 @@
+{
+  "RUN_ID": "20260811T142937Z_ace4dbe",
+  "timestamp": "2026-08-11T14:29:37.233140Z",
+  "git_commit": "ace4dbe77907909390a47a0a6fb5debda4afb539",
+  "branch": "feature/zoom-bogota-rc-v1",
+  "python_version": "3.12.3",
+  "random_seed": 42,
+  "config_hash": "sha256:e88723ca40053ae0ba54d31d6eb1c16fa07c588d0b07701deeb182fbf2a8ed7b",
+  "source_manifest_hash": "sha256:cbafad34f22c0e871aae3a2984e1bbcf90f725117ecf128fbeead432c25c8ba4",
+  "input_hashes": {
+    "bitacora": "sha256:e7d9a092a5b8565e64435a579712a4ab692c756051b1568f602bfaa35bbd05b7",
+    "sab_lluvia": "sha256:dcefca7f99f6c6341ba0e4237cd485ff8f84e6d8ce4244de92625dc710870f8e",
+    "sab_estaciones": "sha256:5963310d8df4f9e9f3ac6e8e6343c16656f4f841ba0e91db518130f18b6cf145"
+  },
+  "output_hashes": {
+    "gold_localidad_dia": "sha256:2cc8b8db7121f68120c1cf6ffe59b0da0b20f57668fa9b5cc9c23dae3820c883",
+    "rc_metrics": "sha256:67f42181acdc0700c6299e21efbf3c9468c1d590b0b7444f0597bf5706ad70b9",
+    "territorial_localidad": "sha256:8be69600b92c109a9967c418856cad1ffaad14212f37db09a1f664b07e494bab",
+    "territorial_upz": "sha256:efb85daa5921df96dee70ac57c52d64754559c3a767606340c305232d25f5ab2",
+    "validation_results": "sha256:4a77ead76301ffca5c2bf874caa5ca27c33a19e8286a1a8d1db6d051b0fd1960",
+    "source_registry": "sha256:cbafad34f22c0e871aae3a2984e1bbcf90f725117ecf128fbeead432c25c8ba4",
+    "config": "sha256:e88723ca40053ae0ba54d31d6eb1c16fa07c588d0b07701deeb182fbf2a8ed7b"
+  },
+  "validation_status": "FAIL"
+}

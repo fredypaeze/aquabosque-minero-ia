@@ -1,0 +1,61 @@
+{
+  "note": "trazabilidad a nivel de campo (Sec 10)",
+  "lineage": [
+    {
+      "output_field": "eventos_remocion",
+      "transformation": "count(regex remoción) groupby Localidad",
+      "input_field": "Tipo de afectación, Localidad",
+      "source_id": "IDIGER_BITACORA_V202608",
+      "script": "scripts/rc/build_territorial_index.py"
+    },
+    {
+      "output_field": "idx_territorial_obs",
+      "transformation": "percentil(eventos_remoción+inundación)",
+      "input_field": "eventos_remocion, eventos_inundacion",
+      "source_id": "IDIGER_BITACORA_V202608",
+      "script": "scripts/rc/build_territorial_index.py"
+    },
+    {
+      "output_field": "p1",
+      "transformation": "media diaria por localidad (t)",
+      "input_field": "mm por estación",
+      "source_id": "IDIGER_SAB_LLUVIA_V202608",
+      "script": "scripts/rc/build_and_validate.py"
+    },
+    {
+      "output_field": "p3/p7/p15",
+      "transformation": "rolling_sum(window) BACKWARD terminando en t",
+      "input_field": "p1",
+      "source_id": "IDIGER_SAB_LLUVIA_V202608",
+      "script": "scripts/rc/build_and_validate.py"
+    },
+    {
+      "output_field": "pmax3",
+      "transformation": "rolling_max(3) backward",
+      "input_field": "p1",
+      "source_id": "IDIGER_SAB_LLUVIA_V202608",
+      "script": "scripts/rc/build_and_validate.py"
+    },
+    {
+      "output_field": "wet7",
+      "transformation": "rolling_count(p1>umbral,7) backward",
+      "input_field": "p1",
+      "source_id": "IDIGER_SAB_LLUVIA_V202608",
+      "script": "scripts/rc/build_and_validate.py"
+    },
+    {
+      "output_field": "y",
+      "transformation": "fwd_target [t+1,t+3] (estrictamente futuro)",
+      "input_field": "evento(remoción∪inundación)",
+      "source_id": "IDIGER_BITACORA_V202608",
+      "script": "scripts/rc/rc_lib.py::fwd_target"
+    },
+    {
+      "output_field": "score_remocion (RETIRADO)",
+      "transformation": "afín de bbox (INVÁLIDO, error 57km)",
+      "input_field": "POT amenaza mm",
+      "source_id": "IDECA_POT_AMENAZA_MM_URB_2021",
+      "script": "scripts/11_prepare_bogota_remocion.py (DEPRECADO)"
+    }
+  ]
+}
