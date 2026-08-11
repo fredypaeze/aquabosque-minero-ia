@@ -1,0 +1,116 @@
+codigo,upz,localidad,localidad_codigo,score_remocion,score_agua,score_fuego_estructural,score_operativo,indice_presion_ecoterritorial_bogota,nivel,lluvia_72h_mm,incidentes_7d,gradiente_oriente
+UPZ52,La Flora,Usme,05,1.0,0.846,0.968,0.139,0.861,Crítico,62,4,0.769
+UPZ59,Alfonso Lopez,Usme,05,1.0,0.829,0.948,0.139,0.852,Crítico,62,4,0.723
+UPZ60,Parque Entrenubes,Usme,05,1.0,0.827,0.946,0.139,0.851,Crítico,62,4,0.718
+UPZ57,Gran Yomasa,Usme,05,1.0,0.821,0.939,0.139,0.848,Crítico,62,4,0.702
+UPZ63,El Mochuelo,Ciudad Bolívar,19,1.0,0.72,1.0,0.299,0.846,Crítico,58,5,0.63
+UPZ64,Monte Blanco,Ciudad Bolívar,19,1.0,0.722,1.0,0.299,0.846,Crítico,58,5,0.635
+UPR3,Upr Rio Tunjuelo,Ciudad Bolívar,19,1.0,0.718,1.0,0.299,0.845,Crítico,58,5,0.623
+UPZ56,Danubio,Usme,05,1.0,0.812,0.929,0.139,0.843,Crítico,62,4,0.678
+UPZ68,El Tesoro,Ciudad Bolívar,19,1.0,0.703,1.0,0.299,0.841,Crítico,58,5,0.579
+UPZ61,Ciudad Usme,Usme,05,1.0,0.808,0.924,0.139,0.841,Crítico,62,4,0.667
+UPZ67,Lucero,Ciudad Bolívar,19,1.0,0.699,1.0,0.299,0.84,Crítico,58,5,0.569
+UPZ66,San Francisco,Ciudad Bolívar,19,1.0,0.699,1.0,0.299,0.84,Crítico,58,5,0.569
+UPZ58,Comuneros,Usme,05,1.0,0.804,0.92,0.139,0.839,Crítico,62,4,0.656
+UPZ65,Arborizadora,Ciudad Bolívar,19,1.0,0.697,1.0,0.299,0.839,Crítico,58,5,0.563
+UPZ70,Jerusalem,Ciudad Bolívar,19,0.985,0.684,1.0,0.299,0.829,Crítico,58,5,0.525
+UPZ32,San Blas,San Cristóbal,04,1.0,0.421,1.0,0.976,0.824,Crítico,54,3,0.8
+UPZ33,Sosiego,San Cristóbal,04,1.0,0.418,1.0,0.976,0.823,Crítico,54,3,0.786
+UPZ10,La Uribe,Usaquén,01,1.0,0.815,0.825,0.133,0.823,Crítico,38,1,0.992
+UPZ11,San Cristobal Norte,Usaquén,01,1.0,0.816,0.826,0.133,0.823,Crítico,38,1,0.994
+UPZ50,La Gloria,San Cristóbal,04,1.0,0.414,1.0,0.976,0.822,Crítico,54,3,0.76
+UPZ51,Los Libertadores,San Cristóbal,04,1.0,0.414,1.0,0.976,0.822,Crítico,54,3,0.762
+UPZ13,Los Cedros,Usaquén,01,1.0,0.813,0.823,0.133,0.822,Crítico,38,1,0.986
+UPZ9,Verbenal,Usaquén,01,1.0,0.81,0.819,0.133,0.82,Crítico,38,1,0.976
+UPZ34,20 De Julio,San Cristóbal,04,1.0,0.408,1.0,0.976,0.82,Crítico,54,3,0.73
+UPZ14,Usaquen,Usaquén,01,1.0,0.809,0.819,0.133,0.82,Crítico,38,1,0.973
+UPZ69,Ismael Perdomo,Ciudad Bolívar,19,0.969,0.673,0.996,0.299,0.819,Crítico,58,5,0.492
+UPZ1,Paseo De Los Libertadores,Usaquén,01,1.0,0.805,0.815,0.133,0.818,Crítico,38,1,0.963
+UPZ12,Toberin,Usaquén,01,1.0,0.796,0.806,0.133,0.813,Crítico,38,1,0.936
+UPZ16,Santa Barbara,Usaquén,01,1.0,0.793,0.803,0.133,0.812,Crítico,38,1,0.926
+UPZ15,Country Club,Usaquén,01,1.0,0.789,0.799,0.133,0.81,Crítico,38,1,0.913
+UPZ89,San Isidro - Patios,Chapinero,02,1.0,0.659,0.856,0.097,0.779,Crítico,33,1,1.0
+UPZ88,El Refugio,Chapinero,02,1.0,0.636,0.827,0.097,0.766,Crítico,33,1,0.915
+UPZ97,Chico Lago,Chapinero,02,0.988,0.628,0.816,0.097,0.757,Crítico,33,1,0.884
+UPZ90,Pardo Rubio,Chapinero,02,0.985,0.626,0.814,0.097,0.754,Crítico,33,1,0.875
+UPZ99,Chapinero,Chapinero,02,0.975,0.62,0.806,0.097,0.747,Crítico,33,1,0.853
+UPZ91,Sagrado Corazon,Santa Fe,03,0.955,0.645,0.652,0.084,0.714,Crítico,49,2,0.858
+UPZ92,La Macarena,Santa Fe,03,0.952,0.643,0.65,0.084,0.712,Crítico,49,2,0.85
+UPZ96,Lourdes,Santa Fe,03,0.942,0.636,0.643,0.084,0.705,Crítico,49,2,0.826
+UPZ93,Las Nieves,Santa Fe,03,0.936,0.632,0.639,0.084,0.7,Crítico,49,2,0.81
+UPZ95,Las Cruces,Santa Fe,03,0.929,0.628,0.634,0.084,0.695,Crítico,49,2,0.795
+UPZ36,San Jose,Rafael Uribe Uribe,18,0.922,0.406,0.672,0.066,0.632,Alto,45,2,0.715
+UPZ53,Marco Fidel Suarez,Rafael Uribe Uribe,18,0.915,0.403,0.666,0.066,0.627,Alto,45,2,0.696
+UPZ55,Diana Turbay,Rafael Uribe Uribe,18,0.914,0.403,0.666,0.066,0.626,Alto,45,2,0.694
+UPZ54,Marruecos,Rafael Uribe Uribe,18,0.906,0.399,0.66,0.066,0.621,Alto,45,2,0.675
+UPZ39,Quiroga,Rafael Uribe Uribe,18,0.903,0.398,0.658,0.066,0.619,Alto,45,2,0.669
+UPR4,Upr Rio Blanco,Sumapaz,20,0.718,0.62,0.697,0.066,0.619,Alto,29,0,0.444
+UPZ71,Tibabuyes,Suba,11,0.731,0.874,0.109,0.117,0.588,Alto,57,2,0.694
+UPZ28,El Rincon,Suba,11,0.712,0.851,0.106,0.117,0.573,Alto,57,2,0.741
+UPZ27,Suba,Suba,11,0.7,0.837,0.105,0.117,0.564,Alto,57,2,0.771
+UPZ25,La Floresta,Suba,11,0.695,0.831,0.104,0.117,0.56,Alto,57,2,0.783
+UPZ24,Niza,Suba,11,0.687,0.821,0.103,0.117,0.553,Alto,57,2,0.803
+UPR1,Upr Zona Norte,Suba,11,0.677,0.81,0.101,0.117,0.546,Alto,57,2,0.827
+UPZ23,Casa Blanca Suba,Suba,11,0.678,0.81,0.101,0.117,0.546,Alto,57,2,0.826
+UPZ20,La Alhambra,Suba,11,0.671,0.802,0.1,0.117,0.541,Alto,57,2,0.842
+UPZ19,El Prado,Suba,11,0.665,0.795,0.099,0.117,0.536,Alto,57,2,0.857
+UPZ17,San Jose De Bavaria,Suba,11,0.664,0.794,0.099,0.117,0.536,Alto,57,2,0.859
+UPZ18,Britalia,Suba,11,0.661,0.79,0.099,0.117,0.533,Alto,57,2,0.867
+UPZ2,La Academia,Suba,11,0.657,0.785,0.098,0.117,0.529,Alto,57,2,0.879
+UPZ3,Guaymaral,Suba,11,0.643,0.768,0.096,0.117,0.519,Alto,57,2,0.913
+UPZ87,Tintal Sur,Bosa,07,0.394,0.655,0.775,0.084,0.517,Alto,64,3,0.357
+UPZ85,Bosa Central,Bosa,07,0.383,0.635,0.752,0.084,0.502,Alto,64,3,0.42
+UPZ86,El Porvenir,Bosa,07,0.382,0.634,0.75,0.084,0.501,Alto,64,3,0.425
+UPZ84,Bosa Occidental,Bosa,07,0.381,0.632,0.748,0.084,0.5,Alto,64,3,0.432
+UPZ49,Apogeo,Bosa,07,0.368,0.61,0.722,0.084,0.483,Alto,64,3,0.502
+UPR5,Upr Rio Sumapaz,Sumapaz,20,0.554,0.479,0.538,0.066,0.479,Alto,29,0,0.0
+UPZ81,Gran Britalia,Kennedy,08,0.347,0.697,0.555,0.084,0.467,Alto,61,2,0.466
+UPZ83,Las Margaritas,Kennedy,08,0.346,0.695,0.554,0.084,0.466,Alto,61,2,0.471
+UPZ42,Venecia,Tunjuelito,06,0.492,0.522,0.505,0.084,0.463,Alto,59,2,0.57
+UPZ48,Timiza,Kennedy,08,0.341,0.685,0.546,0.084,0.459,Alto,61,2,0.501
+UPZ82,Patio Bonito,Kennedy,08,0.341,0.684,0.545,0.084,0.459,Alto,61,2,0.502
+UPZ79,Calandaima,Kennedy,08,0.337,0.678,0.54,0.084,0.455,Alto,61,2,0.521
+UPZ80,Corabastos,Kennedy,08,0.336,0.676,0.539,0.084,0.454,Alto,61,2,0.527
+UPZ47,Kennedy Central,Kennedy,08,0.334,0.671,0.535,0.084,0.45,Alto,61,2,0.542
+UPZ62,Tunjuelito,Tunjuelito,06,0.477,0.506,0.489,0.084,0.449,Medio,59,2,0.629
+UPZ78,Tintal Norte,Kennedy,08,0.331,0.665,0.53,0.084,0.446,Medio,61,2,0.559
+UPZ45,Carvajal,Kennedy,08,0.328,0.659,0.525,0.084,0.442,Medio,61,2,0.577
+UPZ46,Castilla,Kennedy,08,0.325,0.653,0.52,0.084,0.438,Medio,61,2,0.595
+UPZ44,Americas,Kennedy,08,0.323,0.648,0.516,0.084,0.435,Medio,61,2,0.608
+UPZ113,Bavaria,Kennedy,08,0.319,0.64,0.51,0.084,0.43,Medio,61,2,0.63
+UPZ74,Engativa,Engativá,10,0.337,0.728,0.0,0.084,0.362,Medio,42,1,0.606
+UPZ73,Garces Navas,Engativá,10,0.331,0.716,0.0,0.084,0.356,Medio,42,1,0.638
+UPZ76,Fontibon San Pablo,Fontibón,09,0.301,0.679,0.11,0.084,0.355,Medio,51,1,0.517
+UPZ116,Alamos,Engativá,10,0.326,0.704,0.0,0.084,0.35,Medio,42,1,0.668
+UPZ72,Bolivia,Engativá,10,0.324,0.699,0.0,0.084,0.348,Medio,42,1,0.681
+UPZ117,Aeropuerto El Dorado,Fontibón,09,0.294,0.662,0.107,0.084,0.346,Medio,51,1,0.566
+UPZ31,Santa Cecilia,Engativá,10,0.32,0.692,0.0,0.084,0.344,Medio,42,1,0.701
+UPZ75,Fontibon,Fontibón,09,0.289,0.65,0.105,0.084,0.34,Medio,51,1,0.602
+UPZ30,Boyaca Real,Engativá,10,0.317,0.684,0.0,0.084,0.34,Medio,42,1,0.72
+UPZ105,Jardin Botanico,Engativá,10,0.314,0.679,0.0,0.084,0.338,Medio,42,1,0.733
+UPZ112,Granjas De Techo,Fontibón,09,0.287,0.647,0.105,0.084,0.338,Medio,51,1,0.61
+UPZ29,Minuto De Dios,Engativá,10,0.313,0.677,0.0,0.084,0.337,Medio,42,1,0.74
+UPZ115,Capellania,Fontibón,09,0.283,0.638,0.103,0.084,0.334,Medio,51,1,0.636
+UPZ26,Las Ferias,Engativá,10,0.309,0.667,0.0,0.084,0.332,Medio,42,1,0.765
+UPZ114,Modelia,Fontibón,09,0.279,0.629,0.102,0.084,0.329,Medio,51,1,0.662
+UPZ110,Ciudad Salitre Occidental,Fontibón,09,0.275,0.621,0.101,0.084,0.325,Medio,51,1,0.688
+UPZ94,La Candelaria,La Candelaria,17,0.801,0.0,0.0,0.042,0.324,Medio,27,0,0.824
+UPZ103,Parque Salitre,Barrios Unidos,12,0.0,0.459,0.0,0.066,0.144,Bajo,26,0,0.777
+UPZ22,Doce De Octubre,Barrios Unidos,12,0.0,0.453,0.0,0.066,0.143,Bajo,26,0,0.8
+UPZ21,Los Andes,Barrios Unidos,12,0.0,0.446,0.0,0.066,0.14,Bajo,26,0,0.827
+UPZ98,Los Alcazares,Barrios Unidos,12,0.0,0.444,0.0,0.066,0.14,Bajo,26,0,0.832
+UPZ41,Muzu,Puente Aranda,16,0.0,0.443,0.0,0.042,0.137,Bajo,34,1,0.652
+UPZ43,San Rafael,Puente Aranda,16,0.0,0.437,0.0,0.042,0.135,Bajo,34,1,0.675
+UPZ40,Ciudad Montes,Puente Aranda,16,0.0,0.435,0.0,0.042,0.135,Bajo,34,1,0.685
+UPZ111,Puente Aranda,Puente Aranda,16,0.0,0.431,0.0,0.042,0.133,Bajo,34,1,0.702
+UPZ108,Zona Industrial,Puente Aranda,16,0.0,0.424,0.0,0.042,0.131,Bajo,34,1,0.73
+UPZ109,Ciudad Salitre Oriental,Teusaquillo,13,0.0,0.388,0.0,0.042,0.121,Bajo,24,0,0.736
+UPZ107,Quinta Paredes,Teusaquillo,13,0.0,0.385,0.0,0.042,0.12,Bajo,24,0,0.752
+UPZ104,Parque Simon Bolivar - Can,Teusaquillo,13,0.0,0.381,0.0,0.042,0.118,Bajo,24,0,0.769
+UPZ106,La Esmeralda,Teusaquillo,13,0.0,0.379,0.0,0.042,0.118,Bajo,24,0,0.778
+UPZ100,Galerias,Teusaquillo,13,0.0,0.372,0.0,0.042,0.116,Bajo,24,0,0.807
+UPZ101,Teusaquillo,Teusaquillo,13,0.0,0.373,0.0,0.042,0.116,Bajo,24,0,0.805
+UPZ38,Restrepo,Antonio Nariño,15,0.0,0.319,0.0,0.0,0.096,Bajo,25,0,0.711
+UPZ35,Ciudad Jardin,Antonio Nariño,15,0.0,0.312,0.0,0.0,0.094,Bajo,25,0,0.745
+UPZ102,La Sabana,Los Mártires,14,0.0,0.0,0.0,0.0,0.0,Bajo,22,0,0.796
+UPZ37,Santa Isabel,Los Mártires,14,0.0,0.0,0.0,0.0,0.0,Bajo,22,0,0.743

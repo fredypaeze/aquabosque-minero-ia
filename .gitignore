@@ -21,3 +21,6 @@ outputs/*_entrega_completa.zip
 # Guion del expositor: interno, contiene la clave de demo — no versionar en público
 outputs/jurado_2026/GUION_EXPOSITOR.pptx
 scripts/guion_expositor.py
+
+# Bronze grande Bogotá (reproducible via scripts/_bogota_sources.py)
+data/raw/bogota/bitacora_emergencias.csv

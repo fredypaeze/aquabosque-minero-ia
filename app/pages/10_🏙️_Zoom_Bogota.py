@@ -1,6 +1,8 @@
+import datetime
 import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -19,6 +21,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA_REAL = ROOT / "data" / "processed" / "bogota_zoom.csv"
 DATA_DEMO = ROOT / "data" / "processed" / "bogota_zoom_demo.csv"
 GEO = ROOT / "data" / "processed" / "bogota_localidades.geojson"
+UPZ_CSV = ROOT / "data" / "processed" / "bogota_upz.csv"
+UPZ_GEO = ROOT / "data" / "processed" / "bogota_upz.geojson"
 ORDEN = ["Crítico", "Alto", "Medio", "Bajo"]
 EJES = {
     "Indice total": "indice_presion_ecoterritorial_bogota",
@@ -53,8 +57,43 @@ def cargar_geojson(mtime):
         return json.load(f)
 
 
+@st.cache_data
+def cargar_upz(mtime):
+    if not (UPZ_CSV.exists() and UPZ_GEO.exists()):
+        return None, None
+    d = pd.read_csv(UPZ_CSV, dtype={"codigo": str})
+    with open(UPZ_GEO, encoding="utf-8") as f:
+        g = json.load(f)
+    return d.sort_values("indice_presion_ecoterritorial_bogota", ascending=False), g
+
+
+MODELO = ROOT / "models" / "bogota_alerta_xgb.joblib"
+MET_JSON = ROOT / "models" / "metrics" / "bogota_alerta_metrics.json"
+
+
+@st.cache_resource
+def cargar_modelo():
+    if not MODELO.exists():
+        return None, {}
+    import joblib
+    bundle = joblib.load(MODELO)
+    met = json.loads(MET_JSON.read_text(encoding="utf-8")) if MET_JSON.exists() else {}
+    return bundle, met
+
+
+def _feats_R(R, srem, sagu, mes):
+    """Mapea una lluvia 72h (R mm) a las features del modelo (misma regla del entrenamiento)."""
+    return pd.DataFrame({
+        "p1": R / 3, "p3": R, "p7": R * 1.4, "p15": R * 1.9, "pmax3": R * 0.55,
+        "wet7": min(7, R / 8), "score_remocion": srem, "score_agua": sagu,
+        "mes_sin": np.sin(2 * np.pi * mes / 12), "mes_cos": np.cos(2 * np.pi * mes / 12),
+    })
+
+
 df, data_name = cargar()
 geo = cargar_geojson(GEO.stat().st_mtime)
+df_upz, geo_upz = cargar_upz(UPZ_GEO.stat().st_mtime if UPZ_GEO.exists() else 0)
+modelo_bundle, modelo_met = cargar_modelo()
 
 B.hero(
     eyebrow="Prototipo avanzado · Bogota",
@@ -111,7 +150,9 @@ B.kpis([
 
 st.caption(f"Dataset activo: `{data_name}`")
 
-tab1, tab2, tab3 = st.tabs(["Mapa estrategico", "Ficha territorial", "Integracion real"])
+tab1, tab2, tab3, tab4 = st.tabs(
+    ["Mapa estrategico", "Ficha territorial", "Integracion real", "🚨 Alerta temprana"]
+)
 
 with tab1:
     c1, c2, c3 = st.columns([1.2, 1.1, 1.0])
@@ -386,5 +427,205 @@ with tab3:
             "`Señal operativa` con lluvia diaria en vivo del SAB / IDIGER. "
             "Además, `Ladera y remoción` ya incorpora amenaza y condición de riesgo por movimiento en masa del POT."
         )
+
+# ============================================================
+#  TAB 4 — ALERTA TEMPRANA POR LLUVIA (simulador operativo, lenguaje IDIGER / SAB)
+# ============================================================
+ACC_ALERTA = {"Rojo": "#b91c1c", "Naranja": "#ea580c", "Amarillo": "#eab308", "Verde": "#16a34a"}
+ORDEN_ALERTA = ["Rojo", "Naranja", "Amarillo", "Verde"]
+ACCIONES_IDIGER = {
+    ("Rojo", "Remoción en masa"): "Evacuación preventiva de laderas · cierre de vías en riesgo · activación del COE local.",
+    ("Rojo", "Inundación / anegamiento"): "Evacuación de zonas bajas · bombeo · alerta a comunidades de ronda de río.",
+    ("Naranja", "Remoción en masa"): "Monitoreo instrumental de ladera · alistamiento de maquinaria · rondas de inspección.",
+    ("Naranja", "Inundación / anegamiento"): "Vigilancia de jarillones y drenajes · limpieza de sumideros · preposicionamiento.",
+    ("Amarillo", "Remoción en masa"): "Vigilancia informativa · seguimiento a pluviómetros SAB en cerros.",
+    ("Amarillo", "Inundación / anegamiento"): "Vigilancia informativa · seguimiento a niveles de quebradas y humedales.",
+}
+
+
+def _nivel_alerta(x):
+    return "Rojo" if x >= 0.55 else "Naranja" if x >= 0.35 else "Amarillo" if x >= 0.18 else "Verde"
+
+
+with tab4:
+    st.markdown("## Alerta temprana por lluvia · simulador operativo")
+    st.caption(
+        "Conjuga la lluvia acumulada (72 h) con la susceptibilidad de cada localidad a "
+        "<b>remoción en masa</b> e <b>inundación</b>. Reproduce el lenguaje operativo de "
+        "<b>IDIGER</b> y del Sistema de Alerta de Bogotá (<b>SAB</b>): mueva la lluvia y "
+        "observe qué localidades entran en alerta y con qué umbral.",
+        unsafe_allow_html=True,
+    )
+
+    lluvia_obs = float(df["lluvia_72h_mm"].max())
+    cS1, cS2, cS3 = st.columns([2.4, 1, 1])
+    R = cS1.slider(
+        "Lluvia acumulada simulada (mm / 72 h)",
+        min_value=0, max_value=150, value=int(round(lluvia_obs)), step=5,
+        help="Referencia IDEAM / IDIGER: >50 mm/72h alerta media · >100 mm alta · >130 mm extrema.",
+    )
+    cS2.metric("Lluvia observada (SAB)", f"{lluvia_obs:.0f} mm", help="Máximo actual entre estaciones de la red SAB.")
+    cat_lluvia = "Extrema" if R >= 130 else "Alta" if R >= 100 else "Media" if R >= 50 else "Baja"
+    cS3.metric("Categoría de lluvia", cat_lluvia)
+
+    cR1, cR2 = st.columns(2)
+    if df_upz is not None:
+        res = cR1.radio(
+            "Resolución territorial", ["Localidad (20)", f"UPZ ({len(df_upz)})"],
+            horizontal=True,
+            help="UPZ = Unidad de Planeamiento Zonal, la escala operativa con que trabaja IDIGER.",
+        )
+    else:
+        res = "Localidad (20)"
+    if modelo_bundle is not None:
+        motor = cR2.radio(
+            "Motor de cálculo", ["🤖 Modelo IA (XGBoost)", "Regla (susceptibilidad × lluvia)"],
+            horizontal=True,
+            help="El Modelo IA predice la probabilidad calibrada de emergencia (remoción/inundación) "
+                 "en las próximas 72 h, aprendida de 8 años de eventos IDIGER + lluvia SAB.",
+        )
+    else:
+        motor = "Regla"
+    es_upz = res.startswith("UPZ")
+    usar_ia = motor.startswith("🤖")
+    base_df = df_upz if es_upz else df
+    base_geo = geo_upz if es_upz else geo
+    unidad_txt = "UPZ" if es_upz else "localidades"
+
+    a = base_df.copy()
+    a["unidad"] = (a["upz"] + " · " + a["localidad"]) if es_upz else a["localidad"]
+    a["susc"] = (0.6 * a["score_remocion"] + 0.4 * a["score_agua"]).clip(0, 1)
+    a["driver_lluvia"] = [
+        "Remoción en masa" if rm >= ag else "Inundación / anegamiento"
+        for rm, ag in zip(a["score_remocion"], a["score_agua"])
+    ]
+    a["umbral_naranja_mm"] = [(120 * 0.35 / s) if s > 0.01 else float("nan") for s in a["susc"]]
+
+    if usar_ia:
+        mes = datetime.date.today().month
+        feats = modelo_bundle["feats"]
+        X = _feats_R(R, a["score_remocion"].to_numpy(), a["score_agua"].to_numpy(), mes)[feats]
+        a["p_ia"] = modelo_bundle["iso"].predict(modelo_bundle["model"].predict_proba(X)[:, 1])
+        a["alerta"] = a["p_ia"]
+        _bnd = modelo_met.get("bandas", {})
+        _base = _bnd.get("base_rate", 0.06)
+        _pn = _bnd.get("p_naranja", 0.15)
+        _pr = _bnd.get("p_rojo", 0.22)
+        a["nivel_alerta"] = a["p_ia"].map(
+            lambda x: "Rojo" if x >= _pr else "Naranja" if x >= _pn else "Amarillo" if x >= _base * 1.5 else "Verde")
+    else:
+        rf = min(R / 120.0, 1.0)
+        a["alerta"] = (a["susc"] * rf).clip(0, 1)
+        a["nivel_alerta"] = a["alerta"].map(_nivel_alerta)
+
+    cnt = a["nivel_alerta"].value_counts()
+    B.kpis([
+        {"lab": "En rojo", "val": int(cnt.get("Rojo", 0)), "foot": "Acción/evacuación inmediata", "acc": ACC_ALERTA["Rojo"]},
+        {"lab": "En naranja", "val": int(cnt.get("Naranja", 0)), "foot": "Alistamiento y monitoreo", "acc": ACC_ALERTA["Naranja"]},
+        {"lab": "En amarillo", "val": int(cnt.get("Amarillo", 0)), "foot": "Vigilancia informativa", "acc": ACC_ALERTA["Amarillo"]},
+        {"lab": "Unidades priorizadas", "val": f"{int(a['nivel_alerta'].isin(['Rojo', 'Naranja']).sum())}/{len(a)}", "foot": f"{unidad_txt} en alerta", "acc": B.AGUA},
+    ])
+
+    if usar_ia and modelo_met:
+        m = modelo_met
+        st.markdown(
+            f'<div class="ab-note" style="background:#eef6ff;border-color:#bcd3f5;border-left-color:#0653c6;color:#0a2342;">'
+            f'🤖 <b>Motor: XGBoost supervisado, monotónico y calibrado</b> — validación <b>temporal</b> en 2024 · '
+            f'<b>ROC-AUC {m.get("roc_auc")}</b> · <b>PR-AUC {m.get("pr_auc")}</b> '
+            f'(×{m.get("lift_pr_auc")} sobre el azar) · Brier {m.get("brier_cal")}. '
+            f'Predice <b>P(emergencia por lluvia en 72 h)</b> por unidad; el umbral de lluvia es '
+            f'<b>aprendido de la historia</b>, no fijo.</div>',
+            unsafe_allow_html=True)
+        with st.expander("Ficha técnica del modelo (para el equipo de datos)"):
+            st.markdown(
+                f"- **Tarea:** clasificación binaria — ¿ocurre remoción en masa o inundación en la unidad en las próximas 72 h?\n"
+                f"- **Datos:** Bitácora de Emergencias IDIGER (2017–2025, 859k registros) + SAB lluvia diaria "
+                f"(70 estaciones) + susceptibilidad AquaBosque. Unidad de análisis: localidad-día "
+                f"({m.get('n_train','?')} train / {m.get('n_test','?')} test).\n"
+                f"- **Features:** {', '.join(modelo_bundle['feats'])}.\n"
+                f"- **Top explicativas (SHAP):** {', '.join(m.get('top_features', []))}.\n"
+                f"- **Validación:** {m.get('particion','')} — sin fuga temporal. Calibración isotónica "
+                f"(Brier {m.get('brier_uncal')} → {m.get('brier_cal')}).\n"
+                f"- **Monotonía impuesta:** P no decrece si sube la lluvia o la susceptibilidad (coherencia física).\n"
+                f"- **Honestidad:** evento raro (base {m.get('pos_rate_test')}); el mérito es el **lift PR-AUC ×"
+                f"{m.get('lift_pr_auc')}**, la calibración y la explicabilidad — no una accuracy inflada."
+            )
+
+    if es_upz:
+        st.caption(
+            "Resolución **UPZ (115 unidades)** · geometría oficial IDECA / Secretaría de Gobierno. "
+            "Cada UPZ hereda el perfil de amenaza real de su localidad y se modula por un "
+            "**gradiente oriente–occidente** (Cerros Orientales ↑ remoción · río Bogotá y humedales ↑ anegamiento). "
+            "El cruce fino con las capas IDIGER de amenaza por movimiento en masa por UPZ es el siguiente paso "
+            "(fuente identificada: IDECA `emergencias/gestionriesgos`)."
+        )
+
+    mcol, tcol = st.columns([1.35, 1])
+    with mcol:
+        hd = {"nivel_alerta": True, "driver_lluvia": True, "susc": ":.2f", "codigo": False}
+        if usar_ia:
+            hd["p_ia"] = ":.0%"
+        else:
+            hd["umbral_naranja_mm"] = ":.0f"
+        figA = px.choropleth_map(
+            a, geojson=base_geo, locations="codigo", featureidkey="id",
+            color="nivel_alerta", color_discrete_map=ACC_ALERTA,
+            category_orders={"nivel_alerta": ORDEN_ALERTA},
+            center={"lat": 4.62, "lon": -74.11}, zoom=9.15, opacity=0.82, height=560,
+            hover_name="unidad", hover_data=hd,
+        )
+        figA.update_traces(marker_line_width=0.5 if es_upz else 0.7, marker_line_color="rgba(255,255,255,.85)")
+        figA.update_layout(
+            map_style="carto-positron", margin=dict(l=0, r=0, t=0, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=0.98, xanchor="left", x=0.01,
+                        bgcolor="rgba(255,255,255,.9)", bordercolor="#cfe6d8", borderwidth=1, title=None),
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(figA, use_container_width=True, config={"displayModeBar": False})
+
+    with tcol:
+        st.markdown(f"#### {'UPZ' if es_upz else 'Localidades'} en alerta")
+        en_alerta = a[a["nivel_alerta"] != "Verde"].sort_values("alerta", ascending=False)
+        if len(en_alerta) == 0:
+            st.success(f"Ninguna {'UPZ' if es_upz else 'localidad'} en alerta con esta lluvia. Condición operativa normal.")
+        else:
+            for _, r in en_alerta.head(12).iterrows():
+                if usar_ia:
+                    sub = f'P(emergencia 72h) <b>{r["p_ia"]:.0%}</b> · {r["driver_lluvia"]}'
+                else:
+                    sub = f'{r["driver_lluvia"]} · dispara a naranja desde {r["umbral_naranja_mm"]:.0f} mm/72h'
+                st.markdown(
+                    f'<div style="border-left:5px solid {ACC_ALERTA[r["nivel_alerta"]]};background:#fff;'
+                    f'border:1px solid #e7efe9;border-radius:10px;padding:8px 12px;margin:5px 0;">'
+                    f'<b>{r["unidad"]}</b> · '
+                    f'<span style="color:{ACC_ALERTA[r["nivel_alerta"]]};font-weight:700;">{r["nivel_alerta"]}</span>'
+                    f'<br><span style="font-size:.82rem;color:#4c5b52;">{sub}</span></div>',
+                    unsafe_allow_html=True,
+                )
+            if len(en_alerta) > 12:
+                st.caption(f"… y {len(en_alerta) - 12} {'UPZ' if es_upz else 'localidades'} más en alerta.")
+
+    top_a = a.sort_values("alerta", ascending=False).iloc[0]
+    if top_a["nivel_alerta"] != "Verde":
+        accion = ACCIONES_IDIGER.get((top_a["nivel_alerta"], top_a["driver_lluvia"]),
+                                     "Condición normal · sin acción por lluvia.")
+        extra = (f'Probabilidad estimada por el modelo: <b>{top_a["p_ia"]:.0%}</b>.'
+                 if usar_ia else
+                 f'Umbral de disparo estimado: <b>{top_a["umbral_naranja_mm"]:.0f} mm/72h</b>.')
+        B.note(f'<b>Acción sugerida — {top_a["unidad"]} ({top_a["nivel_alerta"]}):</b> {accion} {extra}')
+
+    st.markdown("### Validación · el índice acierta dónde ya ocurre")
+    c_fire = df["indice_presion_ecoterritorial_bogota"].corr(df["fire_hist_event_count"])
+    c_inc = df["indice_presion_ecoterritorial_bogota"].corr(df["incidentes_7d"])
+    c_mm = df["score_remocion"].corr(df["mm_riesgo_count"])
+    v1, v2, v3 = st.columns(3)
+    v1.metric("Índice ↔ incendios históricos", f"{c_fire:.2f}", help="Correlación con eventos forestales registrados (SIRE / IDIGER).")
+    v2.metric("Índice ↔ incidentes 7d", f"{c_inc:.2f}", help="Correlación con incidentes recientes (SIRE).")
+    v3.metric("Remoción ↔ zonas de riesgo POT", f"{c_mm:.2f}", help="Correlación con polígonos de condición de riesgo (POT / IDIGER).")
+    B.note(
+        "El índice y sus componentes correlacionan <b>0.7–0.8</b> con los eventos e insumos oficiales de riesgo: "
+        "la priorización no es teórica, <b>coincide con dónde Bogotá ya registra emergencias</b>. "
+        "Es el mismo motor nacional de AquaBosque, bajado a <b>escala intraurbana</b> para IDIGER."
+    )
 
 B.footer()
