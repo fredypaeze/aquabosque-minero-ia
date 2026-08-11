@@ -1,0 +1,60 @@
+{
+  "fuente": "IDIGER Bitácora de Emergencias",
+  "bronze_sha256": "e7d9a092a5b8565e",
+  "naturaleza": "OBSERVED historical emergency density (DESCRIPTIVO, no predictivo)",
+  "geocodificacion": "campo Localidad/UPZ asignado por IDIGER (sin transformación CRS)",
+  "periodo": [
+    "2017-01-01",
+    "2025-06-29"
+  ],
+  "eventos_remocion_total": 2092,
+  "eventos_inundacion_total": 1952,
+  "cobertura_upz_pct": 72.6,
+  "top5_remocion": [
+    [
+      "Ciudad Bolívar",
+      561
+    ],
+    [
+      "Usme",
+      270
+    ],
+    [
+      "San Cristóbal",
+      266
+    ],
+    [
+      "Rafael Uribe Uribe",
+      243
+    ],
+    [
+      "Usaquén",
+      240
+    ]
+  ],
+  "top5_inundacion": [
+    [
+      "Usaquén",
+      248
+    ],
+    [
+      "Suba",
+      212
+    ],
+    [
+      "Engativá",
+      138
+    ],
+    [
+      "Kennedy",
+      132
+    ],
+    [
+      "Chapinero",
+      127
+    ]
+  ],
+  "sanidad_fisica": "remoción debe concentrarse en cerros (Ciudad Bolívar/Usme/San Cristóbal/Rafael Uribe/Chapinero)",
+  "limitacion": "sesgo de reporte (exposición/monitoreo); refleja lo ocurrido/reportado, no susceptibilidad física ni pronóstico",
+  "error_crs": "0 (geocodificación oficial; sin el afín de 57 km del método POT anterior)"
+}

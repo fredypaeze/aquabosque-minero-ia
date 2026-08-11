@@ -1,0 +1,21 @@
+cod,localidad,eventos_remocion,eventos_inundacion,eventos_total,dias_remocion,idx_remocion_obs,idx_inundacion_obs,idx_territorial_obs,fuente,naturaleza
+19,Ciudad Bolívar,561,106,36489,354,1.0,0.7,1.0,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+01,Usaquén,240,248,58793,187,0.8,1.0,0.95,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+04,San Cristóbal,266,88,29773,202,0.9,0.5,0.9,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+05,Usme,270,77,21079,224,0.95,0.375,0.825,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+18,Rafael Uribe Uribe,243,104,28674,186,0.85,0.6,0.825,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+02,Chapinero,178,127,35359,136,0.7,0.8,0.75,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+11,Suba,49,212,78183,44,0.65,0.95,0.7,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+03,Santa Fe,185,39,23221,149,0.75,0.25,0.65,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+10,Engativá,1,138,71754,1,0.3,0.9,0.6,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+08,Kennedy,2,132,70169,2,0.425,0.85,0.55,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+06,Tunjuelito,1,114,14778,1,0.3,0.75,0.5,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+12,Barrios Unidos,0,105,30517,0,0.125,0.65,0.45,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+16,Puente Aranda,2,89,34343,2,0.425,0.55,0.4,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+13,Teusaquillo,0,87,29055,0,0.125,0.45,0.35,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+07,Bosa,5,77,43151,5,0.5,0.375,0.3,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+09,Fontibón,0,62,32394,0,0.125,0.3,0.25,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+20,Sumapaz,40,1,100,29,0.6,0.05,0.2,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+17,La Candelaria,19,12,4842,17,0.55,0.1,0.15,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+14,Los Mártires,0,27,21549,0,0.125,0.2,0.1,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE
+15,Antonio Nariño,1,21,11356,1,0.3,0.15,0.05,IDIGER Bitácora (geocodificación oficial por localidad),OBSERVED_DESCRIPTIVE

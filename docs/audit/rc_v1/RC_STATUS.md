@@ -62,8 +62,24 @@ Trabajo preparado: contrato+config (Sec 5/23), bronze con hash (Sec 7), pipeline
 5. Muestra escasa de positivos por localidad/mes → validación por territorio limitada.
 6. CRS local de Bogotá no etiquetado en la fuente; se identificó (~96% in-bbox) pero falta la definición autoritativa IDECA para asignación fina.
 
-## VEREDICTO: **NOT READY FOR FINAL REVIEW**
-OVERALL RELEASE = FAIL (DATA FAIL + MODEL FAIL).
+## REMEDIACIÓN EN CURSO (Opción A) — capa territorial reconstruida CRS-safe
+Se reemplazó la susceptibilidad POT (afín, 57 km error) por un **índice territorial DESCRIPTIVO**
+de densidad histórica de emergencias, **geocodificado por IDIGER** en la propia Bitácora
+(campo Localidad/UPZ) → **error CRS = 0** (sin transformación de coordenadas).
+- Fuente: IDIGER Bitácora (hash en `outputs/rc_v1/territorial_index_validation.json`).
+- Período 2017–2025; 2.092 remoción + 1.952 inundación; cobertura UPZ 72.6%.
+- Sanidad física correcta: remoción en cerros (Ciudad Bolívar 561, Usme 270, San Cristóbal 266, Rafael Uribe 243).
+- Naturaleza declarada: **OBSERVED / DESCRIPTIVO** (no predictivo, no susceptibilidad física). Limitación: sesgo de reporte.
+- Salidas: `data/processed/bogota_territorial_v1.csv`, `bogota_upz_territorial_v1.csv`, `scripts/rc/build_territorial_index.py`.
+→ GEOSPATIAL_INTEGRITY del índice territorial: **resuelto por construcción** (falta cerrar `score_agua`/otras capas y formalizar contratos).
+
+## VEREDICTO ACTUAL: **NOT READY FOR FINAL REVIEW** (en remediación)
+OVERALL RELEASE = FAIL. El bloqueo de CRS del núcleo territorial está resuelto por la vía
+IDIGER; **pendiente** para una RC válida bajo Opción A: (1) cerrar las demás capas de
+`bogota_zoom.csv` (agua) con el mismo estándar; (2) Capa 3 producto (índice + escenario de
+lluvia etiquetado, UPZ = priorización, retirar todo claim de probabilidad predictiva);
+(3) Capa 4 trazabilidad/ops (source registry, lineage, run manifest, tests de regresión de
+F1–F9, clean-room, rollback); (4) los 7 docs obligatorios (Sec 67); (5) reejecución final.
 
 ## Camino para una RC válida (Opción A, honesta)
 1. **Reconstruir la capa territorial con georreferenciación correcta:** (a) refinar el CRS local de Bogotá a los parámetros autoritativos de IDECA y reasignar polígonos POT con pyproj (transformación geodésica), o (b) usar la **geocodificación por localidad de la Bitácora IDIGER** (autoritativa, sin CRS) para un índice **descriptivo** de densidad histórica de emergencias. Regenerar `score_remocion`/`score_agua` con test de puntos conocidos y error en metros.
