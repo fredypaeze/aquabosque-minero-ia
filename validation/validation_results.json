@@ -1,0 +1,66 @@
+{
+  "RUN_ID": "20260811T134840Z_bd7216c",
+  "created_at": "2026-08-11T13:48:41.280978Z",
+  "git_commit": "bd7216c72a29f0b9b3509db75d36d94ee0dc5756",
+  "branch": "feature/zoom-bogota-rc-v1",
+  "python": "3.12.3",
+  "config": "config/release_zoom_bogota_v1.yaml",
+  "product_option": "A (índice territorial descriptivo + escenario de lluvia etiquetado)",
+  "regression_tests": {
+    "passed": true,
+    "summary": "============================== 11 passed in 0.05s =============================="
+  },
+  "key_metrics_honest": {
+    "roc_auc": 0.735,
+    "pr_auc": 0.163,
+    "brier_skill_score": 0.035,
+    "crs_affine_error_m_median": 57496
+  },
+  "CAPA_1_DATA": {
+    "TEMPORAL_INTEGRITY": "PASS",
+    "TARGET_VALIDITY": "PASS",
+    "DATA_LEAKAGE": "PASS",
+    "GEOSPATIAL_INTEGRITY": "PARTIAL",
+    "DATA_SUFFICIENCY": "QUANTIFIED",
+    "DATA_REPRESENTATIVENESS": "WARNING",
+    "DATA_TRACEABILITY": "PARTIAL",
+    "DATA_QUALITY": "PARTIAL",
+    "DATA_APPROVED": "FAIL"
+  },
+  "CAPA_2_MODEL": {
+    "BASELINES": "PASS",
+    "NEGATIVE_CONTROLS": "PASS",
+    "UNCERTAINTY": "PASS",
+    "CALIBRATION": "MARGINAL",
+    "PREDICTIVE_VALUE": "FAIL",
+    "OPERATIONAL_UTILITY": "FAIL",
+    "GENERALIZATION": "N/A_OptionA",
+    "EXPLAINABILITY": "PENDING",
+    "nota": "Bajo Opción A el producto NO es predictivo; el modelo predictivo queda documentado como no-apto.",
+    "MODEL_APPROVED": "FAIL"
+  },
+  "CAPA_3_PRODUCT": {
+    "END_TO_END": "NOT_STARTED",
+    "FRONTEND_CONTRACT": "NOT_STARTED",
+    "RESOLUTION_SEMANTICS": "NOT_STARTED",
+    "FAIL_SAFE": "NOT_STARTED",
+    "DATA_FRESHNESS": "NOT_STARTED",
+    "PRODUCT_APPROVED": "FAIL"
+  },
+  "CAPA_4_TRACEABILITY": {
+    "SOURCE_REGISTRY": "PASS",
+    "REGRESSION_TESTS": "PASS",
+    "DATA_LINEAGE": "PENDING",
+    "FIELD_LINEAGE": "PENDING",
+    "PREDICTION_TRACE": "PENDING",
+    "RUN_MANIFEST": "PARTIAL",
+    "ARTIFACT_REGISTRY": "PENDING",
+    "VERSIONING": "PARTIAL",
+    "REPRODUCIBILITY": "PARTIAL",
+    "CLEAN_ROOM": "PENDING",
+    "ROLLBACK": "PENDING",
+    "TRACEABILITY_APPROVED": "FAIL"
+  },
+  "OVERALL_RELEASE": "FAIL",
+  "verdict": "NOT READY FOR FINAL REVIEW"
+}

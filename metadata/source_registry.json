@@ -1,0 +1,104 @@
+{
+  "generated_by": "scripts/rc/build_source_registry.py",
+  "note": "SOURCE_ID obligatorio; ningún dataset sin él (Sec 6). Autoridad = archivo + hash.",
+  "sources": [
+    {
+      "SOURCE_ID": "IDIGER_BITACORA_V202608",
+      "nombre": "Bitácora de Emergencias IDIGER",
+      "entidad": "IDIGER / SIRE",
+      "portal": "Datos Abiertos Bogotá",
+      "licencia": "CC-BY 4.0",
+      "url": "https://datosabiertos.bogota.gov.co/dataset/bitacora-de-emergencias",
+      "cobertura_temporal": "2017-01..2025-06",
+      "cobertura_espacial": "Bogotá D.C.",
+      "frecuencia": "evento",
+      "formato": "CSV",
+      "crs": "N/A (geocodificado a localidad/UPZ por IDIGER)",
+      "unidad": "evento",
+      "archivo": "data/raw/bogota/bitacora_emergencias.csv",
+      "campos_usados": [
+        "Fecha reporte",
+        "Localidad",
+        "Upz",
+        "Tipo de afectación"
+      ],
+      "script_ingesta": "scripts/_bogota_sources.py",
+      "file_hash": "sha256:e7d9a092a5b8565e64435a579712a4ab692c756051b1568f602bfaa35bbd05b7",
+      "file_size": 81189952,
+      "present": true
+    },
+    {
+      "SOURCE_ID": "IDIGER_SAB_LLUVIA_V202608",
+      "nombre": "SAB Lluvia diaria",
+      "entidad": "IDIGER — Sistema de Alerta de Bogotá",
+      "portal": "Datos Abiertos Bogotá",
+      "licencia": "CC-BY 4.0",
+      "url": "https://datosabiertos.bogota.gov.co/dataset/sab-sistema-de-alerta-de-bogota-idiger-bogota-d-c-15-10-2021",
+      "cobertura_temporal": "2021-09..2024-12",
+      "cobertura_espacial": "70 estaciones Bogotá",
+      "frecuencia": "diaria",
+      "formato": "CSV",
+      "crs": "N/A (matriz fecha×estación)",
+      "unidad": "mm/día",
+      "archivo": "data/raw/bogota/sab_lluvia_diaria.csv",
+      "campos_usados": [
+        "FECHALECTURA",
+        "<estaciones>"
+      ],
+      "script_ingesta": "scripts/_bogota_sources.py",
+      "file_hash": "sha256:dcefca7f99f6c6341ba0e4237cd485ff8f84e6d8ce4244de92625dc710870f8e",
+      "file_size": 305549,
+      "present": true
+    },
+    {
+      "SOURCE_ID": "IDIGER_SAB_ESTACIONES_V202608",
+      "nombre": "Catálogo estaciones SAB",
+      "entidad": "IDIGER — SAB",
+      "portal": "Datos Abiertos Bogotá",
+      "licencia": "CC-BY 4.0",
+      "url": "https://datosabiertos.bogota.gov.co/dataset/sab-sistema-de-alerta-de-bogota-idiger-bogota-d-c-15-10-2021",
+      "cobertura_temporal": "vigente",
+      "cobertura_espacial": "77 estaciones",
+      "frecuencia": "catálogo",
+      "formato": "CSV",
+      "crs": "lat/lon (crudo con punto de miles → /1e5)",
+      "unidad": "estación",
+      "archivo": "data/raw/bogota/sab_estaciones.csv",
+      "campos_usados": [
+        "Estación",
+        "Latitud",
+        "Longitud",
+        "Localidad"
+      ],
+      "script_ingesta": "scripts/_bogota_sources.py",
+      "file_hash": "sha256:5963310d8df4f9e9f3ac6e8e6343c16656f4f841ba0e91db518130f18b6cf145",
+      "file_size": 10707,
+      "present": true
+    },
+    {
+      "SOURCE_ID": "IDECA_POT_AMENAZA_MM_URB_2021",
+      "nombre": "Amenaza mov. en masa urbano (POT)",
+      "entidad": "IDECA / SDP",
+      "portal": "Datos Abiertos Bogotá",
+      "licencia": "CC-BY 4.0",
+      "url": "https://datosabiertos.bogota.gov.co/dataset/areas-amenaza-movimientos-en-masa...",
+      "cobertura_temporal": "POT 2021 (escala 1:5000, 2016)",
+      "cobertura_espacial": "Bogotá urbano",
+      "frecuencia": "estático",
+      "formato": "GeoJSON",
+      "crs": "SISTEMA LOCAL BOGOTÁ (Observatorio) sin etiquetar — REQUIERE CRS autoritativo IDECA",
+      "unidad": "polígono",
+      "archivo": "data/raw/bogota/pot/amenaza_mm_urbano.geojson",
+      "campos_usados": [
+        "geometry",
+        "CATEGORIZA",
+        "SHAPE_Area"
+      ],
+      "script_ingesta": "scripts/11_prepare_bogota_remocion.py (DEPRECADO: afín 57km)",
+      "estado": "NO USAR sin reproyección geodésica; reemplazado en V1 por índice IDIGER",
+      "file_hash": "sha256:570ac4c445d28a24a7d17f76f87b779c110f6e980741ec6468663ae7889eea0f",
+      "file_size": 43822277,
+      "present": true
+    }
+  ]
+}
