@@ -554,10 +554,9 @@ with tab4:
     if es_upz:
         st.caption(
             "Resolución **UPZ (115 unidades)** · geometría oficial IDECA / Secretaría de Gobierno. "
-            "Cada UPZ hereda el perfil de amenaza real de su localidad y se modula por un "
-            "**gradiente oriente–occidente** (Cerros Orientales ↑ remoción · río Bogotá y humedales ↑ anegamiento). "
-            "El cruce fino con las capas IDIGER de amenaza por movimiento en masa por UPZ es el siguiente paso "
-            "(fuente identificada: IDECA `emergencias/gestionriesgos`)."
+            "La susceptibilidad de cada UPZ **cruza el perfil físico de su localidad (POT) con la "
+            "amenaza observada**: el número real de emergencias de remoción/inundación registradas "
+            "en esa UPZ por IDIGER (Bitácora 2017–2025). Ej.: **Lucero** concentra 140 remociones históricas."
         )
 
     mcol, tcol = st.columns([1.35, 1])
@@ -567,6 +566,8 @@ with tab4:
             hd["p_ia"] = ":.0%"
         else:
             hd["umbral_naranja_mm"] = ":.0f"
+        if es_upz and "eventos_remocion" in a.columns:
+            hd["eventos_remocion"] = True
         figA = px.choropleth_map(
             a, geojson=base_geo, locations="codigo", featureidkey="id",
             color="nivel_alerta", color_discrete_map=ACC_ALERTA,

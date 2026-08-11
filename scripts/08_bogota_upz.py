@@ -22,6 +22,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -82,6 +83,34 @@ def clamp01(v):
     return max(0.0, min(1.0, v))
 
 
+def upz_eventos():
+    """Amenaza OBSERVADA por UPZ = registro real de emergencias IDIGER (Bitácora).
+    Cruce fino UPZ↔amenaza: usa un CSV curado pequeño si existe; si no, lo calcula del
+    crudo (78 MB, se descarga desde la fuente oficial si falta) y lo guarda."""
+    cache = PROC / "bogota_upz_eventos.csv"
+    if cache.exists():
+        ev = pd.read_csv(cache, dtype={"cod_num": str})
+    else:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import _bogota_sources
+        raw = _bogota_sources.fetch_all(ROOT / "data" / "raw" / "bogota")
+        b = pd.read_csv(raw / "bitacora_emergencias.csv", sep=";", encoding="latin-1",
+                        skiprows=2, low_memory=False)
+        b.columns = [c.strip() for c in b.columns]
+        b["cod_num"] = b["Upz"].astype(str).str.extract(r"^\s*(\d+)")
+        t = b["Tipo de afectación"].astype(str)
+        b["rem"] = t.str.contains("emoci|eslizam|talud|ladera", case=False, regex=True)
+        b["inu"] = t.str.contains("nundaci|ncharca|negaci", case=False, regex=True)
+        ev = (b.dropna(subset=["cod_num"]).groupby("cod_num")
+              .agg(eventos_remocion=("rem", "sum"), eventos_inundacion=("inu", "sum")).reset_index())
+        ev.to_csv(cache, index=False, encoding="utf-8")
+    d = {r.cod_num: (int(r.eventos_remocion), int(r.eventos_inundacion)) for r in ev.itertuples()}
+    p90r = max(1.0, np.percentile([v[0] for v in d.values() if v[0] > 0] or [1], 90))
+    p90i = max(1.0, np.percentile([v[1] for v in d.values() if v[1] > 0] or [1], 90))
+    return d, p90r, p90i
+
+
 def main():
     zoom = pd.read_csv(ZOOM, dtype={"codigo": str})
     zoom["loc_n"] = zoom["localidad"].map(norm)
@@ -91,14 +120,9 @@ def main():
     feats = gj.get("features", [])
     print(f"UPZ descargadas: {len(feats)}")
 
-    # Rango este-oeste de la ciudad (para el gradiente topográfico proxy)
-    lons = []
-    for f in feats:
-        cx, _ = centroid(f["geometry"])
-        if cx is not None:
-            f["_cx"] = cx
-            lons.append(cx)
-    lon_min, lon_max = min(lons), max(lons)
+    ev_upz, p90_rem, p90_inu = upz_eventos()
+    print(f"Amenaza observada IDIGER: {len(ev_upz)} UPZ con eventos "
+          f"(p90 remoción {p90_rem:.0f}, inundación {p90_inu:.0f})")
 
     out_feats, rows = [], []
     sin_match = []
@@ -113,24 +137,22 @@ def main():
             sin_match.append(p.get("LOCNOMBRE"))
             continue
 
-        cx = f.get("_cx")
-        # este=1 (Cerros Orientales) ... oeste=0 (río Bogotá / humedales)
-        este = (cx - lon_min) / (lon_max - lon_min) if cx is not None and lon_max > lon_min else 0.5
-
         base_rem = float(base["score_remocion"])
         base_agu = float(base["score_agua"])
         base_fue = float(base["score_fuego_estructural"])
         base_ope = float(base["score_operativo"])
 
-        # Modulación de INTENSIDAD (no de tipo): la UPZ se agrava según su posición hacia el
-        # peligro dominante de su localidad — cerros (oriente) si domina remoción; río/humedales
-        # (occidente) si domina anegamiento. Se escalan juntos, así el driver real se preserva.
-        dominante_remocion = base_rem >= base_agu
-        g = este if dominante_remocion else (1 - este)
-        intensidad = 0.75 + 0.5 * g          # rango 0.75 .. 1.25
-        rem = clamp01(base_rem * intensidad)
-        agu = clamp01(base_agu * intensidad)
-        fue = clamp01(base_fue * intensidad)
+        # CRUCE FINO UPZ ↔ amenaza IDIGER: la susceptibilidad de la UPZ mezcla el perfil
+        # físico de su localidad (POT) con la amenaza OBSERVADA — nº real de emergencias de
+        # remoción/inundación en esa UPZ (Bitácora IDIGER), normalizado al p90 de la ciudad.
+        cod_num = str(cod).replace("UPZ", "")
+        n_rem, n_inu = ev_upz.get(cod_num, (0, 0))   # sin registro ⇒ 0 eventos observados
+        o_rem = min(n_rem / p90_rem, 1.0)
+        o_inu = min(n_inu / p90_inu, 1.0)
+        # susceptibilidad = mitad físico de la localidad (POT) + mitad amenaza observada (IDIGER)
+        rem = clamp01(0.5 * base_rem + 0.5 * o_rem)
+        agu = clamp01(0.5 * base_agu + 0.5 * o_inu)
+        fue = base_fue
         ope = base_ope
 
         indice = round(0.40 * rem + 0.30 * agu + 0.20 * fue + 0.10 * ope, 3)
@@ -151,7 +173,7 @@ def main():
             "indice_presion_ecoterritorial_bogota": indice, "nivel": nivel,
             "lluvia_72h_mm": int(base["lluvia_72h_mm"]),
             "incidentes_7d": int(base["incidentes_7d"]),
-            "gradiente_oriente": round(este, 3),
+            "eventos_remocion": int(n_rem or 0), "eventos_inundacion": int(n_inu or 0),
         })
 
     gj_out = {"type": "FeatureCollection", "features": out_feats}
