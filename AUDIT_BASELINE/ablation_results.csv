@@ -1,0 +1,9 @@
+modelo,roc_auc,pr_auc,pr_lift
+M6_completo,0.804,0.352,5.65
+M2_susceptibilidad,0.729,0.139,2.24
+M3_lluvia,0.755,0.299,4.8
+M1_estacionalidad,0.572,0.095,1.52
+M4_lluvia+estacion,0.732,0.31,4.98
+M5_lluvia+suscept,0.83,0.404,6.48
+LOCID_solo_localidad,0.741,0.139,2.23
+CONTROL_target_shuffle,0.76,0.226,3.62

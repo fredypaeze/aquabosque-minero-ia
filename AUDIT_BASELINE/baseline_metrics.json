@@ -1,0 +1,57 @@
+{
+  "base_rate_test": 0.0623,
+  "n_core": 14600,
+  "n_test": 7320,
+  "ablation": [
+    {
+      "modelo": "M6_completo",
+      "roc_auc": 0.804,
+      "pr_auc": 0.352,
+      "pr_lift": 5.65
+    },
+    {
+      "modelo": "M2_susceptibilidad",
+      "roc_auc": 0.729,
+      "pr_auc": 0.139,
+      "pr_lift": 2.24
+    },
+    {
+      "modelo": "M3_lluvia",
+      "roc_auc": 0.755,
+      "pr_auc": 0.299,
+      "pr_lift": 4.8
+    },
+    {
+      "modelo": "M1_estacionalidad",
+      "roc_auc": 0.572,
+      "pr_auc": 0.095,
+      "pr_lift": 1.52
+    },
+    {
+      "modelo": "M4_lluvia+estacion",
+      "roc_auc": 0.732,
+      "pr_auc": 0.31,
+      "pr_lift": 4.98
+    },
+    {
+      "modelo": "M5_lluvia+suscept",
+      "roc_auc": 0.83,
+      "pr_auc": 0.404,
+      "pr_lift": 6.48
+    },
+    {
+      "modelo": "LOCID_solo_localidad",
+      "roc_auc": 0.741,
+      "pr_auc": 0.139,
+      "pr_lift": 2.23
+    },
+    {
+      "modelo": "CONTROL_target_shuffle",
+      "roc_auc": 0.76,
+      "pr_auc": 0.226,
+      "pr_lift": 3.62
+    }
+  ],
+  "determinismo_diff_auc": 0.0,
+  "nota": "usa el gold actual (etiqueta [t,t+2] incluye día t). Ablation para localizar la señal."
+}
