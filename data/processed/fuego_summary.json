@@ -1,69 +1,69 @@
 {
-  "generado": "2026-07-23T03:32:07.727212+00:00",
+  "generado": "2026-08-25T11:30:11.816783+00:00",
   "ventana": "7 días (NRT)",
   "fuente": "NASA FIRMS · VIIRS (SNPP+NOAA-20) + MODIS · sin API key",
-  "total_focos_colombia": 3787,
-  "municipios_con_fuego": 307,
+  "total_focos_colombia": 4326,
+  "municipios_con_fuego": 328,
   "top10": [
     {
-      "municipio": "EL PEÑÓN",
-      "departamento": "BOLÍVAR",
-      "focos_7d": 107,
-      "frp_total": 1341.32
+      "municipio": "COELLO",
+      "departamento": "TOLIMA",
+      "focos_7d": 154,
+      "frp_total": 6925.05
     },
     {
-      "municipio": "CHIRIGUANÁ",
-      "departamento": "CESAR",
-      "focos_7d": 131,
-      "frp_total": 1268.55
+      "municipio": "MAICAO",
+      "departamento": "LA GUAJIRA",
+      "focos_7d": 97,
+      "frp_total": 3531.63
     },
     {
       "municipio": "RIOHACHA",
       "departamento": "LA GUAJIRA",
-      "focos_7d": 71,
-      "frp_total": 994.62
+      "focos_7d": 167,
+      "frp_total": 1940.29
     },
     {
-      "municipio": "CHIMICHAGUA",
-      "departamento": "CESAR",
-      "focos_7d": 74,
-      "frp_total": 851.85
-    },
-    {
-      "municipio": "DIBULLA",
-      "departamento": "LA GUAJIRA",
-      "focos_7d": 26,
-      "frp_total": 804.84
-    },
-    {
-      "municipio": "PLATO",
-      "departamento": "MAGDALENA",
-      "focos_7d": 77,
-      "frp_total": 688.68
-    },
-    {
-      "municipio": "CUMARIBO",
-      "departamento": "VICHADA",
-      "focos_7d": 83,
-      "frp_total": 638.55
-    },
-    {
-      "municipio": "EL CARMEN",
-      "departamento": "NORTE DE SANTANDER",
-      "focos_7d": 22,
-      "frp_total": 625.28
+      "municipio": "COYAIMA",
+      "departamento": "TOLIMA",
+      "focos_7d": 46,
+      "frp_total": 871.84
     },
     {
       "municipio": "LA PRIMAVERA",
       "departamento": "VICHADA",
-      "focos_7d": 70,
-      "frp_total": 553.7
+      "focos_7d": 100,
+      "frp_total": 847.41
     },
     {
-      "municipio": "TIBÚ",
-      "departamento": "NORTE DE SANTANDER",
-      "focos_7d": 26,
-      "frp_total": 495.1
+      "municipio": "LA DORADA",
+      "departamento": "CALDAS",
+      "focos_7d": 9,
+      "frp_total": 534.85
+    },
+    {
+      "municipio": "CUMARIBO",
+      "departamento": "VICHADA",
+      "focos_7d": 77,
+      "frp_total": 521.45
+    },
+    {
+      "municipio": "PUERTO GAITÁN",
+      "departamento": "META",
+      "focos_7d": 68,
+      "frp_total": 506.22
+    },
+    {
+      "municipio": "CAJIBÍO",
+      "departamento": "CAUCA",
+      "focos_7d": 12,
+      "frp_total": 475.65
+    },
+    {
+      "municipio": "ORTEGA",
+      "departamento": "TOLIMA",
+      "focos_7d": 11,
+      "frp_total": 452.01
     }
   ],
   "nota_honestidad": "Señal satelital térmica NRT (proxy de deforestación/quema), no clasificación de imagen cruda por red neuronal (esa es la capa 2, GPU)."
