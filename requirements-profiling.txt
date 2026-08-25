@@ -1,0 +1,5 @@
+# Herramienta de auditoría de datos (no es dependencia de runtime)
+# pandas-profiling está descontinuado: su sucesor es ydata-profiling
+ydata-profiling==4.18.4
+setuptools<81  # ydata-profiling importa pkg_resources (retirado en setuptools>=81)
+pyarrow
