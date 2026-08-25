@@ -224,9 +224,12 @@ lat, lon = float(row["lat"]), float(row["lon"])
 cod = int(float(row["cod_mpio"]))
 
 k1, k2, k3, k4 = st.columns(4)
-k1.metric("Nivel de riesgo", str(row.get("riesgo_nivel", "—")))
-k2.metric("Presión minera", f"{row.get('idx_minero', 0):.2f}")
-k3.metric("Deforestación", f"{row.get('idx_deforestacion', 0):.2f}")
+k1.metric("Nivel de riesgo", str(row.get("riesgo_nivel", "—")),
+          help="Priorización del modelo (índice compuesto sobre datos abiertos históricos).")
+k2.metric("Presión minera", f"{row.get('idx_minero', 0):.2f}",
+          help="Sub-índice del modelo [0-1] · fuentes ANM/RUCOM (corte del entrenamiento).")
+k3.metric("Deforestación", f"{row.get('idx_deforestacion', 0):.2f}",
+          help="Sub-índice del modelo [0-1] · fuente IDEAM/SMByC (histórico; 0 = sin registro en la fuente).")
 # Señal de fuego FRESCA (fuego_municipal.csv, NRT): predicciones.csv es la foto de
 # entrenamiento del modelo y puede decir 0 focos en un municipio que hoy arde.
 _frow = fuego[fuego["cod_mpio"] == cod]
@@ -273,7 +276,10 @@ if not _res:
 else:
     _items = {p.parent.name: _json.loads(p.read_text(encoding="utf-8")) for p in _res}
     _opts = {f"{v['municipio']} (~{v['hectareas_perdida']:.0f} ha)": k for k, v in _items.items()}
-    _sel = st.selectbox("Municipio (frente de deforestación · precomputado)", list(_opts.keys()))
+    # Sigue al municipio elegido en el explorador de arriba, si tiene resultado precomputado
+    _keys = list(_opts.keys())
+    _pre = next((i for i, _k in enumerate(_keys) if _opts[_k] == str(cod)), 0)
+    _sel = st.selectbox("Municipio (frente de deforestación · precomputado)", _keys, index=_pre)
     _r = _items[_opts[_sel]]
     st.caption(f"Sentinel-2 (10 m) descargadas y procesadas localmente (Copernicus vía STAC Earth Search). "
                f"Ventana ~{_r['ventana_km']:.0f}×{_r['ventana_km']:.0f} km · **cambio NDVI bi-temporal, sin GPU**.")
