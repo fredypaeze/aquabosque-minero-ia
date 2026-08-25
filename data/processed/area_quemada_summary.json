@@ -1,0 +1,14 @@
+{
+  "generado": "2026-08-25T13:10:00+00:00",
+  "metodo": "dNBR bi-temporal sobre Sentinel-2 L2A (Copernicus, STAC Earth Search)",
+  "formula": "NBR=(NIR-SWIR16)/(NIR+SWIR16); dNBR=NBR_antes-NBR_despues; quemado si dNBR>=0.27",
+  "referente_umbral": "USGS: dNBR>=0.27 = severidad de quema moderada-alta",
+  "resolucion_m": 10,
+  "detalle": "SWIR16 (20 m) remuestreado a 10 m por vecino más cercano; recorte a extensión común entre fechas; escenas con más de 40% de nube descartadas",
+  "infraestructura": "GPU institucional (NVIDIA L40S) — procesamiento por mosaicos",
+  "periodo_antes": "2026-05-01/2026-06-30",
+  "periodo_despues": "2026-08-01/2026-08-25",
+  "municipios_medidos": 4,
+  "ha_quemadas_total": 159607.2,
+  "nota_honestidad": "Medición de área quemada en los 4 municipios de mayor potencia radiativa (FRP) de la crisis de agosto de 2026: cobertura PARCIAL en expansión, no censo nacional. El dNBR mide cambio espectral consistente con quema; puede incluir quemas agrícolas y no distingue causa (natural/antrópica)."
+}
