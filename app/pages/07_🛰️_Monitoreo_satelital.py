@@ -82,6 +82,9 @@ if VIIRS_RAW.exists() or MODIS_RAW.exists():
         return p
     pts = _focos(VIIRS_RAW.stat().st_mtime if VIIRS_RAW.exists() else 0)
     fecha_sat = str(pts["acq_date"].max())
+    # GIBS publica el true-color con rezago: la imagen del día en curso puede no existir aún
+    # (tiles negros en la mañana) → se usa el día anterior al foco más reciente.
+    fecha_gibs = (pd.to_datetime(fecha_sat) - pd.Timedelta(days=1)).date().isoformat()
 
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("🔥 Focos activos", f"{len(pts):,}")
@@ -95,27 +98,27 @@ if VIIRS_RAW.exists() or MODIS_RAW.exists():
     # Imagen satelital REAL de la NASA (GIBS true-color) como capa raster — abierta, sin token
     # VIIRS SNPP: barrido ancho (~3.060 km) → sin la franja sin-dato de MODIS, y coherente con los focos VIIRS
     gibs_url = ("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/"
-                "VIIRS_SNPP_CorrectedReflectance_TrueColor/default/" + fecha_sat +
+                "VIIRS_SNPP_CorrectedReflectance_TrueColor/default/" + fecha_gibs +
                 "/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg")
     gibs_layer = {"below": "traces", "sourcetype": "raster",
                   "sourceattribution": "NASA GIBS / EOSDIS", "source": [gibs_url]}
     center = {"lat": 3.8, "lon": -73.5}
     if "Puntos" in vista:
-        fig = px.scatter_mapbox(
+        fig = px.scatter_map(
             pts, lat="latitude", lon="longitude", color="frp",
             color_continuous_scale="YlOrRd", range_color=(0, float(pts["frp"].quantile(0.9))),
             hover_data={"frp": ":.0f", "acq_date": True, "sensor": True, "latitude": False, "longitude": False},
             zoom=4.4, center=center, height=580)
         fig.update_traces(marker={"size": 4, "opacity": 0.8})
     else:
-        fig = px.density_mapbox(
+        fig = px.density_map(
             pts, lat="latitude", lon="longitude", z="frp", radius=7,
             color_continuous_scale="YlOrRd", zoom=4.4, center=center, height=580)
-    fig.update_layout(mapbox_style="carto-darkmatter", mapbox_layers=[gibs_layer],
+    fig.update_layout(map_style="carto-darkmatter", map_layers=[gibs_layer],
                       margin=dict(l=0, r=0, t=0, b=0),
                       coloraxis_colorbar=dict(title="FRP (MW)"))
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-    st.caption(f"Base: **NASA GIBS · VIIRS SNPP true-color** ({fecha_sat}) — imagen satelital real, dato abierto sin token. "
+    st.caption(f"Base: **NASA GIBS · VIIRS SNPP true-color** ({fecha_gibs}, última imagen publicada) — imagen satelital real, dato abierto sin token. "
                f"Focos: **NASA FIRMS** (VIIRS+MODIS), cada punto es un fuego térmico real de los últimos 7 días; "
                f"color y tamaño por potencia radiativa (FRP). Se ve la frontera de quema y deforestación en vivo.")
     st.divider()
@@ -184,9 +187,11 @@ st.info("**Fuente:** NASA FIRMS (VIIRS SNPP + NOAA-20, MODIS C6.1) · datos abie
 # ============================================================
 try:
     _recent = fecha_sat
+    _gibs = fecha_gibs
     _pts = pts
 except NameError:
     _recent = str(fuego["ultima_fecha"].max())[:10] if "ultima_fecha" in fuego else "2026-08-07"
+    _gibs = (pd.to_datetime(_recent) - pd.Timedelta(days=1)).date().isoformat()
     _pts = pd.DataFrame(columns=["latitude", "longitude", "frp", "acq_date", "sensor"])
 
 st.divider()
@@ -211,34 +216,46 @@ _di = deptos.index("META") if "META" in deptos else 0
 dep_sel = cA.selectbox("Departamento", deptos, index=_di)
 munis = sorted(pred[pred["departamento"] == dep_sel]["municipio"].dropna().unique())
 mun_sel = cB.selectbox("Municipio", munis)
-_fechas = ["2023-06-15", "2024-06-15", "2025-06-15", "2026-03-15", _recent]
-fecha_e = cC.select_slider("Fecha de la imagen satelital", options=_fechas, value=_recent)
+_fechas = ["2023-06-15", "2024-06-15", "2025-06-15", "2026-03-15", _gibs]
+fecha_e = cC.select_slider("Fecha de la imagen satelital", options=_fechas, value=_gibs)
 
 row = pred[(pred["departamento"] == dep_sel) & (pred["municipio"] == mun_sel)].iloc[0]
 lat, lon = float(row["lat"]), float(row["lon"])
 cod = int(float(row["cod_mpio"]))
 
 k1, k2, k3, k4 = st.columns(4)
-k1.metric("Nivel de riesgo", str(row.get("riesgo_nivel", "—")))
-k2.metric("Presión minera", f"{row.get('idx_minero', 0):.2f}")
-k3.metric("Deforestación", f"{row.get('idx_deforestacion', 0):.2f}")
+k1.metric("Nivel de riesgo", str(row.get("riesgo_nivel", "—")),
+          help="Priorización del modelo (índice compuesto sobre datos abiertos históricos).")
+k2.metric("Presión minera", f"{row.get('idx_minero', 0):.2f}",
+          help="Sub-índice del modelo [0-1] · fuentes ANM/RUCOM (corte del entrenamiento).")
+k3.metric("Deforestación", f"{row.get('idx_deforestacion', 0):.2f}",
+          help="Sub-índice del modelo [0-1] · fuente IDEAM/SMByC (histórico; 0 = sin registro en la fuente).")
+# Señal de fuego FRESCA (fuego_municipal.csv, NRT): predicciones.csv es la foto de
+# entrenamiento del modelo y puede decir 0 focos en un municipio que hoy arde.
+_frow = fuego[fuego["cod_mpio"] == cod]
+_focos_hoy = int(_frow.iloc[0]["focos_7d"]) if len(_frow) else 0
 _vrow = vel_df[vel_df.get("cod_mpio").astype("Int64") == cod] if "cod_mpio" in getattr(vel_df, "columns", []) else pd.DataFrame()
-if len(_vrow):
+if _focos_hoy > 0:
+    k4.metric("🔥 Focos de calor (7 días)", _focos_hoy,
+              delta=f"{_frow.iloc[0]['frp_total']:,.0f} MW FRP", delta_color="inverse",
+              help="Señal NRT de NASA FIRMS (refresco diario), no la foto de entrenamiento del modelo.")
+elif len(_vrow):
     k4.metric("Deforestación (dinámica)", str(_vrow.iloc[0]["dinamica"]),
               delta=f"{_vrow.iloc[0]['aceleracion_ha_ano']:+.0f} ha/año")
 else:
-    k4.metric("Focos de calor", f"{row.get('idx_fuego', 0):.2f}")
+    k4.metric("🔥 Focos de calor (7 días)", 0,
+              help="Sin focos activos en la ventana de 7 días (NASA FIRMS, refresco diario).")
 
 sub = _pts[(_pts["latitude"].between(lat - 0.45, lat + 0.45)) & (_pts["longitude"].between(lon - 0.45, lon + 0.45))]
 gibs_e = ("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/"
           "VIIRS_SNPP_CorrectedReflectance_TrueColor/default/" + str(fecha_e) +
           "/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg")
-figm = px.scatter_mapbox(sub if len(sub) else pd.DataFrame({"latitude": [lat], "longitude": [lon], "frp": [0]}),
+figm = px.scatter_map(sub if len(sub) else pd.DataFrame({"latitude": [lat], "longitude": [lon], "frp": [0]}),
                          lat="latitude", lon="longitude", color="frp" if len(sub) else None,
                          color_continuous_scale="YlOrRd", zoom=9.2, center={"lat": lat, "lon": lon}, height=520)
 figm.update_traces(marker={"size": 7 if len(sub) else 1, "opacity": 0.85})
-figm.update_layout(mapbox_style="carto-darkmatter",
-                   mapbox_layers=[{"below": "traces", "sourcetype": "raster",
+figm.update_layout(map_style="carto-darkmatter",
+                   map_layers=[{"below": "traces", "sourcetype": "raster",
                                    "sourceattribution": "NASA GIBS / EOSDIS", "source": [gibs_e]}],
                    margin=dict(l=0, r=0, t=0, b=0), coloraxis_colorbar=dict(title="FRP (MW)"))
 st.plotly_chart(figm, use_container_width=True, config={"displayModeBar": False})
@@ -259,7 +276,10 @@ if not _res:
 else:
     _items = {p.parent.name: _json.loads(p.read_text(encoding="utf-8")) for p in _res}
     _opts = {f"{v['municipio']} (~{v['hectareas_perdida']:.0f} ha)": k for k, v in _items.items()}
-    _sel = st.selectbox("Municipio (frente de deforestación · precomputado)", list(_opts.keys()))
+    # Sigue al municipio elegido en el explorador de arriba, si tiene resultado precomputado
+    _keys = list(_opts.keys())
+    _pre = next((i for i, _k in enumerate(_keys) if _opts[_k] == str(cod)), 0)
+    _sel = st.selectbox("Municipio (frente de deforestación · precomputado)", _keys, index=_pre)
     _r = _items[_opts[_sel]]
     st.caption(f"Sentinel-2 (10 m) descargadas y procesadas localmente (Copernicus vía STAC Earth Search). "
                f"Ventana ~{_r['ventana_km']:.0f}×{_r['ventana_km']:.0f} km · **cambio NDVI bi-temporal, sin GPU**.")

@@ -30,3 +30,6 @@ data/raw/bogota/pot/
 
 # imágenes Sentinel-2 generadas (regenerables via ndvi_change_real.py; se versiona result.json)
 outputs/satelital_ndvi/*/*.png
+
+# informes de perfilado (pesados; se versiona solo el resumen JSON)
+outputs/perfilado/*.html

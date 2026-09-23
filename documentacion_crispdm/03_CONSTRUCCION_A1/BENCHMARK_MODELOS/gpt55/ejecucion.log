@@ -1,0 +1,5 @@
+[35m[plugins][39m [33mplugins.allow is empty; discovered non-bundled plugins may auto-load: codex (/home/tuxilo/.openclaw/npm/projects/openclaw-codex-8902d781d4/node_modules/@openclaw/codex/dist/index.js). Set plugins.allow to explicit trusted ids.[39m
+/home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/03_CONSTRUCCION_A1/BENCHMARK_MODELOS/gpt55/PARTE_04_ARCHITECTURE_BENCHMARK.md
+
+PARTIAL
+⚠️ 🛠️ `which pandoc || which docx2txt || which unzip (agent)` failed
