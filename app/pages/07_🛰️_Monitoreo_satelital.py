@@ -104,17 +104,17 @@ if VIIRS_RAW.exists() or MODIS_RAW.exists():
                   "sourceattribution": "NASA GIBS / EOSDIS", "source": [gibs_url]}
     center = {"lat": 3.8, "lon": -73.5}
     if "Puntos" in vista:
-        fig = px.scatter_mapbox(
+        fig = px.scatter_map(
             pts, lat="latitude", lon="longitude", color="frp",
             color_continuous_scale="YlOrRd", range_color=(0, float(pts["frp"].quantile(0.9))),
             hover_data={"frp": ":.0f", "acq_date": True, "sensor": True, "latitude": False, "longitude": False},
             zoom=4.4, center=center, height=580)
         fig.update_traces(marker={"size": 4, "opacity": 0.8})
     else:
-        fig = px.density_mapbox(
+        fig = px.density_map(
             pts, lat="latitude", lon="longitude", z="frp", radius=7,
             color_continuous_scale="YlOrRd", zoom=4.4, center=center, height=580)
-    fig.update_layout(mapbox_style="carto-darkmatter", mapbox_layers=[gibs_layer],
+    fig.update_layout(map_style="carto-darkmatter", map_layers=[gibs_layer],
                       margin=dict(l=0, r=0, t=0, b=0),
                       coloraxis_colorbar=dict(title="FRP (MW)"))
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
@@ -250,12 +250,12 @@ sub = _pts[(_pts["latitude"].between(lat - 0.45, lat + 0.45)) & (_pts["longitude
 gibs_e = ("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/"
           "VIIRS_SNPP_CorrectedReflectance_TrueColor/default/" + str(fecha_e) +
           "/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg")
-figm = px.scatter_mapbox(sub if len(sub) else pd.DataFrame({"latitude": [lat], "longitude": [lon], "frp": [0]}),
+figm = px.scatter_map(sub if len(sub) else pd.DataFrame({"latitude": [lat], "longitude": [lon], "frp": [0]}),
                          lat="latitude", lon="longitude", color="frp" if len(sub) else None,
                          color_continuous_scale="YlOrRd", zoom=9.2, center={"lat": lat, "lon": lon}, height=520)
 figm.update_traces(marker={"size": 7 if len(sub) else 1, "opacity": 0.85})
-figm.update_layout(mapbox_style="carto-darkmatter",
-                   mapbox_layers=[{"below": "traces", "sourcetype": "raster",
+figm.update_layout(map_style="carto-darkmatter",
+                   map_layers=[{"below": "traces", "sourcetype": "raster",
                                    "sourceattribution": "NASA GIBS / EOSDIS", "source": [gibs_e]}],
                    margin=dict(l=0, r=0, t=0, b=0), coloraxis_colorbar=dict(title="FRP (MW)"))
 st.plotly_chart(figm, use_container_width=True, config={"displayModeBar": False})

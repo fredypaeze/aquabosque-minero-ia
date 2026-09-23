@@ -1,0 +1,149 @@
+framework:
+  name: METODOLOGIA_ESTUDIOS_ESTRATEGICOS
+  version: "1.0"
+  path: /home/tuxilo/METODOLOGIA_ESTUDIOS_ESTRATEGICOS
+
+project:
+  id: AQUABOSQUE
+  name: AquaBosque Minero IA
+  mode: DOCUMENT
+  language: es
+  methodology: CRISP-DM
+
+paths:
+  repository: /home/tuxilo/aquabosque-minero-ia
+  workspace: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm
+
+  control: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/00_CONTROL
+  protocols_local: /home/tuxilo/METODOLOGIA_ESTUDIOS_ESTRATEGICOS/PROTOCOLS
+  audit: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/02_AUDITORIA_PREVIA
+  traceability: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/03_TRAZABILIDAD
+  crispdm: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/04_CRISP_DM
+  extensions: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/05_EXTENSIONES
+  final_document: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/06_DOCUMENTO_FINAL
+  validation: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/07_VALIDACION
+  delivery: /home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/08_ENTREGA
+
+deployment:
+  public_url: https://streamlit.spartanit.pro/
+
+evidence:
+  primary:
+    - /home/tuxilo/aquabosque-minero-ia
+
+  historical:
+    - /home/tuxilo/AquaBosque_A1_Definicion_Tematica.docx
+    - /home/tuxilo/AquaBosque_A2_Entendimiento_Negocio.docx
+    - /home/tuxilo/AquaBosque_A3_Entendimiento_Datos.docx
+    - /home/tuxilo/AquaBosque_A4_Preparacion_Datos.docx
+    - /home/tuxilo/AquaBosque_A5_Modelamiento.docx
+    - /home/tuxilo/AquaBosque_A6_Evaluacion.docx
+    - /home/tuxilo/AquaBosque_A7_Despliegue_Documento_Final.docx
+    - /home/tuxilo/AquaBosque_A8_Seguimiento_Mejora_Continua.docx
+    - /home/tuxilo/documentacion_auditoria_aquabosque
+    - /home/tuxilo/MEMORIA_TECNICA_AQUABOSQUE_GTICS.pdf
+    - /home/tuxilo/MEMORIA_TECNICA_AQUABOSQUE_GTICS.html
+    - /home/tuxilo/MEMORIA_TECNICA_AQUABOSQUE_GTICS_fichas
+    - /home/tuxilo/AquaBosque_perfilado_datos_20260825.zip
+    - /home/tuxilo/entrega_auditoria_aquabosque
+    - /home/tuxilo/SOPORTES_TAIGA_AGOSTO/SIM-010_02_AquaBosque_Presentacion_Jurado.pdf
+    - /home/tuxilo/AQUABOSQUE_CRISIS_INCENDIOS.html
+    - /home/tuxilo/AQUABOSQUE_CRISIS_INCENDIOS.pdf
+    - /home/tuxilo/AQUABOSQUE_HERRAMIENTA_INCENDIOS.html
+    - /home/tuxilo/AQUABOSQUE_HERRAMIENTA_INCENDIOS.pdf
+
+protected_paths:
+  read_only:
+    - /home/tuxilo/aquabosque-minero-ia/app
+    - /home/tuxilo/aquabosque-minero-ia/audit
+    - /home/tuxilo/aquabosque-minero-ia/AUDIT_BASELINE
+    - /home/tuxilo/aquabosque-minero-ia/config
+    - /home/tuxilo/aquabosque-minero-ia/data
+    - /home/tuxilo/aquabosque-minero-ia/docs
+    - /home/tuxilo/aquabosque-minero-ia/metadata
+    - /home/tuxilo/aquabosque-minero-ia/models
+    - /home/tuxilo/aquabosque-minero-ia/notebooks
+    - /home/tuxilo/aquabosque-minero-ia/outputs
+    - /home/tuxilo/aquabosque-minero-ia/scripts
+    - /home/tuxilo/aquabosque-minero-ia/src
+    - /home/tuxilo/aquabosque-minero-ia/tests
+    - /home/tuxilo/aquabosque-minero-ia/validation
+
+protocols:
+  mandatory:
+    - 01_1_PEDAT_PROTOCOLO_EXPANSION_DOCUMENTAL.md
+    - 01_2_REGLA_DE_SEPARACION_ENTRE_NARRATIVA_Y_EVIDENCIA.md
+    - 02_PGV_ACG_PROTOCOLO_GOBERNANZA_VISUAL.md
+    - 03_PGV-MAPAS.md
+    - 04_PRD_PIPELINE_REDACCION_DOCUMENTAL.md
+    - 05_PBF_PROTOCOLO_BIBLIOGRAFIA_Y_FUENTES.md
+
+taiga:
+  product: documento_6
+  activities:
+    - id: 190
+      code: A1
+      name: Definición de la temática
+      workflow: D05
+    - id: 191
+      code: A2
+      name: Entendimiento del negocio
+      workflow: D06
+    - id: 192
+      code: A3
+      name: Entendimiento de los datos
+      workflow: D07
+    - id: 193
+      code: A4
+      name: Preparación de los datos
+      workflow: D08
+    - id: 194
+      code: A5
+      name: Modelamiento de los datos
+      workflow: D09
+    - id: 195
+      code: A6
+      name: Evaluación del modelo
+      workflow: D10
+    - id: 196
+      code: A7
+      name: Despliegue del modelo
+      workflow: D11
+    - id: 197
+      code: QA
+      name: Revisión del documento
+      workflows:
+        - D13
+        - D14
+        - D15
+
+additional_deliverable:
+  code: A8
+  name: Seguimiento y mejora continua
+  workflow: D12
+  administrative_note: >
+    Se documenta como actividad complementaria posterior al despliegue.
+    No debe presentarse como fase oficial de CRISP-DM.
+
+extensions:
+  expected_to_investigate:
+    - MONITOREO_SATELITAL
+    - ALERTAS_ANTICIPATORIAS
+    - ZOOM_BOGOTA
+    - INCENDIOS
+
+final_status_allowed:
+  - APTO PARA REVISION HUMANA
+
+execution:
+  autonomous: true
+  continue_after_gate_pass: true
+  auto_correct_qa_failures: true
+  stop_only_on_critical_blocker: true
+  preserve_intermediate_artifacts: true
+  update_state_continuously: true
+
+security:
+  expose_secrets: false
+  modify_primary_evidence: false
+  destructive_actions: false

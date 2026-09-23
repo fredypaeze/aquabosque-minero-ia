@@ -29,7 +29,13 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[3]
 PRED = ROOT / "outputs" / "tables" / "predicciones.csv"
 FUEGO = ROOT / "data" / "processed" / "fuego_municipal.csv"
-DOCS = [ROOT / "docs" / "CRISP_ML.md", ROOT / "README.md"]
+DOCS = [ROOT / "docs" / "CRISP_ML.md", ROOT / "README.md",
+        ROOT / "docs" / "10_zoom_bogota.md", ROOT / "docs" / "MODEL_CARD_ZOOM_BOGOTA.md",
+        ROOT / "docs" / "MODELO_ALERTA_BOGOTA.md", ROOT / "docs" / "DICCIONARIO_DATOS_BOGOTA.md"]
+AREA_Q = ROOT / "data" / "processed" / "area_quemada_municipal.csv"
+AREA_Q_SUM = ROOT / "data" / "processed" / "area_quemada_summary.json"
+BOG_ZOOM = ROOT / "data" / "processed" / "bogota_zoom.csv"
+BOG_UPZ = ROOT / "data" / "processed" / "bogota_upz.csv"
 INDEX = ROOT / "data" / "processed" / "rag_index.npz"
 META = ROOT / "data" / "processed" / "rag_meta.json"
 
@@ -124,6 +130,64 @@ def construir_corpus() -> list[dict]:
                           ", ".join(f"{r['municipio']} {int(r['focos_7d'])}"
                                     for _, r in gf.sort_values("focos_7d", ascending=False).head(6).iterrows()) + ".")
         corpus.append({"id": f"resumen-dep-{dep}", "tipo": "resumen", "municipio": "", "texto": " ".join(partes)})
+
+    # --- Capa satelital: área quemada por dNBR (Sentinel-2) ---
+    if AREA_Q.exists():
+        aq = pd.read_csv(AREA_Q)
+        for _, r in aq.iterrows():
+            corpus.append({"id": f"areaq-{r['cod_mpio']}", "tipo": "area_quemada",
+                           "municipio": str(r["municipio"]),
+                           "texto": (f"Área quemada en {r['municipio']} ({r['departamento']}): "
+                                     f"{float(r['ha_quemada_dnbr']):,.0f} hectáreas por dNBR Sentinel-2, "
+                                     f"comparando {r['periodo_antes']} (antes) con {r['periodo_despues']} (después); "
+                                     f"umbral dNBR {r['umbral_dnbr']} (USGS), nubes máx {r['nubes_max_pct']}%, "
+                                     f"procesado el {r['procesado']} en la GPU institucional.")})
+        if AREA_Q_SUM.exists():
+            s = json.loads(AREA_Q_SUM.read_text(encoding="utf-8"))
+            corpus.append({"id": "resumen-area-quemada", "tipo": "resumen", "municipio": "",
+                           "texto": (f"Resumen de área quemada (generado {s.get('generado','')}): "
+                                     f"{s.get('municipios_medidos','')} municipios medidos, "
+                                     f"{float(s.get('ha_quemadas_total') or 0):,.0f} ha quemadas en total. "
+                                     f"Método: {s.get('metodo','')}. Fórmula: {s.get('formula','')}. "
+                                     f"Referente del umbral: {s.get('referente_umbral','')}. {s.get('detalle','')} "
+                                     f"Nota de honestidad: {s.get('nota_honestidad','')}")})
+
+    # --- Zoom Bogotá (IDIGER): localidades y UPZ ---
+    if BOG_ZOOM.exists():
+        bz = pd.read_csv(BOG_ZOOM, dtype={"codigo": str})
+        for _, r in bz.iterrows():
+            corpus.append({"id": f"bogota-loc-{r['codigo']}", "tipo": "bogota_localidad",
+                           "municipio": "Bogotá",
+                           "texto": (f"Bogotá, localidad {r['localidad']}: índice de presión ecoterritorial "
+                                     f"{float(r['indice_presion_ecoterritorial_bogota']):.3f} (nivel {r['nivel']}); "
+                                     f"driver principal: {r['driver_principal']}; corredor: {r['corredor_estrategico']}. "
+                                     f"Scores: remoción {float(r['score_remocion']):.2f}, agua {float(r['score_agua']):.2f}, "
+                                     f"fuego estructural {float(r['score_fuego_estructural']):.2f}, operativo {float(r['score_operativo']):.2f}. "
+                                     f"Incidentes 7 días: {r['incidentes_7d']}; lluvia 72 h: {r['lluvia_72h_mm']} mm. "
+                                     f"{r.get('resumen','')}")})
+        top = bz.sort_values("indice_presion_ecoterritorial_bogota", ascending=False)
+        corpus.append({"id": "resumen-bogota-localidades", "tipo": "resumen", "municipio": "Bogotá",
+                       "texto": ("Ranking de localidades de Bogotá por índice de presión ecoterritorial: " +
+                                 ", ".join(f"{r['localidad']} ({r['nivel']}, {float(r['indice_presion_ecoterritorial_bogota']):.3f})"
+                                           for _, r in top.iterrows()) +
+                                 ". Niveles: " + ", ".join(f"{k}={v}" for k, v in bz["nivel"].value_counts().items()) + ".")})
+    if BOG_UPZ.exists():
+        bu = pd.read_csv(BOG_UPZ)
+        crit = bu[bu["nivel"].isin(["Crítico", "Alto"])].sort_values(
+            "indice_presion_ecoterritorial_bogota", ascending=False)
+        corpus.append({"id": "resumen-bogota-upz", "tipo": "resumen", "municipio": "Bogotá",
+                       "texto": (f"Bogotá a nivel UPZ: {len(bu)} UPZ evaluadas; "
+                                 f"{int((bu['nivel']=='Crítico').sum())} en nivel Crítico y {int((bu['nivel']=='Alto').sum())} en Alto. "
+                                 "UPZ con mayor presión: " +
+                                 ", ".join(f"{r['upz']} ({r['localidad']}, {r['nivel']}, {float(r['indice_presion_ecoterritorial_bogota']):.3f})"
+                                           for _, r in crit.head(15).iterrows()) + ".")})
+        for loc, g in bu.groupby("localidad"):
+            g2 = g.sort_values("indice_presion_ecoterritorial_bogota", ascending=False)
+            corpus.append({"id": f"bogota-upz-{loc}", "tipo": "bogota_upz", "municipio": "Bogotá",
+                           "texto": (f"UPZ de la localidad {loc} (Bogotá), de mayor a menor presión: " +
+                                     "; ".join(f"{r['upz']} {r['nivel']} {float(r['indice_presion_ecoterritorial_bogota']):.3f} "
+                                               f"(remoción {int(r['eventos_remocion'])} eventos, inundación {int(r['eventos_inundacion'])})"
+                                               for _, r in g2.iterrows()) + ".")})
 
     # --- Base de conocimiento del sistema (para responder cualquier pregunta de defensa) ---
     conocimiento = [
@@ -225,8 +289,9 @@ def construir_corpus() -> list[dict]:
          "cobertura nacional operativa. Todo el código y los datos son abiertos y auditables."),
         ("conoc-actualizacion",
          "Actualización: la capa de fuego (NASA FIRMS) se refresca automáticamente a diario con un temporizador; es "
-         "cobertura nacional. El modelo estructural (minería, deforestación, agua, sensibilidad) es estable y se "
-         "re-entrena cuando entran datos nuevos, no cada día. El análisis Sentinel-2 se corre por zonas en la GPU."),
+         "cobertura nacional, y el índice del asistente se reconstruye tras cada refresco. El modelo estructural "
+         "(minería, deforestación, agua, sensibilidad) es estable y se re-entrena cuando entran datos nuevos, "
+         "no cada día. El análisis Sentinel-2 (área quemada por dNBR) se corre por zonas en la GPU."),
     ]
     for cid, txt in conocimiento:
         corpus.append({"id": cid, "tipo": "conocimiento", "municipio": "", "texto": txt})

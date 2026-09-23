@@ -1,69 +1,69 @@
 {
-  "generado": "2026-08-25T11:30:11.816783+00:00",
+  "generado": "2026-09-23T11:30:19.475569+00:00",
   "ventana": "7 días (NRT)",
   "fuente": "NASA FIRMS · VIIRS (SNPP+NOAA-20) + MODIS · sin API key",
-  "total_focos_colombia": 4326,
-  "municipios_con_fuego": 328,
+  "total_focos_colombia": 6344,
+  "municipios_con_fuego": 313,
   "top10": [
     {
-      "municipio": "COELLO",
+      "municipio": "CHAPARRAL",
       "departamento": "TOLIMA",
       "focos_7d": 154,
-      "frp_total": 6925.05
-    },
-    {
-      "municipio": "MAICAO",
-      "departamento": "LA GUAJIRA",
-      "focos_7d": 97,
-      "frp_total": 3531.63
-    },
-    {
-      "municipio": "RIOHACHA",
-      "departamento": "LA GUAJIRA",
-      "focos_7d": 167,
-      "frp_total": 1940.29
-    },
-    {
-      "municipio": "COYAIMA",
-      "departamento": "TOLIMA",
-      "focos_7d": 46,
-      "frp_total": 871.84
+      "frp_total": 5869.33
     },
     {
       "municipio": "LA PRIMAVERA",
       "departamento": "VICHADA",
-      "focos_7d": 100,
-      "frp_total": 847.41
-    },
-    {
-      "municipio": "LA DORADA",
-      "departamento": "CALDAS",
-      "focos_7d": 9,
-      "frp_total": 534.85
+      "focos_7d": 388,
+      "frp_total": 3586.25
     },
     {
       "municipio": "CUMARIBO",
       "departamento": "VICHADA",
-      "focos_7d": 77,
-      "frp_total": 521.45
+      "focos_7d": 422,
+      "frp_total": 3267.44
+    },
+    {
+      "municipio": "CHÍQUIZA",
+      "departamento": "BOYACÁ",
+      "focos_7d": 85,
+      "frp_total": 2375.36
     },
     {
       "municipio": "PUERTO GAITÁN",
       "departamento": "META",
-      "focos_7d": 68,
-      "frp_total": 506.22
-    },
-    {
-      "municipio": "CAJIBÍO",
-      "departamento": "CAUCA",
-      "focos_7d": 12,
-      "frp_total": 475.65
+      "focos_7d": 335,
+      "frp_total": 2341.85
     },
     {
       "municipio": "ORTEGA",
       "departamento": "TOLIMA",
-      "focos_7d": 11,
-      "frp_total": 452.01
+      "focos_7d": 81,
+      "frp_total": 1739.7
+    },
+    {
+      "municipio": "VILLA DE LEYVA",
+      "departamento": "BOYACÁ",
+      "focos_7d": 42,
+      "frp_total": 1120.53
+    },
+    {
+      "municipio": "SANTA ROSALÍA",
+      "departamento": "VICHADA",
+      "focos_7d": 89,
+      "frp_total": 1053.51
+    },
+    {
+      "municipio": "PUERTO GUZMÁN",
+      "departamento": "PUTUMAYO",
+      "focos_7d": 91,
+      "frp_total": 1037.99
+    },
+    {
+      "municipio": "YUMBO",
+      "departamento": "VALLE DEL CAUCA",
+      "focos_7d": 6,
+      "frp_total": 783.88
     }
   ],
   "nota_honestidad": "Señal satelital térmica NRT (proxy de deforestación/quema), no clasificación de imagen cruda por red neuronal (esa es la capa 2, GPU)."

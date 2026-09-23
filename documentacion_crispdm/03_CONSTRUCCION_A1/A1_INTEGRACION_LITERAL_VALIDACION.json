@@ -1,0 +1,70 @@
+{
+  "estado": "INTEGRACION_LITERAL_COMPLETA_QA_PENDIENTE",
+  "archivo": "/home/tuxilo/aquabosque-minero-ia/documentacion_crispdm/03_CONSTRUCCION_A1/A1_INTEGRADO_LITERAL_BORRADOR.md",
+  "apartados": {
+    "01_TITULO.md": {
+      "bytes_originales": 4585,
+      "sha256_original": "696a53e9d348359ffd196eeac294776aeaeb4e95c723c987e2630b120af65dbb",
+      "apariciones_en_integrado": 1
+    },
+    "02_OBJETIVO_GENERAL.md": {
+      "bytes_originales": 7297,
+      "sha256_original": "ac8aa40aa69dc2fbd0d4562791d91394baeb25d04c3025b7ba759e4ae0e7a86a",
+      "apariciones_en_integrado": 1
+    },
+    "03_OBJETIVOS_ESPECIFICOS.md": {
+      "bytes_originales": 9616,
+      "sha256_original": "8f4c2ed44a44edf123e0c9b3adf5e7ab1705a9f40d64c1ed21943625f086a46b",
+      "apariciones_en_integrado": 1
+    },
+    "04_JUSTIFICACION.md": {
+      "bytes_originales": 9458,
+      "sha256_original": "a5031862ef837690833a4457e6208fe95ac7e46146a7bc17b07adcc559d6b51b",
+      "apariciones_en_integrado": 1
+    },
+    "05_PROBLEMA_ANALITICO.md": {
+      "bytes_originales": 10738,
+      "sha256_original": "19c9dc16e4fbb8add3c7880f164e7c618eea540866a000818a4933b50b9ad365",
+      "apariciones_en_integrado": 1
+    },
+    "06_PREGUNTAS_INVESTIGACION.md": {
+      "bytes_originales": 11848,
+      "sha256_original": "f31dc318fe65f94f14e571818a6366c153e8655483d320954731aabb5c6b6f1a",
+      "apariciones_en_integrado": 1
+    },
+    "07_ALCANCE.md": {
+      "bytes_originales": 10792,
+      "sha256_original": "7ec2740daea808d31ea87e8e03cf78d9623f1161f3d84a115e1151c6a94972da",
+      "apariciones_en_integrado": 1
+    },
+    "08_FUENTES_DATOS.md": {
+      "bytes_originales": 13830,
+      "sha256_original": "03b719da2aa407e56bb12282d14f09590057e97a7b6ce53718b89d039f50801a",
+      "apariciones_en_integrado": 1
+    },
+    "09_VIABILIDAD.md": {
+      "bytes_originales": 12583,
+      "sha256_original": "225bdb70619ac40bdeec77f6241fd74d0bee99e027b6cb209c10421d1cc66f3d",
+      "apariciones_en_integrado": 1
+    },
+    "10_RESULTADOS_ESPERADOS.md": {
+      "bytes_originales": 5360,
+      "sha256_original": "ef5f9754576338ab6ca5793ec032df39cf09a13ae82553ba509391739d9bc87c",
+      "apariciones_en_integrado": 1
+    },
+    "11_SUPUESTOS.md": {
+      "bytes_originales": 11730,
+      "sha256_original": "e6a71d391cebbbde3e47cd09ee7191071d90794a86d6de552eb2a9e130c2584e",
+      "apariciones_en_integrado": 1
+    },
+    "12_RIESGOS_LIMITACIONES.md": {
+      "bytes_originales": 12812,
+      "sha256_original": "488c2689ae706f3268d04121d1c53a7692ee950d0f78b91117bd2ed788d8474f",
+      "apariciones_en_integrado": 1
+    }
+  },
+  "sha256_integrado": "0a30301b44458b4adac0ec365b2b6e66c0f2f0a261ae010fbb921a6b9256c988",
+  "bibliografia_final": "PENDIENTE",
+  "preliminares": "PENDIENTE",
+  "qa_sustantivo": "PENDIENTE"
+}
